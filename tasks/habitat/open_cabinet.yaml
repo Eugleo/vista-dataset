@@ -1,0 +1,25 @@
+prompt_gpt: |
+  You will be given five frames from a video depicting a first-person video of a simulated interaction in a 3D environment. Important notes:
+  - the frames are given to you in chronological order
+  - the video captures a model 3D environment, not the actual world
+
+  Your task is to describe what you see in each frame. There will be a kitchen cabinet and you task will be to describe whether it is being opened, closed, or just passively observed in an open or a closed state and not interacted with. Exactly one of those will be true. Describe each frame separately, be very brief and to the point.
+
+  # EXAMPLE for a different container
+
+  Input: [five frames]
+
+  Assistant:
+  0. We see a pot with a lid.
+  1. We see no hand but the lid is being lifted up.
+  2. The lid is being lifted up and to the side now.
+  3. The pot is now fully open, the lid lies next to it.
+  4. In the last frame, the basket is still open.
+
+  # TASK
+prompt_baseline: a container
+label_prompts:
+  actively_opening: a video where a kitchen cabinet is being opened
+  observing_opened: a video where we observe an open kitchen cabinet
+  observing_closed: a video where we observe a closed kitchen cabinet
+  actively_closing: a video where a kitchen cabinet is being closed

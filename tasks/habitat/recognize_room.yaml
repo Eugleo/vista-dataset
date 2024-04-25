@@ -1,0 +1,33 @@
+prompt_gpt: |
+  You will be given five frames from a video depicting a first-person video reconstruction taken in a 3D model of a house. Important notes:
+  - the frames are given to you in chronological order
+  - due to compression and modelling issues, there might be some artifacts in the frames
+
+  Your task is to describe what you see in each frame. Focus on general context of the video. Describe each frame separately, but be brief and to the point. Later you will be asked which room the footage was taken in; then, take into account the position of the camera, too, not only the raw content of the frames.
+
+  # EXAMPLE
+
+  Input: [five frames]
+
+  Assistant:
+  0. The room appears to be a living room.
+  1. In this frame, we can see a TV and a couch.
+  2. Additionally, there is a coffee table in the middle of the room.
+  3. In this frame, we can see that the room seems to be adjacent to a kitchen.
+  4. We are still in the living room, heading towards the kitchen.
+
+  The footage was taken in a living room, though a kitchen was briefly visible, too.
+
+  # TASK
+prompt_base: first-person indoor footage
+label_prompts:
+  bathroom: first-person indoor footage in the bathroom
+  bedroom: first-person indoor footage in the bedroom
+  dining_room: first-person indoor footage in the dining room
+  closet: first-person indoor footage in a closet
+  garage: first-person indoor footage in the garage
+  hall: first-person indoor footage in the hall
+  kitchen: first-person indoor footage in the kitchen
+  laundry_room: first-person indoor footage in the laundry room
+  living_room: first-person indoor footage in the living room
+  office: first-person indoor footage in a home office

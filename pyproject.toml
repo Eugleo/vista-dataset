@@ -1,0 +1,27 @@
+[project]
+dependencies = [
+    "backoff",
+    "einops",
+    "imageio",
+    "openai",
+    "open_clip_torch",
+    "opencv-python",
+    "human-id",
+    "polars",
+    "pyarrow",
+    "pydantic",
+    "python-dotenv",
+    "scikit-learn",
+    "seaborn",
+    "torch",
+    "torchvision",
+    "typer",
+]
+name = "vlm-benchmark"
+version = "0.0.1"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[project.scripts]
+vlm = "evaluate:app"
