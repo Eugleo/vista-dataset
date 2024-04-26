@@ -78,6 +78,9 @@ class ViCLIP(nn.Module):
             state_dict = torch.load(pretrain, map_location="cpu")["model"]
             self.load_state_dict(state_dict)
 
+        for p in self.parameters():
+            p.requires_grad = False
+
         # Freeze weights
         if freeze_text:
             self.freeze_text()
@@ -96,6 +99,7 @@ class ViCLIP(nn.Module):
 
         return ret
 
+    @torch.no_grad()
     def forward(
         self, image, text, raw_text, idx, log_generation=None, return_sims=False
     ):
@@ -130,6 +134,7 @@ class ViCLIP(nn.Module):
             loss_vtc=loss_vtc,
         )
 
+    @torch.no_grad()
     def encode_vision(self, image, test=False):
         """encode image / videos as features.
 

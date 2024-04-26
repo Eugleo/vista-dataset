@@ -38,7 +38,7 @@ class CLIP(Encoder):
         self,
         model_name: str,
         pretrained: str,
-        cache_dir: str,
+        model_cache_dir: str,
         expected_n_frames: int = 32,
     ):
         super().__init__()
@@ -46,7 +46,7 @@ class CLIP(Encoder):
         self._model: open_clip.model.CLIP = open_clip.create_model(
             model_name=model_name,
             pretrained=pretrained,
-            cache_dir=cache_dir,
+            cache_dir=model_cache_dir,
             device="cuda" if torch.cuda.is_available() else "cpu",
         )  # type: ignore
         assert isinstance(self._model, open_clip.model.CLIP)
@@ -71,7 +71,7 @@ class CLIP(Encoder):
         return encoded
 
     @torch.inference_mode()
-    def encode_video(self, videos: torch.Tensor) -> torch.Tensor:
+    def encode_videos(self, videos: torch.Tensor) -> torch.Tensor:
         _, n_frames, *_ = videos.shape
         videos = rearrange(videos, "b t c h w -> (b t) c h w")
         encoded_frames = self._model.encode_image(videos, normalize=True)
@@ -81,10 +81,10 @@ class CLIP(Encoder):
         return window_embed
 
 
-class ViCLIP(VideoEncoder):
+class ViCLIP(Encoder):
     def __init__(self, model_cache_dir: str) -> None:
         super().__init__()
-        model_name = "ViCLIP-L_InternVid-FLT-10M.pth"
+        model_name = "ViClip-InternVid-10M-FLT.pth"
         path = Path(model_cache_dir) / "viclip" / model_name
         self._model, self._tokenizer = get_viclip(
             "l", path.absolute().as_posix(), frames_per_video=8
@@ -100,15 +100,14 @@ class ViCLIP(VideoEncoder):
         return result
 
     @torch.inference_mode()
-    def encode_video(self, videos: torch.Tensor) -> torch.Tensor:
+    def encode_videos(self, videos: torch.Tensor) -> torch.Tensor:
         _, n_frames, *_ = videos.shape
         assert n_frames >= self.expected_n_frames
         encoded_videos = self._model.get_vid_features(videos)
-
         return encoded_videos
 
 
-class S3D(nn.Module):
+class S3D(Encoder):
     def __init__(self, model_cache_dir: str) -> None:
         super().__init__()
         self._model = s3d.S3D(f"{model_cache_dir}/s3d/s3d_dict.npy", 512)
@@ -124,12 +123,12 @@ class S3D(nn.Module):
     def encode_text(self, x: List[str]) -> torch.Tensor:
         return self._model.text_module(x)["text_embedding"]
 
-    def _transform(self, img: torch.Tensor) -> torch.Tensor:
-        if img.dtype not in (torch.float16, torch.float32, torch.float64):
-            img = img.float() / 255
-        img = F.interpolate(img, mode="bicubic", size=self.target_size)
-        img = img.clamp(0, 1)
-        return img
+    def transform(self, frames: torch.Tensor) -> torch.Tensor:
+        if frames.dtype not in (torch.float16, torch.float32, torch.float64):
+            frames = frames.float() / 255
+        frames = F.interpolate(frames, mode="bicubic", size=self.target_size)
+        frames = frames.clamp(0, 1)
+        return frames
 
     @torch.inference_mode()
     def encode_videos(self, videos: torch.Tensor) -> torch.Tensor:

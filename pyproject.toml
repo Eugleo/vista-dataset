@@ -24,4 +24,4 @@ version = "0.0.1"
 where = ["src"]
 
 [project.scripts]
-vlm = "evaluate:app"
+vlm = "main:app"

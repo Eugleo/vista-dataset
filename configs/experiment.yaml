@@ -1,22 +1,22 @@
-datasets:
-  - habitat
+task_dir: tasks/habitat
+video_dir: videos/habitat
 tasks:
   - open_cabinet
-  - recognize_room
 models:
-  - kind: gpt
-    n_frames: 5
-  - kind: encoder
-    encoder: clip
-    head: cosine
-    n_frames: 32
   - kind: encoder
     encoder: viclip
-    head: cosine
+    heads:
+      - kind: cosine
+    batch_size: 1
   - kind: encoder
     encoder: s3d
-    head: cosine
-# Optional
-task_path: tasks
-video_path: videos
-output_path: experiments
+    heads:
+      - kind: cosine
+  # - kind: encoder
+  #   encoder: clip
+  #   heads:
+  #     - kind: cosine
+  #   hf_model: ViT-bigG-14/laion2b_s39b_b160k
+  #   n_frames: 32
+  # - kind: gpt
+  #   n_frames: 5

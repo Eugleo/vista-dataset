@@ -5,7 +5,7 @@ import logging
 import re
 from functools import partial
 from pathlib import Path
-from typing import Protocol
+from typing import Callable
 
 import backoff
 import cv2
@@ -13,74 +13,101 @@ import dotenv
 import openai
 import polars as pl
 import torch as t
-from torch.utils.data import DataLoader
+from rich.progress import track
+from torch.utils.data import DataLoader, IterableDataset
+from torchvision.io import read_video
 
 import vlm.utils as utils
-from vlm.datamodel import Task, Video, VideoDataset
 from vlm.encoders import VideoEncoder
 from vlm.heads import Head
+from vlm.objects import Model, Task, Video
 
 
-class Model(Protocol):
-    id: str
+class VideoDataset(IterableDataset):
+    def __init__(
+        self, videos: list[Video], tasks: list[Task], transforms: list[Callable] = []
+    ) -> None:
+        self._videos = videos
+        self._tasks = [task.id for task in tasks]
+        self._transforms = transforms
 
-    def predict(self, videos: list[Video], tasks: list[Task]) -> pl.DataFrame:
-        """Predict the probability of each label in each task for each video.
-        Returns a DataFrame with the following columns:
-        - task: The task ID
-        - head: The head ID
-        - video: The path to the video
-        - label: The label for which the probability is predicted
-        - prob: The predicted probability
-        - true_prob: The true probability (1.0 if the label is correct, 0.0 otherwise)
-        """
-        ...
+    def __len__(self):
+        return len(self._videos)
+
+    def __iter__(self):
+        for idx in range(len(self)):
+            yield self[idx]
+
+    def __getitem__(self, idx: int) -> dict:
+        video = self._videos[idx]
+        frames = read_video(video.path, pts_unit="sec", output_format="TCHW")[0]
+        for transform in self._transforms:
+            frames = transform(frames)
+        return {
+            "path": video.path,
+            "frames": frames,
+            "labels": video.labels,
+            "task_mask": t.tensor([task in video.labels for task in self._tasks]),
+        }
 
 
 class EncoderModel(Model):
-    def __init__(self, id: str, encoder: VideoEncoder, heads: dict[str, list[Head]]):
+    def __init__(
+        self,
+        id: str,
+        encoder: VideoEncoder,
+        heads: dict[str, list[Head]],
+        batch_size: int = 1,
+    ):
         self.id = id
         self._encoder = encoder
         self._heads = heads
+        self._batch_size = batch_size
 
     def _predict_batch(self, batch, tasks: list[Task]) -> pl.DataFrame:
-        videos = batch["frames"].to(self._encoder.device)
+        device = t.device("cuda" if t.cuda.is_available() else "cpu")
+        videos = batch["frames"].to(device)
         video_encodings = self._encoder.encode_videos(videos)
 
         results = []
-        for task in tasks:
-            mask = batch["task_mask"][:, task.id]
+        for i, task in enumerate(tasks):
+            mask = batch["task_mask"][:, i]
+
+            if not mask.any():
+                continue
             heads = self._heads[task.id]
-            results += [
-                {
-                    "task": task.id,
-                    "model": f"{self.id}_{head.id}",
-                    "video": video_path,
-                    "label": label,
-                    "prob": prob,
-                    "true_prob": 1.0 if true_labels[task.id] == label else 0.0,
-                }
-                for head in heads
-                for video_path, true_labels, label_probs in zip(
-                    batch["path"][mask],
-                    batch["labels"][mask],
+            for head in heads:
+                for video_path, true_label, label_probs in zip(
+                    [p for i, p in enumerate(batch["path"]) if mask[i]],
+                    [l for i, l in enumerate(batch["labels"][task.id]) if mask[i]],
                     head(video_encodings[mask]),
-                )
-                for label, prob in zip(task.labels, label_probs)
-            ]
+                ):
+                    for label, prob in zip(task.labels, label_probs):
+                        results.append(
+                            {
+                                "task": task.id,
+                                "model": f"{self.id}_{head.id}",
+                                "video": video_path,
+                                "label": label,
+                                "prob": prob,
+                                "true_prob": float(true_label == label),
+                            }
+                        )
         result = pl.DataFrame(results)
 
         return result
 
-    def predict(
-        self, videos: list[Video], tasks: list[Task], batch_size: int
-    ) -> pl.DataFrame:
+    def predict(self, videos: list[Video], tasks: list[Task]) -> pl.DataFrame:
+        device = t.device("cuda" if t.cuda.is_available() else "cpu")
+        self._encoder.to(device)
+
         subsample = partial(utils.subsample, n_frames=self._encoder.expected_n_frames)
         transforms = [subsample, self._encoder.transform]
         dataset = VideoDataset(videos, tasks, transforms)
-        dataloader = DataLoader(dataset, batch_size=batch_size)
+        dataloader = DataLoader(dataset, batch_size=self._batch_size)
+
         results = []
-        for batch in dataloader:
+        for batch in track(dataloader):
             results.append(self._predict_batch(batch, tasks))
         result = pl.concat(results)
 

@@ -1,31 +1,24 @@
 # Quick Start
 
-Add the following packages into your virtual environment:
-
-```
-pip install imageio av seaborn python-dotenv openai scikit-learn
-```
 
 ## Models
 
-If you want to test S3D, download the required files into your cache directory (default: `.cache`).
+If you want to test S3D, download the required files into the cache directory (default: `.cache/encoders/s3d`).
 
 ```sh
-cd .cache
-wget https://www.rocq.inria.fr/cluster-willow/amiech/howto100m/s3d_howto100m.pth
-wget https://www.rocq.inria.fr/cluster-willow/amiech/howto100m/s3d_dict.npy
+mkdir -p .cache/encoders/s3d
+wget -P .cache/encoders/s3d https://www.rocq.inria.fr/cluster-willow/amiech/howto100m/s3d_howto100m.pth
+wget -P .cache/encoders/s3d https://www.rocq.inria.fr/cluster-willow/amiech/howto100m/s3d_dict.npy
 ```
 
 If you want to test ViCLIP, you should put `ViCLIP-L_InternVid-FLT-10M.pth` to the cache directory, too. You can get the file [here](https://huggingface.co/OpenGVLab/ViCLIP/tree/main).
 
-If you want to test GPT-4V, you should put your API key into an .env file in the project-root:
+If you want to test GPT-4V, you should put your API key into an `.env` file in the project root:
 
 ```
 # .env
 OPENAI_API_KEY=
 ```
-
-If you want to test CLIP, refer to the main repo README.
 
 ## Running the evaluator
 

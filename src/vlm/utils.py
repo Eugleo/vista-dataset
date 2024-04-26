@@ -9,8 +9,8 @@ def serialize_dict(d) -> str:
 
 
 def subsample(x: t.Tensor, n_frames: int) -> t.Tensor:
-    n_frames, *_ = x.shape
-    step = n_frames // n_frames
+    total_frames, *_ = x.shape
+    step = total_frames // n_frames
     x = x[::step, ...][:n_frames, ...]
     return x
 

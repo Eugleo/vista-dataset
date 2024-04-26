@@ -19,7 +19,7 @@ prompt_gpt: |
   The footage was taken in a living room, though a kitchen was briefly visible, too.
 
   # TASK
-prompt_base: first-person indoor footage
+prompt_baseline: first-person indoor footage
 label_prompts:
   bathroom: first-person indoor footage in the bathroom
   bedroom: first-person indoor footage in the bedroom
