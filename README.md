@@ -1,66 +1,130 @@
-# Quick Start
+# VLM Benchmark
+
+This repo hosts the benchmark for VLM capabilities relevant for using VLMs as process supervisors.
+
+## Quickstart
+
+1. Clone the repo, create a virtual environment, install packages with
+
+    ```shell
+    pip install --editable .
+    ```
+
+2. Do one-time setup for the models you want to test (see section Models below)
+3. Define tasks and video labels (see section Tasks below)
+4. Define an experiment config file. You can use the one below as an inspiration
+    ```yaml
+    # Directory task definitions (yaml) and task data (json) are stored
+    task_dir: tasks/habitat
+    # Directory where the videos are stored
+    # In task data, the video path is relative to this directory
+    video_dir: videos/habitat
+    # The tasks to test
+    # The evaluation script will look for [task_name].yaml in task_dir
+    tasks:
+    - open_cabinet
+    # The models to test
+    models:
+    # We support two kinds of models: encoder and gpt
+    - kind: encoder
+        # Which encoder to use
+        # We support: viclip, s3d, clip
+        encoder: viclip
+        # Which head(s) to use (currently only cosine is supported)
+        heads:
+        - kind: cosine
+        # Optional, is 8 by default
+        batch_size: 16
+    - kind: encoder
+        encoder: s3d
+        heads:
+        - kind: cosine
+    - kind: encoder
+        encoder: clip
+        heads:
+        - kind: cosine
+        # CLIP models require the specific model that is to be used
+        hf_model: ViT-bigG-14/laion2b_s39b_b160k
+        # CLIP models also require the number of frames to average over
+        n_frames: 32
+    # - kind: gpt
+    #   # GPT models require the number of frames that are used as input
+    #   n_frames: 5
+    ```
+5. Run the experiment by running
+    ```shell
+    vlm evaluate [path to config file]
+    ```
+    This will create a new folder in `output_dir`, and inside of it, a `results.csv` with results for all the tasks, models, and videos.
+
+6. Optionally generate the plots by running
+    ```shell
+    vlm plot --experiment-dir [...] [optional: experiment name]
+    ```
+    If no experiment name is given, the latest experiment in `experiment-dir` is loaded by default. This creates a folder `plots` inside of the experiment's directory (where `results.csv` is).
 
 
-## Models
+### Models
 
-If you want to test S3D, download the required files into the cache directory (default: `.cache/encoders/s3d`).
+You will have to manually download a few files in order to test specific models.
 
-```sh
+**S3D**: Run
+
+```shell
 mkdir -p .cache/encoders/s3d
 wget -P .cache/encoders/s3d https://www.rocq.inria.fr/cluster-willow/amiech/howto100m/s3d_howto100m.pth
 wget -P .cache/encoders/s3d https://www.rocq.inria.fr/cluster-willow/amiech/howto100m/s3d_dict.npy
 ```
 
-If you want to test ViCLIP, you should put `ViCLIP-L_InternVid-FLT-10M.pth` to the cache directory, too. You can get the file [here](https://huggingface.co/OpenGVLab/ViCLIP/tree/main).
+**ViCLIP**: Download `ViCLIP-L_InternVid-FLT-10M.pth` from [HuggingFace](https://huggingface.co/OpenGVLab/ViCLIP/tree/main) and put it into `.cache/encoders/viclip`.
 
-If you want to test GPT-4V, you should put your API key into an `.env` file in the project root:
+**CLIP**: Nothing needs to be done, CLIP will get downloaded automatically.
 
-```
-# .env
+**GPT-4V**: Put your OpenAI API key into `.env` file in the project root:
+
+```shell
+# inside .env
 OPENAI_API_KEY=
 ```
 
-## Running the evaluator
+### Tasks
 
-Once your models and data are in place, you can set up the evaluation experinemt in the `run_evals.sh` script. By default, this is what the script looks like:
+A task is one multiclass classification problem. The definition of a task `[task id]` has to be stored in `[task dir]/[task id].yaml`, and looks like this:
 
-```bash
-models=("clip" "viclip" "s3d" "gpt4")
+```yaml
+# in [task dir]/open_cabinet.yaml
 
-for model in "${models[@]}"; do
-    python src/evaluation/evaluator.py -t data/evaluation/data.csv -m "$model" -r logit,projection -a 0.0,0.25,0.50,0.75,1.0 -n 32 -e standardized_improved --standardize
-done
+# Optional, only needed for the GPT4-V model
+prompt_gpt: [...]
+# Optional, only needed for the projection head that we currently don't support
+prompt_baseline: a container
+# Required
+label_prompts:
+    # label id (used in the task data, see below): label description (given to the evaluation head / to gpt as a part of the prompt)
+    actively_opening: a video where a kitchen cabinet is being opened
+    observing_opened: a video where we observe an open kitchen cabinet
+    observing_closed: a video where we observe a closed kitchen cabinet
+    actively_closing: a video where a kitchen cabinet is being closed
 ```
 
-This will run the evaluator for each model in `models`. The evaluator will then load the given model (`-m`) and run a set of experiments on it, one experiment for each combination of hyperparameters. Each experiment will generate its own confusion matrix, saved by default in `out`. The hyperparameters are:
-    - method to compute reward (`-r`), used for non-gpt models
-    - alpha to use with the projection reward (`a`)
-    - number of frames to average over for the clip model (`-n`)
-    - whether to standardize the rewards or not (`--standardize`)
-    - the experiment name that is prefixed to all the generated matrices (`-e`)
+Each task will have some labeled data. The data (videos) are stored in a separate directory, but the labels are stored with the task definition in `task_dir`. The data file for task `[task id]` have to be stored in `[task id]_data.json`. For example:
 
-One you edit `run_evals.sh` with the hyperparameters you want to use, you can run it like this:
-
-```shell
-sbatch run_evals.sh
+```json
+// [task dir]/open_cabinet_data.json
+[
+    {
+        "path": "open_cabinet/cabinet_close_1.mp4",
+        "label": "actively_closing"
+    },
+    {
+        "path": "open_cabinet/cabinet_open_1.mp4",
+        "label": "actively_opening"
+    },
+    {
+        "path": "open_cabinet/cabinet_observe_opened_1.mp4",
+        "label": "observing_opened"
+    }
+]
 ```
 
-## Architecture
-
-This is only a high-level overview, ask Evžen for details. Do not spend too much time trying to figure out things on your own :-)
-
-The evaluator loads a model. All the models (but GPT-4V) have a common interface called `Encoder`. Encoders can encode both text and videos and are specified in `src/vlmrm/reward/encoders.py`. If you want to add another model to eval, implementing the Encoder interface for it would be the place to start.
-
-Encoders expect the video to come pre-segmented into pieces called windows. Windows can overlap, but have all the same length, which we call `n_frames` below. In addition, because the class is used by vlmrm, the videos are expected to come from multiple episodes. The complete type of `encode_videos` is then:
-
-```haskell
-encode_video :: (n_frames n_windows n_episodes c h w) -> (n_windows n_episodes embed_dim)
-```
-
-Once we have the encodings for each window, we can pass them to a `Reward` function — this is again an interface which you'd need to implement if you wanted to support additional reward functions. It is specified in `src/vlmrm/reward/rewards.py`. A reward is a stateful function that computes a reward for every window it is passed; i.e. its type is:
-
-```haskell
-reward :: (n_windows n_episodes embed_dim) -> (n_windows n_episodes)
-```
-
-I said _stateful_ function since, by default, the reward needs to be initialized first with the target label wrt which the reward should be computed. This is again caused by this interface being used in vlmrm. Feel free to implement your own reward function that get the target label on each call (or see `projection_reward` and `logit_reward` in `src/vlmrm/reward/rewards.py`).
+The video paths are taken relative to the `video_dir`, which is specified in the experiment config. The labels have to match one of the label ids in the keys of the `label_prompts` from the task definiton.
