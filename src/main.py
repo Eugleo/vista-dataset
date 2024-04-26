@@ -20,7 +20,7 @@ def evaluate(config: Annotated[str, typer.Argument()]):
 @app.command()
 def plot(
     experiment: Annotated[Optional[str], typer.Argument()] = None,
-    interactive: Annotated[bool, typer.Option()] = True,
+    interactive: Annotated[bool, typer.Option()] = False,
     experiment_dir: Annotated[
         str, typer.Option()
     ] = "/data/datasets/vlm_benchmark/experiments",

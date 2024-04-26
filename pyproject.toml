@@ -1,9 +1,11 @@
 [project]
 dependencies = [
+    "av",
     "backoff",
     "einops",
     "human-id",
     "kaleido",
+    "matplotlib",
     "open_clip_torch",
     "openai",
     "opencv-python",

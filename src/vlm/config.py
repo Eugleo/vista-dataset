@@ -3,6 +3,7 @@ import time
 from pathlib import Path
 from typing import Callable, Literal, Optional
 
+import torch as t
 import yaml
 from human_id import generate_id
 from pydantic import BaseModel, ValidationInfo, field_validator, model_validator
@@ -30,6 +31,8 @@ class HeadConfig(BaseModel):
         # if self.kind == "projection":
         #     assert self.alpha is not None
         #     return ProjectionHead.for_task(task, encoder, self.alpha)
+        device = "cuda" if t.cuda.is_available() else "cpu"
+        encoder.to(device)
         if self.kind == "cosine":
             return CosineHead.for_task(task, encoder)
         else:
