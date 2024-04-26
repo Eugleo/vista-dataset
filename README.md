@@ -90,7 +90,7 @@ label_prompts:
 
 Each task will have some labeled data. The data (videos) are stored in a separate directory, but the labels are stored with the task definition in `task_dir`. The data file for task `[task id]` have to be stored in `[task id]_data.json`. For example:
 
-```json
+```js
 // [task dir]/open_cabinet_data.json
 [
     {
