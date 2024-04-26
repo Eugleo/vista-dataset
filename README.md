@@ -29,31 +29,31 @@ This repo hosts the benchmark for VLM capabilities relevant for using VLMs as pr
     - open_cabinet
     # The models to test
     models:
-    # We support two kinds of models: encoder and gpt
-    - kind: encoder
-        # Which encoder to use
-        # We support: viclip, s3d, clip
-        encoder: viclip
-        # Which head(s) to use (currently only cosine is supported)
-        heads:
-        - kind: cosine
-        # Optional, is 8 by default
-        batch_size: 16
-    - kind: encoder
-        encoder: s3d
-        heads:
-        - kind: cosine
-    - kind: encoder
-        encoder: clip
-        heads:
-        - kind: cosine
-        # CLIP models require the specific model that is to be used
-        hf_model: ViT-bigG-14/laion2b_s39b_b160k
-        # CLIP models also require the number of frames to average over
-        n_frames: 32
-    # - kind: gpt
-    #   # GPT models require the number of frames that are used as input
-    #   n_frames: 5
+        # We support two kinds of models: encoder and gpt
+        - kind: encoder
+            # Which encoder to use
+            # We support: viclip, s3d, clip
+            encoder: viclip
+            # Which head(s) to use (currently only cosine is supported)
+            heads:
+            - kind: cosine
+            # Optional, is 8 by default
+            batch_size: 16
+        - kind: encoder
+            encoder: s3d
+            heads:
+            - kind: cosine
+        - kind: encoder
+            encoder: clip
+            heads:
+            - kind: cosine
+            # CLIP models require the specific model that is to be used
+            hf_model: ViT-bigG-14/laion2b_s39b_b160k
+            # CLIP models also require the number of frames to average over
+            n_frames: 32
+        # - kind: gpt
+        #   # GPT models require the number of frames that are used as input
+        #   n_frames: 5
     ```
 5. Run the experiment by running
     ```shell
