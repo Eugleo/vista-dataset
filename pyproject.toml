@@ -2,14 +2,15 @@
 dependencies = [
     "backoff",
     "einops",
-    "openai",
-    "open_clip_torch",
-    "opencv-python",
     "human-id",
+    "kaleido",
+    "open_clip_torch",
+    "openai",
+    "opencv-python",
+    "pandas",
+    "plotly",
     "polars",
     "pyarrow",
-    "plotly",
-    "kaleido",
     "pydantic",
     "python-dotenv",
     "scikit-learn",
@@ -19,6 +20,10 @@ dependencies = [
 ]
 name = "vlm-benchmark"
 version = "0.0.1"
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
 where = ["src"]
