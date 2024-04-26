@@ -21,7 +21,9 @@ def evaluate(config: Annotated[str, typer.Argument()]):
 def plot(
     experiment: Annotated[Optional[str], typer.Argument()] = None,
     interactive: Annotated[bool, typer.Option()] = True,
-    experiment_dir: Annotated[str, typer.Option()] = "experiments",
+    experiment_dir: Annotated[
+        str, typer.Option()
+    ] = "/data/datasets/vlm_benchmark/experiments",
 ):
     if experiment is None:
         experiments = Path(experiment_dir).iterdir()

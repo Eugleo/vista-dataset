@@ -150,8 +150,8 @@ class ExperimentConfig(BaseModel):
 
     video_dir: str
     task_dir: str
-    cache_dir: str = ".cache"
-    output_dir: str = "experiments"
+    cache_dir: str = "/data/datasets/vlm_benchmark/.cache"
+    output_dir: str = "/data/datasets/vlm_benchmark/experiments"
 
     @field_validator("video_dir", mode="after")
     def video_dir_exists(cls, v: str, _: ValidationInfo):
