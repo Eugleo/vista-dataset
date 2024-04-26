@@ -14,11 +14,15 @@ This repo hosts the benchmark for VLM capabilities relevant for using VLMs as pr
 3. Define tasks and video labels (see section Tasks below)
 4. Define an experiment config file. You can use the one below as an inspiration
     ```yaml
+    # Directory where encoders (viclip, ...) and cache are stored
+    cache_dir: /data/datasets/vlm_benchmark/cache
+    # Directory where experiment results will be saved
+    output_dir: /data/datasets/vlm_benchmark/experiments
     # Directory task definitions (yaml) and task data (json) are stored
-    task_dir: tasks/habitat
+    task_dir: /data/datasets/vlm_benchmark/tasks/habitat
     # Directory where the videos are stored
     # In task data, the video path is relative to this directory
-    video_dir: videos/habitat
+    video_dir: /data/datasets/vlm_benchmark/videos/habitat
     # The tasks to test
     # The evaluation script will look for [task_name].yaml in task_dir
     tasks:
