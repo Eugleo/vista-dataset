@@ -4,29 +4,30 @@ This repo hosts the benchmark for VLM capabilities relevant for using VLMs as pr
 
 ## Quickstart
 
-1. Clone the repo, create a virtual environment, install packages with
+If you're running this on CAIS, you don't need to download the models (unless you change the default cache directory). Otherwise first do the setup in section Models below.
+
+1. Clone the repo, create a virtual environment, install dependencies with
 
     ```shell
     pip install --editable .
     ```
-
-2. Do one-time setup for the models you want to test (see section Models below)
-3. Define tasks and video labels (see section Tasks below)
-4. Define an experiment config file. You can use the one below as an inspiration
+2. Upload your video files somewhere. Recommended directory is `/data/datasets/vlm_benchmark/videos/[your dataset name]`.
+3. Add task definitons and labeled task data somewhere (see section Tasks below). Recommended directory for this is `/data/datasets/vlm_benchmark/tasks/[your dataset name]`.
+4. Define an experiment config file in `configs/`. You can use the one below as an inspiration
     ```yaml
-    # Directory where encoders (viclip, ...) and cache are stored
-    cache_dir: /data/datasets/vlm_benchmark/cache
-    # Directory where experiment results will be saved
+    # Optional: Directory where encoders (viclip, ...) and cache are stored
+    cache_dir: /data/datasets/vlm_benchmark/.cache
+    # Optional: Directory where experiment results will be saved
     output_dir: /data/datasets/vlm_benchmark/experiments
     # Directory task definitions (yaml) and task data (json) are stored
     task_dir: /data/datasets/vlm_benchmark/tasks/habitat
     # Directory where the videos are stored
-    # In task data, the video path is relative to this directory
+    # In labeled task data, the video path is taken relative to this directory
     video_dir: /data/datasets/vlm_benchmark/videos/habitat
     # The tasks to test
-    # The evaluation script will look for [task_name].yaml in task_dir
+    # The script will look for [task_name].yaml in task_dir
     tasks:
-    - open_cabinet
+        - open_cabinet
     # The models to test
     models:
         # We support two kinds of models: encoder and gpt
@@ -67,31 +68,7 @@ This repo hosts the benchmark for VLM capabilities relevant for using VLMs as pr
     ```
     If no experiment name is given, the latest experiment in `experiment-dir` is loaded by default. This creates a folder `plots` inside of the experiment's directory (where `results.csv` is).
 
-
-### Models
-
-You will have to manually download a few files in order to test specific models.
-
-**S3D**: Run
-
-```shell
-mkdir -p .cache/encoders/s3d
-wget -P .cache/encoders/s3d https://www.rocq.inria.fr/cluster-willow/amiech/howto100m/s3d_howto100m.pth
-wget -P .cache/encoders/s3d https://www.rocq.inria.fr/cluster-willow/amiech/howto100m/s3d_dict.npy
-```
-
-**ViCLIP**: Download `ViCLIP-L_InternVid-FLT-10M.pth` from [HuggingFace](https://huggingface.co/OpenGVLab/ViCLIP/tree/main) and put it into `.cache/encoders/viclip`.
-
-**CLIP**: Nothing needs to be done, CLIP will get downloaded automatically.
-
-**GPT-4V**: Put your OpenAI API key into `.env` file in the project root:
-
-```shell
-# inside .env
-OPENAI_API_KEY=
-```
-
-### Tasks
+## Tasks
 
 A task is one multiclass classification problem. The definition of a task `[task id]` has to be stored in `[task dir]/[task id].yaml`, and looks like this:
 
@@ -132,3 +109,27 @@ Each task will have some labeled data. The data (videos) are stored in a separat
 ```
 
 The video paths are taken relative to the `video_dir`, which is specified in the experiment config. The labels have to match one of the label ids in the keys of the `label_prompts` from the task definiton.
+
+
+## Models
+
+If you want to run off CAIS, you will have to download a few files manually. Assuming your cache directory is `.cache`...
+
+**S3D**: Run
+
+```shell
+mkdir -p .cache/encoders/s3d
+wget -P .cache/encoders/s3d https://www.rocq.inria.fr/cluster-willow/amiech/howto100m/s3d_howto100m.pth
+wget -P .cache/encoders/s3d https://www.rocq.inria.fr/cluster-willow/amiech/howto100m/s3d_dict.npy
+```
+
+**ViCLIP**: Download `ViCLIP-L_InternVid-FLT-10M.pth` from [HuggingFace](https://huggingface.co/OpenGVLab/ViCLIP/tree/main) and put it into `.cache/encoders/viclip`.
+
+**CLIP**: Nothing needs to be done, CLIP will get downloaded automatically.
+
+**GPT-4V**: Put your OpenAI API key into `.env` file in the project root:
+
+```shell
+# inside .env
+OPENAI_API_KEY=
+```
