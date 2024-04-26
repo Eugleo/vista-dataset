@@ -82,14 +82,17 @@ class EncoderModel(Model):
                     [l for i, l in enumerate(batch["labels"][task.id]) if mask[i]],
                     head(video_encodings[mask]),
                 ):
-                    for label, prob in zip(task.labels, label_probs):
+                    for i, (label, prob) in enumerate(zip(task.labels, label_probs)):
                         results.append(
                             {
                                 "task": task.id,
                                 "model": f"{self.id}_{head.id}",
                                 "video": video_path,
                                 "label": label,
+                                "label_idx": i,
                                 "prob": prob,
+                                "true_label": true_label,
+                                "true_label_idx": task.labels.index(true_label),
                                 "true_prob": float(true_label == label),
                             }
                         )
