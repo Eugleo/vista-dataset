@@ -4,6 +4,7 @@
 logs/
 run.sh
 plot.sh
+*.code-workspace
 
 ### macOS ###
 # General
