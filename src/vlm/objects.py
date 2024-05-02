@@ -58,10 +58,6 @@ class Experiment:
     output_dir: str
 
     def run(self) -> pl.DataFrame:
-        output_dir = Path(self.output_dir) / self.id
-        output_dir.mkdir(exist_ok=True, parents=True)
-        (output_dir / "config.yaml").write_text(Path(self.config_file).read_text())
-
         results: list[pl.DataFrame] = []
         for get_model in self.models:
             model = get_model()
@@ -70,5 +66,8 @@ class Experiment:
             results.append(result)
         result = pl.concat(results)
 
+        output_dir = Path(self.output_dir) / self.id
+        output_dir.mkdir(exist_ok=True, parents=True)
+        (output_dir / "config.yaml").write_text(Path(self.config_file).read_text())
         result.write_csv(output_dir / "results.csv")
         return result

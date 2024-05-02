@@ -76,26 +76,28 @@ class EncoderModel(Model):
             if not mask.any():
                 continue
             heads = self._heads[task.id]
-            for head in heads:
+
+            results += [
+                {
+                    "task": task.id,
+                    "model": self.id,
+                    "metadata": {"head": head.id, "encoder": self._encoder.metadata},
+                    "video": video_path,
+                    "label": label,
+                    "label_idx": i,
+                    "prob": prob,
+                    "true_label": true_label,
+                    "true_label_idx": task.labels.index(true_label),
+                    "true_prob": float(true_label == label),
+                }
+                for head in heads
                 for video_path, true_label, label_probs in zip(
                     [p for i, p in enumerate(batch["path"]) if mask[i]],
                     [l for i, l in enumerate(batch["labels"][task.id]) if mask[i]],
                     head(video_encodings[mask]),
-                ):
-                    for i, (label, prob) in enumerate(zip(task.labels, label_probs)):
-                        results.append(
-                            {
-                                "task": task.id,
-                                "model": f"{self.id}_{head.id}",
-                                "video": video_path,
-                                "label": label,
-                                "label_idx": i,
-                                "prob": prob,
-                                "true_label": true_label,
-                                "true_label_idx": task.labels.index(true_label),
-                                "true_prob": float(true_label == label),
-                            }
-                        )
+                )
+                for i, (label, prob) in enumerate(zip(task.labels, label_probs))
+            ]
         result = pl.DataFrame(results)
 
         return result
@@ -222,13 +224,17 @@ The format for your answers should be:
                 {
                     "task": task.id,
                     "model": self.id,
+                    "metadata": {"n_frames": self._n_frames},
                     "video": path,
                     "label": label,
+                    "label_idx": label_idx,
                     # All labels should be present in the cache by construction
                     "prob": cache[path][label],
+                    "true_label": item["labels"][task.id],
+                    "true_label_idx": task.labels.index(item["labels"][task.id]),
                     "true_prob": 1.0 if item["labels"][task.id] == label else 0.0,
                 }
-                for label in task.labels
+                for label_idx, label in enumerate(task.labels)
             ]
         )
 
