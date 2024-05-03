@@ -46,7 +46,7 @@ class VideoDataset(IterableDataset):
         return {
             "path": video.path,
             "frames": frames,
-            "labels": video.labels,
+            "labels": {task: "" for task in self._tasks} | video.labels,
             "task_mask": t.tensor([task in video.labels for task in self._tasks]),
         }
 
@@ -75,7 +75,6 @@ class EncoderModel(Model):
 
             if not mask.any():
                 continue
-            heads = self._heads[task.id]
 
             results += [
                 {
@@ -90,7 +89,7 @@ class EncoderModel(Model):
                     "true_label_idx": task.labels.index(true_label),
                     "true_prob": float(true_label == label),
                 }
-                for head in heads
+                for head in self._heads[task.id]
                 for video_path, true_label, label_probs in zip(
                     [p for i, p in enumerate(batch["path"]) if mask[i]],
                     [l for i, l in enumerate(batch["labels"][task.id]) if mask[i]],

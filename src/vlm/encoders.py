@@ -124,6 +124,7 @@ class S3D(Encoder):
 
         self.target_size = (224, 224)
         self.expected_n_frames = 32
+        self.metadata = {}
 
     @torch.inference_mode()
     def encode_text(self, x: List[str]) -> torch.Tensor:

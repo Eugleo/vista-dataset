@@ -69,5 +69,5 @@ class Experiment:
         output_dir = Path(self.output_dir) / self.id
         output_dir.mkdir(exist_ok=True, parents=True)
         (output_dir / "config.yaml").write_text(Path(self.config_file).read_text())
-        result.write_csv(output_dir / "results.csv")
+        result.write_json(output_dir / "results.json")
         return result

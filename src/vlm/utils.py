@@ -12,6 +12,8 @@ def serialize_dict(d) -> str:
 
 def subsample(x: t.Tensor, n_frames: int) -> t.Tensor:
     total_frames, *_ = x.shape
+    if total_frames <= n_frames:
+        raise ValueError("Video is too short to subsample.")
     step = total_frames // n_frames
     x = x[::step, ...][:n_frames, ...]
     return x

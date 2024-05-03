@@ -1,11 +1,24 @@
 tasks:
+  - find_room
+  - move_can
   - open_cabinet
   - open_container
   - open_drawer
   - open_fridge
+  - recognize_apple_container
+  - recognize_can_container
   - recognize_container
+  - recognize_hammer_container
+  - recognize_large_object
+  - recognize_large_object_in_context
   - recognize_room_model
   - recognize_room_scan
+  - recognize_small_object
+  - recognize_small_object_in_container
+  - walk_to
+  - walk_to_chair
+  - walk_to_plant
+  - walk_to_tv
 models:
   - kind: encoder
     encoder: clip

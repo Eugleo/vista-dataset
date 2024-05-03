@@ -36,7 +36,7 @@ def plot(
         TextColumn("[progress.description]{task.description}"),
     ) as progress:
         progress.add_task("Creating plots...")
-        df = pl.read_csv(dir / "results.csv")
+        df = pl.read_json(dir / "results.json")
 
         predictions = utils.get_predictions(df)
         metrics = predictions.group_by(["task", "model"]).agg(
