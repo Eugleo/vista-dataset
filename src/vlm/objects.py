@@ -11,8 +11,8 @@ class Task:
     id: str
     label_prompts: dict[str, str]
 
-    prompt_gpt: Optional[str]
-    prompt_baseline: Optional[str]
+    prompt_gpt: Optional[str] = None
+    prompt_baseline: Optional[str] = None
 
     @property
     def labels(self) -> list[str]:
