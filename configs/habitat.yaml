@@ -1,5 +1,11 @@
 tasks:
   - open_cabinet
+  - open_container
+  - open_drawer
+  - open_fridge
+  - recognize_container
+  - recognize_room_model
+  - recognize_room_scan
 models:
   - kind: encoder
     encoder: clip
@@ -7,6 +13,12 @@ models:
       - kind: cosine
     hf_model: ViT-bigG-14/laion2b_s39b_b160k
     n_frames: 32
+  - kind: encoder
+    encoder: clip
+    heads:
+      - kind: cosine
+    hf_model: ViT-bigG-14/laion2b_s39b_b160k
+    n_frames: 4
   - kind: encoder
     encoder: viclip
     heads:
