@@ -11,8 +11,8 @@ If you're running this on CAIS, you don't need to download the models (unless yo
     ```shell
     pip install --editable .
     ```
-2. Upload your video files somewhere. Recommended directory is `/data/datasets/vlm_benchmark/videos/[your dataset name]`.
-3. Add task definitons and labeled task data somewhere (see section Tasks below). Recommended directory for this is `/data/datasets/vlm_benchmark/tasks/[your dataset name]`.
+2. Move your video files into a local directory. On the CAIS cluster, the recommended directory for video files is `/data/datasets/vlm_benchmark/videos/[your dataset name]`. You can choose the folder structure within that directory as you like, for a recommendation check out `/data/datasets/vlm_benchmark/videos/habitat`.
+3. Create task definitons and labeled task data in a local directory (see section Tasks below). On the CAIS cluster, the recommended directory for tasks and their data is `/data/datasets/vlm_benchmark/tasks/[your dataset name]`. All files should be placed into this directory, without any additional folder structure. The naming scheme is also important. Check out the section Tasks below and see `/data/datasets/vlm_benchmark/tasks/habitat` for an example.
 4. Define an experiment config file in `configs/`. You can use the one below as an inspiration
     ```yaml
     # Optional: Directory where encoders (viclip, ...) and cache are stored
