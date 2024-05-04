@@ -45,41 +45,49 @@ def plot_habitat(
             accuracy=utils.compute_metric(utils.accuracy)
         )
 
+        # groups = {
+        #     "Proximity": ["walk_to_chair", "walk_to_plant", "walk_to_tv"],
+        #     "Rooms": ["recognize_room_model", "recognize_room_scan"],
+        #     "Heading into a Specific Room": ["find_room"],
+        #     "Objects": [
+        #         "recognize_small_object",
+        #         "recognize_large_object",
+        #     ],
+        #     "Large Objects in a Room": ["recognize_large_object_in_context"],
+        #     "Containers": [
+        #         "recognize_apple_container",
+        #         "recognize_can_container",
+        #         "recognize_hammer_container",
+        #     ],
+        #     "Small Objects in a Container": ["recognize_small_object_in_container"],
+        #     "Container State": ["recognize_container"],
+        #     "Opening Motion": ["open_cabinet", "open_fridge", "open_drawer"],
+        #     "Walking to a concrete Object": ["walk_to"],
+        #     "Moving an object From and To a Specific Container": ["move_can"],
+        #     "Handling a Container": [
+        #         "recognize_apple_container",
+        #         "recognize_can_container",
+        #         "recognize_hammer_container",
+        #         "recognize_container",
+        #         "open_cabinet",
+        #         "open_fridge",
+        #         "open_drawer",
+        #     ],
+        #     "Proximity Tasks": [
+        #         "recognize_large_object",
+        #         "walk_to_chair",
+        #         "walk_to_plant",
+        #         "walk_to_tv",
+        #         "walk_to",
+        #     ],
+        # }
         groups = {
-            "Proximity": ["walk_to_chair", "walk_to_plant", "walk_to_tv"],
-            "Rooms": ["recognize_room_model", "recognize_room_scan"],
-            "Heading into a Specific Room": ["find_room"],
-            "Objects": [
-                "recognize_small_object",
-                "recognize_large_object",
-            ],
-            "Large Objects in a Room": ["recognize_large_object_in_context"],
-            "Containers": [
-                "recognize_apple_container",
-                "recognize_can_container",
-                "recognize_hammer_container",
-            ],
-            "Small Objects in a Container": ["recognize_small_object_in_container"],
-            "Container State": ["recognize_container"],
-            "Opening Motion": ["open_cabinet", "open_fridge", "open_drawer"],
-            "Walking to a concrete Object": ["walk_to"],
-            "Moving an object From and To a Specific Container": ["move_can"],
-            "Handling a Container": [
-                "recognize_apple_container",
-                "recognize_can_container",
-                "recognize_hammer_container",
-                "recognize_container",
-                "open_cabinet",
+            "Opening a Container": [
                 "open_fridge",
                 "open_drawer",
-            ],
-            "Proximity Tasks": [
-                "recognize_large_object",
-                "walk_to_chair",
-                "walk_to_plant",
-                "walk_to_tv",
-                "walk_to",
-            ],
+                "open_drawer_A",
+                "open_cabinet",
+            ]
         }
         for name, tasks in groups.items():
             baselines = {

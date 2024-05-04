@@ -226,10 +226,9 @@ The format for your answers should be:
                     "label": label,
                     "label_idx": label_idx,
                     # All labels should be present in the cache by construction
-                    "prob": cache[path][label],
+                    "score": cache[path][label],
                     "true_label": item["labels"][task.id],
                     "true_label_idx": task.labels.index(item["labels"][task.id]),
-                    "true_prob": 1.0 if item["labels"][task.id] == label else 0.0,
                 }
                 for label_idx, label in enumerate(task.labels)
             ]
