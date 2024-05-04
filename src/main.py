@@ -39,7 +39,7 @@ def plot_habitat(
         progress.add_task("Creating plots...")
         df = pl.read_json(dir / "results.json")
 
-        predictions = utils.get_predictions(df)
+        predictions = utils.get_predictions(df, standardize=True)
         metrics = predictions.group_by(["task", "model"]).agg(
             accuracy=utils.compute_metric(utils.accuracy)
         )

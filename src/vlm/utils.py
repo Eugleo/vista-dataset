@@ -4,6 +4,7 @@ import plotly.express as px
 import polars as pl
 import sklearn.metrics as skm
 import torch as t
+from polars import col as c
 
 
 def serialize_dict(d) -> str:
@@ -29,10 +30,17 @@ def mcc(group: pl.Series):
     )
 
 
-def get_predictions(df: pl.DataFrame):
+def get_predictions(df: pl.DataFrame, standardize: bool = False) -> pl.DataFrame:
+    if standardize:
+        scores_stats = df.groupby(["model", "task"]).agg(
+            c("score").mean().alias("mean_score"), c("score").std().alias("std_score")
+        )
+        df = df.join(scores_stats, on=["model", "task"]).with_columns(
+            score=(c("score") - c("mean_score")) / c("std_score")
+        )
     return df.group_by(["video", "task", "model"]).agg(
         # Extract the label with the highest probability
-        pl.col("label").sort_by("prob").last(),
+        pl.col("label").sort_by("score").last(),
         pl.col("true_label").first(),
     )
 
