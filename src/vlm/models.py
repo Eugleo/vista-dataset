@@ -139,13 +139,13 @@ The format for your answers should be:
 
     @staticmethod
     def _frames_to_b64(frames: t.Tensor):
+        frames = einops.rearrange(frames, "t c h w -> t h w c")
         frames_np = frames.numpy()
         # Convert RGB to BGR
         frames_np = frames_np[:, :, :, ::-1]
 
         b64_frames = []
         for frame in frames_np:
-            frame = einops.rearrange(frame, "c h w -> h w c")
             _, buffer = cv2.imencode(".jpg", frame)
             b64_frames.append(base64.b64encode(buffer).decode("utf-8"))  # type: ignore
 
