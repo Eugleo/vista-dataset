@@ -3,6 +3,8 @@
 
 logs/
 experiments/
+videos/
+tasks/
 run.sh
 plot.sh
 *.code-workspace
