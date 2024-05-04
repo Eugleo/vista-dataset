@@ -32,10 +32,10 @@ def mcc(group: pl.Series):
 
 def get_predictions(df: pl.DataFrame, standardize: bool = False) -> pl.DataFrame:
     if standardize:
-        scores_stats = df.groupby(["model", "task"]).agg(
+        scores_stats = df.groupby(["model", "task", "label"]).agg(
             c("score").mean().alias("mean_score"), c("score").std().alias("std_score")
         )
-        df = df.join(scores_stats, on=["model", "task"]).with_columns(
+        df = df.join(scores_stats, on=["model", "task", "label"]).with_columns(
             score=(c("score") - c("mean_score")) / c("std_score")
         )
     return df.group_by(["video", "task", "model"]).agg(

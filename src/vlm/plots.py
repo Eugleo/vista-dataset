@@ -6,10 +6,13 @@ from polars import col as c
 
 
 def task_performance(
-    data: pl.DataFrame, df: pl.DataFrame, metric: str, title: str, baselines: dict
+    data: pl.DataFrame,
+    df: pl.DataFrame,
+    metric: str,
+    title: str,
+    baselines: dict,
+    tasks: list,
 ):
-    data = data.sort("task", "model")
-    tasks = data["task"].unique().sort().to_list()
     models = data["model"].unique().sort().to_list()
     if len(tasks) > 1:
         avg_data = (
@@ -20,6 +23,7 @@ def task_performance(
         )
         data = pl.concat([data, avg_data])
         tasks.append("average")
+    data = data.sort("model")
 
     model_titles = [model for model in models for _ in range(len(tasks))]
     fig = make_subplots(
@@ -69,7 +73,9 @@ def task_performance(
         width=300 * len(tasks) if len(tasks) > 1 else 500,
         height=300 * (1 + len(models)),
         showlegend=False,
+        title=title,
     )
+    fig.update_yaxes(range=[0, 1], row=1)
     return fig
 
 

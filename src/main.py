@@ -27,8 +27,9 @@ def plot_habitat(
     ] = "/data/datasets/vlm_benchmark/experiments",
 ):
     if experiment is None:
-        experiments = Path(experiment_dir).iterdir()
+        experiments = [d for d in Path(experiment_dir).iterdir() if d.is_dir()]
         dir = sorted(experiments, key=lambda d: d.stat().st_mtime)[-1]
+        print(f"Loading the most recent experiment: {dir}...")
     else:
         dir = Path(experiment_dir) / experiment
 
@@ -63,6 +64,22 @@ def plot_habitat(
             "Opening Motion": ["open_cabinet", "open_fridge", "open_drawer"],
             "Walking to a concrete Object": ["walk_to"],
             "Moving an object From and To a Specific Container": ["move_can"],
+            "Handling a Container": [
+                "recognize_apple_container",
+                "recognize_can_container",
+                "recognize_hammer_container",
+                "recognize_container",
+                "open_cabinet",
+                "open_fridge",
+                "open_drawer",
+            ],
+            "Proximity Tasks": [
+                "recognize_large_object",
+                "walk_to_chair",
+                "walk_to_plant",
+                "walk_to_tv",
+                "walk_to",
+            ],
         }
         for name, tasks in groups.items():
             baselines = {
@@ -74,10 +91,11 @@ def plot_habitat(
                 metrics.filter(pl.col("task").is_in(tasks)),
                 predictions.filter(pl.col("task").is_in(tasks)),
                 metric="accuracy",
-                title=name,
+                title=f"{name} (standardized)",
                 baselines=baselines,
+                tasks=tasks,
             )
             plot_dir = dir / "plots"
             plot_dir.mkdir(exist_ok=True, parents=True)
             plot.write_image(plot_dir / f"{name}_performance.pdf")
-        print("Plots saved")
+        print("Plots seed")
