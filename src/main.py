@@ -3,8 +3,9 @@ from typing import Annotated, Optional
 
 import polars as pl
 import typer
+from polars import col as c
 from rich.progress import Progress, SpinnerColumn, TextColumn
-from vlm import utils
+from vlm import plots, utils
 from vlm.config import ExperimentConfig
 
 app = typer.Typer()
@@ -18,7 +19,7 @@ def evaluate(config: Annotated[str, typer.Argument()]):
 
 
 @app.command()
-def plot(
+def plot_habitat(
     experiment: Annotated[Optional[str], typer.Argument()] = None,
     interactive: Annotated[bool, typer.Option()] = False,
     experiment_dir: Annotated[
@@ -40,27 +41,43 @@ def plot(
 
         predictions = utils.get_predictions(df)
         metrics = predictions.group_by(["task", "model"]).agg(
-            mcc=utils.compute_metric(utils.mcc)
+            accuracy=utils.compute_metric(utils.accuracy)
         )
 
-        plot_dir = dir / "plots"
-        plot_dir.mkdir(exist_ok=True, parents=True)
-
-        performance_plot = utils.performance_per_task(metrics)
-        performance_plot.write_image(plot_dir / "task_performance.pdf")
-        print("Performance plot saved")
-        if interactive:
-            performance_plot.show()
-
-        for task in df["task"].unique().to_list():
-            for model in df["model"].unique().to_list():
-                task_df = predictions.filter(pl.col("task") == task).filter(
-                    pl.col("model") == model
-                )
-                confusion_matrix = utils.confusion_matrix(task_df)
-                confusion_matrix.figure_.set_figwidth(12)
-                confusion_matrix.figure_.set_figheight(12)
-                confusion_matrix.figure_.savefig(
-                    plot_dir / f"{task}_{model}_confusion_matrix.pdf"
-                )
-        print("Confusion matrices saved")
+        groups = {
+            "Proximity": ["walk_to_chair", "walk_to_plant", "walk_to_tv"],
+            "Rooms": ["recognize_room_model", "recognize_room_scan"],
+            "Heading into a Specific Room": ["find_room"],
+            "Objects": [
+                "recognize_small_object",
+                "recognize_large_object",
+            ],
+            "Large Objects in a Room": ["recognize_large_object_in_context"],
+            "Containers": [
+                "recognize_apple_container",
+                "recognize_can_container",
+                "recognize_hammer_container",
+            ],
+            "Small Objects in a Container": ["recognize_small_object_in_container"],
+            "Container State": ["recognize_container"],
+            "Opening Motion": ["open_cabinet", "open_fridge", "open_drawer"],
+            "Walking to a concrete Object": ["walk_to"],
+            "Moving an object From and To a Specific Container": ["move_can"],
+        }
+        for name, tasks in groups.items():
+            baselines = {
+                task: 1
+                / df.filter(c("task") == task).get_column("true_label").n_unique()
+                for task in tasks
+            }
+            plot = plots.performance_per_task(
+                metrics.filter(pl.col("task").is_in(tasks)),
+                predictions.filter(pl.col("task").is_in(tasks)),
+                metric="accuracy",
+                title=name,
+                baselines=baselines,
+            )
+            plot_dir = dir / "plots"
+            plot_dir.mkdir(exist_ok=True, parents=True)
+            plot.write_image(plot_dir / f"{name}_performance.pdf")
+        print("Plots saved")

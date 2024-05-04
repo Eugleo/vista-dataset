@@ -61,3 +61,10 @@ def confusion_matrix(data: pl.DataFrame):
         xticks_rotation="vertical",
     )
     return cm
+
+
+def accuracy(group: pl.Series):
+    return skm.accuracy_score(
+        y_true=group.struct.field("true_label").to_numpy(),
+        y_pred=group.struct.field("label").to_numpy(),
+    )

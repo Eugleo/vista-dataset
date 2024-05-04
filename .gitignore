@@ -2,6 +2,7 @@
 # Edit at https://www.toptal.com/developers/gitignore?templates=macos,python
 
 logs/
+experiments/
 run.sh
 plot.sh
 *.code-workspace
