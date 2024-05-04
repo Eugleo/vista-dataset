@@ -70,7 +70,7 @@ def plot_habitat(
                 / df.filter(c("task") == task).get_column("true_label").n_unique()
                 for task in tasks
             }
-            plot = plots.performance_per_task(
+            plot = plots.task_performance(
                 metrics.filter(pl.col("task").is_in(tasks)),
                 predictions.filter(pl.col("task").is_in(tasks)),
                 metric="accuracy",

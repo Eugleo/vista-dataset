@@ -5,7 +5,7 @@ from plotly.subplots import make_subplots
 from polars import col as c
 
 
-def performance_per_task(
+def task_performance(
     data: pl.DataFrame, df: pl.DataFrame, metric: str, title: str, baselines: dict
 ):
     data = data.sort("task", "model")
