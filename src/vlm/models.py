@@ -10,6 +10,7 @@ from typing import Callable
 import backoff
 import cv2
 import dotenv
+import einops
 import openai
 import polars as pl
 import torch as t
@@ -117,7 +118,7 @@ class EncoderModel(Model):
 
 
 class GPT4VModel(Model):
-    scoring_prompt = """Now, given the original frames and your description, score the following potential video descriptions from 0 to 1 based on how well they fit the frames you've seen. Feel free to use values between 0 and 1, too. There should be exactly one 'correct' description with score 1. The descriptions are given in the following format:
+    scoring_prompt = """Now, given the original frames and your description, score the following potential video descriptions from 0 to 1 based on how well they describe the video you've seen. Feel free to use values between 0 and 1, too. There should be exactly one 'correct' description with score 1. The descriptions are given in the following format:
 
 - (id label) description
 
@@ -144,6 +145,7 @@ The format for your answers should be:
 
         b64_frames = []
         for frame in frames_np:
+            frame = einops.rearrange(frame, "c h w -> h w c")
             _, buffer = cv2.imencode(".jpg", frame)
             b64_frames.append(base64.b64encode(buffer).decode("utf-8"))  # type: ignore
 
@@ -179,7 +181,7 @@ The format for your answers should be:
             model="gpt-4-vision-preview", messages=messages, max_tokens=1200
         )
         reponse_text = response.choices[0].message.content  # type: ignore
-        logging.info(f"Received response from GPT-4V: {reponse_text}")
+        print(f"Received response from GPT-4V: {reponse_text}")
 
         if reponse_text is None:
             raise ValueError(f"Empty response from GPT-4. {messages=}, {response=}")
@@ -188,6 +190,8 @@ The format for your answers should be:
 
     def _predict_video(self, item: dict, task: Task, cache: dict):
         path = item["path"]
+        print(f"\n\nTrue label: {item['labels'][task.id]}")
+        print(f"Predicting for {path}")
         if path not in cache:
             system_prompt = [{"type": "text", "text": task.prompt_gpt}]
             history = [{"role": "system", "content": system_prompt}]
