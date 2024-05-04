@@ -126,10 +126,7 @@ class ModelConfig(BaseModel):
                 encoder = self._get_encoder(cache_dir)
                 heads = self._get_heads(tasks, encoder)
                 return EncoderModel(
-                    id=self.encoder,
-                    encoder=encoder,
-                    heads=heads,
-                    batch_size=self.batch_size,
+                    encoder=encoder, heads=heads, batch_size=self.batch_size
                 )
 
             return get_encoder

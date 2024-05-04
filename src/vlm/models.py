@@ -58,6 +58,7 @@ class EncoderModel(Model):
         heads: dict[str, list[Head]],
         batch_size: int = 1,
     ):
+        self.id = encoder.id
         self._encoder = encoder
         self._heads = heads
         self._batch_size = batch_size
