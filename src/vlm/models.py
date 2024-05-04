@@ -54,12 +54,10 @@ class VideoDataset(IterableDataset):
 class EncoderModel(Model):
     def __init__(
         self,
-        id: str,
         encoder: VideoEncoder,
         heads: dict[str, list[Head]],
         batch_size: int = 1,
     ):
-        self.id = id
         self._encoder = encoder
         self._heads = heads
         self._batch_size = batch_size
@@ -79,23 +77,22 @@ class EncoderModel(Model):
             results += [
                 {
                     "task": task.id,
-                    "model": self.id,
+                    "model": self._encoder.id + "_" + head.id,
                     "metadata": {"head": head.id, "encoder": self._encoder.metadata},
                     "video": video_path,
                     "label": label,
                     "label_idx": i,
-                    "prob": prob,
+                    "score": score,
                     "true_label": true_label,
                     "true_label_idx": task.labels.index(true_label),
-                    "true_prob": float(true_label == label),
                 }
                 for head in self._heads[task.id]
-                for video_path, true_label, label_probs in zip(
+                for video_path, true_label, label_scores in zip(
                     [p for i, p in enumerate(batch["path"]) if mask[i]],
                     [l for i, l in enumerate(batch["labels"][task.id]) if mask[i]],
                     head(video_encodings[mask]),
                 )
-                for i, (label, prob) in enumerate(zip(task.labels, label_probs))
+                for i, (label, score) in enumerate(zip(task.labels, label_scores))
             ]
         result = pl.DataFrame(results)
 
@@ -180,7 +177,7 @@ The format for your answers should be:
         response = self._client.chat.completions.create(
             model="gpt-4-vision-preview", messages=messages, max_tokens=1200
         )
-        reponse_text = response.choices[0].message.content
+        reponse_text = response.choices[0].message.content  # type: ignore
         logging.info(f"Received response from GPT-4V: {reponse_text}")
 
         if reponse_text is None:

@@ -21,6 +21,7 @@ class TextEncoder(nn.Module):
 class VideoEncoder(nn.Module):
     expected_n_frames: int
     metadata: dict
+    id: str
 
     def transform(self, frames: torch.Tensor) -> torch.Tensor:
         """Transform a batch of frames to the expected input format for the model. Input shape: (n_frames, c, h, w)"""
@@ -55,6 +56,7 @@ class CLIP(Encoder):
         image_size: int = size if isinstance(size, int) else size[0]  # type: ignore
         self.transform = image_transform(image_size)  # type: ignore
         self.expected_n_frames = expected_n_frames
+        self.id = f"clip-{expected_n_frames}"
         self.metadata = {
             "model": f"{model_name}/{pretrained}",
             "n_frames": expected_n_frames,
@@ -97,6 +99,7 @@ class ViCLIP(Encoder):
         size = self._model.inputs_image_res
         self.transform = image_transform(size, mean=VICLIP_MEAN, std=VICLIP_STD)  # type: ignore
         self.expected_n_frames = self._model.video_input_num_frames
+        self.id = "viclip"
         self.metadata = {}
 
     @torch.inference_mode()
@@ -124,6 +127,7 @@ class S3D(Encoder):
 
         self.target_size = (224, 224)
         self.expected_n_frames = 32
+        self.id = "s3d"
         self.metadata = {}
 
     @torch.inference_mode()
