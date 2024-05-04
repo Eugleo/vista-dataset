@@ -52,7 +52,7 @@ class CosineHead(Head):
     @t.inference_mode()
     def forward(self, x: t.Tensor) -> t.Tensor:
         self.options = self.options.to(x.device)
-        return (x @ self.options.T).softmax(dim=-1)
+        return x @ self.options.T
 
     @staticmethod
     def for_task(task: Task, encoder: TextEncoder) -> "CosineHead":
