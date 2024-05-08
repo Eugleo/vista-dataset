@@ -26,6 +26,9 @@ tasks:
   - room/model
   - room/scan
   - room/sequence
+  - walking_towards_or_away/chair
+  - walking_towards_or_away/plant
+  - walking_towards_or_away/tv
   - move_can
 models:
   - kind: encoder
