@@ -98,4 +98,12 @@ def plot_habitat(
             plot_dir = dir / "plots"
             plot_dir.mkdir(exist_ok=True, parents=True)
             plot.write_image(plot_dir / f"{name}_performance.pdf")
+
+            plot = plots.overall_performance(
+                metrics.filter(pl.col("task").is_in(tasks)),
+                metric="accuracy",
+                title=f"{name} (standardized)",
+            )
+            plot.write_image(plot_dir / f"{name}_overall.pdf")
+
         print("Plots seed")
