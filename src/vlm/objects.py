@@ -58,6 +58,9 @@ class Experiment:
     output_dir: str
 
     def run(self) -> pl.DataFrame:
+        print(
+            f"Running {len(self.models)} on {len(self.tasks)} tasks ({len(self.videos)} unique videos)"
+        )
         results: list[pl.DataFrame] = []
         for get_model in self.models:
             model = get_model()
