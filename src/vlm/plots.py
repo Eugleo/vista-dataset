@@ -14,23 +14,21 @@ def task_performance(
     tasks: list,
 ):
     models = data["model"].unique().sort().to_list()
-    if len(tasks) > 1:
-        avg_data = (
-            data.group_by("model")
-            .agg(pl.col(metric).mean())
-            .with_columns(task=pl.lit("average"))
-            .select(["task", "model", metric])
-        )
-        data = pl.concat([data, avg_data])
-        tasks.append("average")
+    avg_data = (
+        data.group_by("model")
+        .agg(pl.col(metric).mean())
+        .with_columns(task=pl.lit("average"))
+        .select(["task", "model", metric])
+    )
+    data = pl.concat([data, avg_data])
+    tasks.append("average")
     data = data.sort("model")
 
     model_titles = [model for model in models for _ in range(len(tasks))]
     fig = make_subplots(
         rows=1 + len(models),
-        cols=len(tasks),
+        cols=1 + len(tasks),
         subplot_titles=tasks + model_titles,
-        # specs=[[{}, {}]],
         horizontal_spacing=0.05,
         vertical_spacing=0.05,
     )
@@ -68,6 +66,20 @@ def task_performance(
                 if model_idx < len(models) + 1:
                     fig.update_xaxes(showticklabels=False, row=model_idx, col=task_idx)
                 fig.add_traces(heatmap["data"], rows=model_idx, cols=task_idx)
+
+    print(data.filter(c("task") == "average"))
+
+    overview = px.imshow(
+        data.filter(c("task") == "average")
+        .with_columns(dummy=pl.lit(""))
+        .to_pandas()
+        .pivot(index="dummy", columns="model", values="metric"),
+        labels=dict(x="Model", y="Model"),
+        color_continuous_scale="Viridis",
+        range_color=(0, 1),
+    )
+    fig.add_traces(overview["data"], rows=1, cols=len(tasks) + 1)
+
     fig.update(layout_coloraxis_showscale=False)
     fig.update_layout(
         width=300 * len(tasks) if len(tasks) > 1 else 500,
