@@ -101,6 +101,18 @@ def overall_performance(metrics: pl.DataFrame, metric: str, title: str):
     )
 
 
+def incorrect_video_labels(predictions: pl.DataFrame):
+    incorrect_count = (
+        predictions.filter(c("label") != c("true_label"))
+        .groupby("video", "task")
+        .agg(c("model").n_unique().alias("count"))
+    )
+
+    df = incorrect_count.sort("count", descending=True)
+
+    return df
+
+
 def confusion_matrix(data: pl.DataFrame):
     # Compute confusion matrix
     cm = skm.confusion_matrix(data["true_label"].to_numpy(), data["label"].to_numpy())

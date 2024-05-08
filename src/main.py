@@ -45,6 +45,11 @@ def plot_habitat(
             accuracy=utils.compute_metric(utils.accuracy)
         )
 
+        problems = plots.incorrect_video_labels(predictions)
+        plot_dir = dir / "plots"
+        problems.write_csv(plot_dir / "problems.csv")
+        plot_dir.mkdir(exist_ok=True, parents=True)
+
         groups = {
             "Closed v. Closing": [
                 "closed_or_closing/cabinet",
