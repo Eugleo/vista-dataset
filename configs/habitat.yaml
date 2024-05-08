@@ -31,6 +31,8 @@ tasks:
   - walking_towards_or_away/tv
   - move_can
 models:
+  - kind: gpt
+    n_frames: 5
   - kind: encoder
     encoder: clip
     heads:

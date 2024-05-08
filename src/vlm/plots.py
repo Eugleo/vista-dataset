@@ -31,7 +31,7 @@ def task_performance(
     fig = make_subplots(
         rows=nrows,
         cols=ncols,
-        subplot_titles=tasks + ["average"] + model_titles,
+        subplot_titles=tasks + model_titles,
         horizontal_spacing=0.05,
         vertical_spacing=0.1,
     )
