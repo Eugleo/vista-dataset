@@ -61,10 +61,13 @@ def plot_habitat(
         problems.write_csv(plot_dir / "problems.csv")
 
         groups = {
-            "Closed v. Closing": [
+            "Static v. Changing": [
                 "closed_or_closing/cabinet",
                 "closed_or_closing/drawer",
                 "closed_or_closing/fridge",
+                "opening_or_closing/cabinet",
+                "opening_or_closing/drawer",
+                "opening_or_closing/fridge",
             ],
             "Open v. Opening": [
                 "open_or_opening/cabinet",
@@ -76,11 +79,6 @@ def plot_habitat(
                 "open_or_closed/drawer",
                 "open_or_closed/fridge",
             ],
-            "Opening v. Closing": [
-                "opening_or_closing/cabinet",
-                "opening_or_closing/drawer",
-                "opening_or_closing/fridge",
-            ],
             "Opening v. Closing Specific Container": ["opening_or_closing/container"],
             "Container Type": [
                 "container_type/apple",
@@ -88,12 +86,19 @@ def plot_habitat(
                 "container_type/hammer",
             ],
             "Near v. Far": ["near_or_far/chair", "near_or_far/plant", "near_or_far/tv"],
-            "Object": ["object/large", "object/small"],
-            "Object in Context": ["object/large_in_room", "object/small_in_container"],
+            "Small Object": ["object/small"],
+            "Large Object": ["object/large"],
+            "Object in Container": ["object/small_in_container"],
+            "Object in Room": ["object/large_in_room"],
             "Room": ["room/model", "room/scan"],
             "Find Room": ["room/find"],
             "Sequence of Rooms": ["room/sequence"],
             "Move Can": ["move_can"],
+            "Walking Towards v. Away": [
+                "walking_towards_or_away/chair",
+                "walking_towards_or_away/plant",
+                "walking_towards_or_away/tv",
+            ],
         }
 
         for name, tasks in groups.items():
