@@ -1,3 +1,4 @@
+import logging
 from pathlib import Path
 from typing import Annotated, Optional
 
@@ -15,6 +16,15 @@ app = typer.Typer()
 def evaluate(config: Annotated[str, typer.Argument()]):
     experiment_config = ExperimentConfig.from_file(config)
     experiment = ExperimentConfig.to_experiment(experiment_config)
+    experiment_dir = Path(experiment.output_dir) / experiment.id
+    experiment_dir.mkdir(exist_ok=True, parents=True)
+    logging.basicConfig(
+        filename=experiment_dir / "log.txt",
+        filemode="a",
+        format="%(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s",
+        datefmt="%H:%M:%S",
+        level=logging.INFO,
+    )
     experiment.run()
 
 
@@ -87,6 +97,9 @@ def plot_habitat(
         }
 
         for name, tasks in groups.items():
+            tasks = [t for t in tasks if len(df.filter(c("task") == t)) > 0]
+            if not tasks:
+                continue
             baselines = {
                 task: 1
                 / df.filter(c("task") == task).get_column("true_label").n_unique()

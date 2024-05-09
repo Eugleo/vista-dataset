@@ -181,7 +181,7 @@ The format for your answers should be:
             model="gpt-4-vision-preview", messages=messages, max_tokens=1200
         )
         reponse_text = response.choices[0].message.content  # type: ignore
-        print(f"Received response from GPT-4V: {reponse_text}")
+        logging.info(f"GPT-4V response: {reponse_text}")
 
         if reponse_text is None:
             raise ValueError(f"Empty response from GPT-4. {messages=}, {response=}")
@@ -190,8 +190,9 @@ The format for your answers should be:
 
     def _predict_video(self, item: dict, task: Task, cache: dict):
         path = item["path"]
-        print(f"\n\nTrue label: {item['labels'][task.id]}")
-        print(f"Predicting for {path}")
+
+        logging.info(f"Predicting task {task.id} for video: {path}")
+        logging.info(f"True label: {item['labels'][task.id]}")
         if path not in cache:
             system_prompt = [{"type": "text", "text": task.prompt_gpt}]
             history = [{"role": "system", "content": system_prompt}]
@@ -220,6 +221,8 @@ The format for your answers should be:
             # This writes directly into the cache object we've been passed
             cache[path] = label_probs
 
+        logging.info(f"Predicted scores: {cache[path]}")
+
         return pl.DataFrame(
             [
                 {
@@ -246,7 +249,7 @@ The format for your answers should be:
     @staticmethod
     def _load_cache(dir, task, evaluator):
         key = GPT4VModel._generate_cache_key(task, evaluator)
-        filepath = Path(dir) / "score_cache" / f"{key}.json"
+        filepath = Path(dir) / "gpt_scores" / f"{key}.json"
         if filepath.exists():
             logging.info(f"Loading cache from {filepath}")
             with open(filepath, "r") as f:
@@ -258,7 +261,7 @@ The format for your answers should be:
     @staticmethod
     def _save_cache(cache, dir, task, evaluator):
         key = GPT4VModel._generate_cache_key(task, evaluator)
-        dir = Path(dir) / "score_cache"
+        dir = Path(dir) / "gpt_scores"
         dir.mkdir(parents=True, exist_ok=True)
         with open(dir / f"{key}.json", "w") as f:
             logging.info(f"Saving cache to {dir / f'{key}.json'}")
@@ -273,7 +276,7 @@ The format for your answers should be:
 
         results = []
         for item in dataset:
-            for task in [task for task in tasks if task.id in item["labels"]]:
+            for task in [task for task in tasks if item["labels"][task.id]]:
                 task_info = {
                     "id": task.id,
                     "gpt4_prompt": task.prompt_gpt,
@@ -284,6 +287,7 @@ The format for your answers should be:
                 model_info = {"id": self.id, "n_frames": self._n_frames}
                 cache = GPT4VModel._load_cache(self._cache_dir, task_info, model_info)
                 results.append(self._predict_video(item, task, cache))
+                GPT4VModel._save_cache(cache, self._cache_dir, task_info, model_info)
         result = pl.concat(results)
 
         return result
