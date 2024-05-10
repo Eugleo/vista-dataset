@@ -1,3 +1,4 @@
+import logging
 from pathlib import Path
 from typing import Annotated, Optional
 
@@ -15,6 +16,15 @@ app = typer.Typer()
 def evaluate(config: Annotated[str, typer.Argument()]):
     experiment_config = ExperimentConfig.from_file(config)
     experiment = ExperimentConfig.to_experiment(experiment_config)
+    experiment_dir = Path(experiment.output_dir) / experiment.id
+    experiment_dir.mkdir(exist_ok=True, parents=True)
+    logging.basicConfig(
+        filename=experiment_dir / "log.txt",
+        filemode="a",
+        format="%(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s",
+        datefmt="%H:%M:%S",
+        level=logging.INFO,
+    )
     experiment.run()
 
 
@@ -97,51 +107,56 @@ def plot_habitat(
             accuracy=utils.compute_metric(utils.accuracy)
         )
 
-        # groups = {
-        #     "Proximity": ["walk_to_chair", "walk_to_plant", "walk_to_tv"],
-        #     "Rooms": ["recognize_room_model", "recognize_room_scan"],
-        #     "Heading into a Specific Room": ["find_room"],
-        #     "Objects": [
-        #         "recognize_small_object",
-        #         "recognize_large_object",
-        #     ],
-        #     "Large Objects in a Room": ["recognize_large_object_in_context"],
-        #     "Containers": [
-        #         "recognize_apple_container",
-        #         "recognize_can_container",
-        #         "recognize_hammer_container",
-        #     ],
-        #     "Small Objects in a Container": ["recognize_small_object_in_container"],
-        #     "Container State": ["recognize_container"],
-        #     "Opening Motion": ["open_cabinet", "open_fridge", "open_drawer"],
-        #     "Walking to a concrete Object": ["walk_to"],
-        #     "Moving an object From and To a Specific Container": ["move_can"],
-        #     "Handling a Container": [
-        #         "recognize_apple_container",
-        #         "recognize_can_container",
-        #         "recognize_hammer_container",
-        #         "recognize_container",
-        #         "open_cabinet",
-        #         "open_fridge",
-        #         "open_drawer",
-        #     ],
-        #     "Proximity Tasks": [
-        #         "recognize_large_object",
-        #         "walk_to_chair",
-        #         "walk_to_plant",
-        #         "walk_to_tv",
-        #         "walk_to",
-        #     ],
-        # }
+        problems = plots.incorrect_video_labels(predictions)
+        plot_dir = dir / "plots"
+        plot_dir.mkdir(exist_ok=True, parents=True)
+        problems.write_csv(plot_dir / "problems.csv")
+
         groups = {
-            "Opening a Container": [
-                "open_fridge",
-                "open_drawer",
-                "open_drawer_A",
-                "open_cabinet",
-            ]
+            "Static v. Changing": [
+                "closed_or_closing/cabinet",
+                "closed_or_closing/drawer",
+                "closed_or_closing/fridge",
+                "opening_or_closing/cabinet",
+                "opening_or_closing/drawer",
+                "opening_or_closing/fridge",
+            ],
+            "Open v. Opening": [
+                "open_or_opening/cabinet",
+                "open_or_opening/drawer",
+                "open_or_opening/fridge",
+            ],
+            "Open v. Closed": [
+                "open_or_closed/cabinet",
+                "open_or_closed/drawer",
+                "open_or_closed/fridge",
+            ],
+            "Opening v. Closing Specific Container": ["opening_or_closing/container"],
+            "Container Type": [
+                "container_type/apple",
+                "container_type/can",
+                "container_type/hammer",
+            ],
+            "Near v. Far": ["near_or_far/chair", "near_or_far/plant", "near_or_far/tv"],
+            "Small Object": ["object/small"],
+            "Large Object": ["object/large"],
+            "Object in Container": ["object/small_in_container"],
+            "Object in Room": ["object/large_in_room"],
+            "Room": ["room/model", "room/scan"],
+            "Find Room": ["room/find"],
+            "Sequence of Rooms": ["room/sequence"],
+            "Move Can": ["move_can"],
+            "Walking Towards v. Away": [
+                "walking_towards_or_away/chair",
+                "walking_towards_or_away/plant",
+                "walking_towards_or_away/tv",
+            ],
         }
+
         for name, tasks in groups.items():
+            tasks = [t for t in tasks if len(df.filter(c("task") == t)) > 0]
+            if not tasks:
+                continue
             baselines = {
                 task: 1
                 / df.filter(c("task") == task).get_column("true_label").n_unique()
@@ -158,4 +173,12 @@ def plot_habitat(
             plot_dir = dir / "plots"
             plot_dir.mkdir(exist_ok=True, parents=True)
             plot.write_image(plot_dir / f"{name}_performance.pdf")
+
+            plot = plots.overall_performance(
+                metrics.filter(pl.col("task").is_in(tasks)),
+                metric="accuracy",
+                title=f"{name} (standardized)",
+            )
+            plot.write_image(plot_dir / f"{name}_overall.pdf")
+
         print("Plots seed")

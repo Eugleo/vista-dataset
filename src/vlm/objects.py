@@ -58,12 +58,17 @@ class Experiment:
     output_dir: str
 
     def run(self) -> pl.DataFrame:
+        print(
+            f"Running {len(self.models)} models on {len(self.tasks)} tasks ({len(self.videos)} unique videos)"
+        )
         results: list[pl.DataFrame] = []
         for get_model in self.models:
             model = get_model()
             print(f"Running model {model.id}")
             result = model.predict(self.videos, self.tasks)
-            results.append(result)
+            results.append(result.drop("metadata"))
+        print(results[0])
+        print(results[1])
         result = pl.concat(results)
 
         output_dir = Path(self.output_dir) / self.id

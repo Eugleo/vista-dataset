@@ -36,7 +36,9 @@ def get_predictions(df: pl.DataFrame, standardize: bool = False) -> pl.DataFrame
             c("score").mean().alias("mean_score"), c("score").std().alias("std_score")
         )
         df = df.join(scores_stats, on=["model", "task", "label"]).with_columns(
-            score=(c("score") - c("mean_score")) / c("std_score")
+            score=pl.when(c("model") != "gpt4v")
+            .then((c("score") - c("mean_score")) / c("std_score"))
+            .otherwise(c("score"))
         )
     return df.group_by(["video", "task", "model"]).agg(
         # Extract the label with the highest probability
