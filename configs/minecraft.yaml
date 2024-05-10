@@ -1,0 +1,28 @@
+tasks:
+  - break
+  - combat
+  - craft
+  - find
+  - mine
+  - pickup
+  - place
+models:
+  - kind: encoder
+    encoder: clip
+    heads:
+      - kind: cosine
+    hf_model: ViT-bigG-14/laion2b_s39b_b160k
+    n_frames: 32
+  - kind: encoder
+    encoder: viclip
+    heads:
+      - kind: cosine
+    batch_size: 16
+  - kind: encoder
+    encoder: s3d
+    heads:
+      - kind: cosine
+task_dir: tasks/minecraft
+video_dir: "."
+cache_dir: .cache
+output_dir: experiments

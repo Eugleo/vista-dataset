@@ -59,6 +59,8 @@ def performance_per_task(data: pl.DataFrame):
         facet_col="task",
         y="mcc",
         title="Performance of each model per task",
+        height=400,
+        width=800,
     )
 
 
