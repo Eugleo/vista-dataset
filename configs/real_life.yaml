@@ -1,0 +1,22 @@
+tasks:
+  - opening_or_closing/door
+models:
+  # - kind: gpt
+  #   n_frames: 5
+  - kind: encoder
+    encoder: clip
+    heads:
+      - kind: cosine
+    hf_model: ViT-bigG-14/laion2b_s39b_b160k
+    n_frames: 8
+  - kind: encoder
+    encoder: viclip
+    heads:
+      - kind: cosine
+    batch_size: 16
+  - kind: encoder
+    encoder: s3d
+    heads:
+      - kind: cosine
+task_dir: /data/datasets/vlm_benchmark/tasks/real_life
+video_dir: /data/datasets/vlm_benchmark/videos/real_life

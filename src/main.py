@@ -29,6 +29,72 @@ def evaluate(config: Annotated[str, typer.Argument()]):
 
 
 @app.command()
+def plot(
+    experiment: Annotated[Optional[str], typer.Argument()] = None,
+    experiment_dir: Annotated[
+        str, typer.Option()
+    ] = "/data/datasets/vlm_benchmark/experiments",
+):
+    if experiment is None:
+        experiments = [d for d in Path(experiment_dir).iterdir() if d.is_dir()]
+        dir = sorted(experiments, key=lambda d: d.stat().st_mtime)[-1]
+        print(f"Loading the most recent experiment: {dir}...")
+    else:
+        dir = Path(experiment_dir) / experiment
+
+    with Progress(
+        SpinnerColumn(),
+        TextColumn("[progress.description]{task.description}"),
+    ) as progress:
+        progress.add_task("Creating plots...")
+        df = pl.read_json(dir / "results.json")
+
+        predictions = utils.get_predictions(df, standardize=True)
+        metrics = predictions.group_by(["task", "model"]).agg(
+            accuracy=utils.compute_metric(utils.accuracy)
+        )
+
+        problems = plots.incorrect_video_labels(predictions)
+        plot_dir = dir / "plots"
+        plot_dir.mkdir(exist_ok=True, parents=True)
+        problems.write_csv(plot_dir / "problems.csv")
+
+        groups = {
+            task.replace("/", "-"): [task] for task in df.get_column("task").unique()
+        }
+
+        for name, tasks in groups.items():
+            tasks = [t for t in tasks if len(df.filter(c("task") == t)) > 0]
+            if not tasks:
+                continue
+            baselines = {
+                task: 1
+                / df.filter(c("task") == task).get_column("true_label").n_unique()
+                for task in tasks
+            }
+            plot = plots.task_performance(
+                metrics.filter(pl.col("task").is_in(tasks)),
+                predictions.filter(pl.col("task").is_in(tasks)),
+                metric="accuracy",
+                title=f"{name} (standardized)",
+                baselines=baselines,
+                tasks=tasks,
+            )
+            plot_dir = dir / "plots"
+            plot_dir.mkdir(exist_ok=True, parents=True)
+            plot.write_image(plot_dir / f"{name}_performance.pdf")
+
+            plot = plots.overall_performance(
+                metrics.filter(pl.col("task").is_in(tasks)),
+                metric="accuracy",
+                title=f"{name} (standardized)",
+            )
+            plot.write_image(plot_dir / f"{name}_overall.pdf")
+
+        print("Plots seed")
+
+
+@app.command()
 def plot_minecraft(
     experiment: Annotated[Optional[str], typer.Argument()] = None,
     interactive: Annotated[bool, typer.Option()] = False,
