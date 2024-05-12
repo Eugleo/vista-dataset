@@ -1,8 +1,8 @@
 tasks:
-  - opening_or_closing/door
+  - opening_or_closing_mini/door
 models:
-  - kind: gpt
-    n_frames: 5
+#  - kind: gpt
+#    n_frames: 5
   - kind: encoder
     encoder: clip
     heads:
