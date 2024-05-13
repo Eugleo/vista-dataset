@@ -62,11 +62,27 @@ class Experiment:
 
     output_dir: str
 
+    def record_result(self, result: pl.DataFrame, output_dir) -> None:
+        # append the results from each model individually into the same file,
+        # so that results are stored even if the experiment is interrupted
+
+        # load the existing results if they exist
+        if (output_dir / "results.json").exists():
+            results_so_far = pl.read_json(output_dir / "results.json")
+        else:
+            # create empty DataFrame if no results exist yet
+            results_so_far = pl.DataFrame()
+        updated_results = pl.concat([results_so_far, result])
+        updated_results.write_json(output_dir / "results.json")
+
+
+
     def run(self) -> pl.DataFrame:
         print(
             f"Running {len(self.models)} models on {len(self.tasks)} tasks ({len(self.videos)} unique videos)"
         )
-        output_dir = Path(self.output_dir) / self.id / "results"
+
+        output_dir = Path(self.output_dir) / self.id
         output_dir.mkdir(exist_ok=True, parents=True)
         log_dir = Path(self.output_dir) / self.id / "logs"
         log_dir.mkdir(exist_ok=True, parents=True)
@@ -75,22 +91,12 @@ class Experiment:
             Path(self.config_file).read_text()
         )
 
-        results: list[pl.DataFrame] = []
         for get_model in self.models:
-            model = get_model()
             print(f"Running model {model.id}")
-            result, metadata = model.predict(self.videos, self.tasks, log_dir)
-            if result is None:
-                continue
+            indiv_result = model.predict(self.videos, self.tasks).drop("metadata")
+            self.record_result(indiv_result, output_dir)
+            print(indiv_result)
 
-            run_id = uuid.uuid4()
-
-            with open(output_dir / f"{model.id}_{run_id}.yaml", "w") as f:
-                config = {"model_metadata": metadata}
-                yaml.dump(config, f)
-
-            result.write_json(output_dir / f"{model.id}_{run_id}.json")
-            results.append(result)
-        result = pl.concat(results)
-
-        return result
+        # read in the results from all models
+        overall_result = pl.read_json(output_dir / "results.json")
+        return overall_result
