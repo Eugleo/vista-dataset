@@ -134,6 +134,7 @@ def task_performance(
         height=300 * nrows,
         showlegend=False,
         title=title,
+        coloraxis_colorscale="Purples",
     )
     fig.update_yaxes(range=[0, 1], row=1)
     return fig
@@ -174,16 +175,3 @@ def incorrect_video_labels(predictions: pl.DataFrame):
     df = incorrect_count.sort("count", descending=True)
 
     return df
-
-
-def confusion_matrix(data: pl.DataFrame):
-    # Compute confusion matrix
-    cm = skm.confusion_matrix(data["true_label"].to_numpy(), data["label"].to_numpy())
-
-    # Create heatmap
-    heatmap = px.imshow(
-        cm,
-        labels=dict(x="Predicted label", y="True label"),
-        color_continuous_scale="Viridis",
-    )
-    return heatmap
