@@ -5,7 +5,8 @@ import logging
 import re
 from functools import partial
 from pathlib import Path
-from typing import Callable
+from typing import Callable, List, Tuple
+from math import sqrt
 
 import backoff
 import cv2
@@ -14,9 +15,11 @@ import einops
 import openai
 import polars as pl
 import torch as t
+import numpy as np
 from rich.progress import track
 from torch.utils.data import DataLoader, IterableDataset
 from torchvision.io import read_video
+from torchvision.utils import make_grid
 
 import vlm.utils as utils
 from vlm.encoders import VideoEncoder
@@ -42,11 +45,13 @@ class VideoDataset(IterableDataset):
     def __getitem__(self, idx: int) -> dict:
         video = self._videos[idx]
         frames = read_video(video.path, pts_unit="sec", output_format="TCHW")[0]
+        original_shape = frames.shape
         for transform in self._transforms:
             frames = transform(frames)
         return {
             "path": video.path,
             "frames": frames,
+            "original_shape": original_shape,
             "labels": {task: "" for task in self._tasks} | video.labels,
             "task_mask": t.tensor([task in video.labels for task in self._tasks]),
         }
@@ -64,9 +69,13 @@ class EncoderModel(Model):
         self._heads = heads
         self._batch_size = batch_size
 
+        n_params = sum(p.numel() for p in self._encoder.parameters())
+        print(f"N parameters: {n_params}")
+        self.device = t.device("cuda" if t.cuda.is_available() and n_params < 3e9 else "cpu")
+        print(f"Device: {self.device}")
+
     def _predict_batch(self, batch, tasks: list[Task]) -> pl.DataFrame:
-        device = t.device("cuda" if t.cuda.is_available() else "cpu")
-        videos = batch["frames"].to(device)
+        videos = batch["frames"].to(self.device)
         video_encodings = self._encoder.encode_videos(videos)
 
         results = []
@@ -101,9 +110,7 @@ class EncoderModel(Model):
         return result
 
     def predict(self, videos: list[Video], tasks: list[Task]) -> pl.DataFrame:
-        device = t.device("cuda" if t.cuda.is_available() else "cpu")
-        self._encoder.to(device)
-
+        self._encoder.to(self.device)
         subsample = partial(utils.subsample, n_frames=self._encoder.expected_n_frames)
         transforms = [subsample, self._encoder.transform]
         dataset = VideoDataset(videos, tasks, transforms)
@@ -117,8 +124,7 @@ class EncoderModel(Model):
         return result
 
 
-class GPT4VModel(Model):
-    scoring_prompt = """Now, given the original frames and your description, score the following potential video descriptions from 0 to 1 based on how well they describe the video you've seen. Feel free to use values between 0 and 1, too. There should be exactly one 'correct' description with score 1. The descriptions are given in the following format:
+MULTICLASS_PROMPT = """Now, given the original frames and your description, score the following potential video descriptions from 0 to 1 based on how well they describe the video you've seen. Feel free to use values between 0 and 1, too. There should be exactly one 'correct' description with score 1. The descriptions are given in the following format:
 
 - (id label) description
 
@@ -130,17 +136,39 @@ The format for your answers should be:
 - id label: your score
 """
 
-    def __init__(self, n_frames: int, cache_dir: str):
+MULTILABEL_PROMPT = """Now, given the original frames and your description, score the following potential video descriptions from 0 to 1 based on how well they describe the video you've seen. Feel free to use values between 0 and 1, too. There could be more than one 'correct' description with score 1. The descriptions are given in the following format:
+
+- (id label) description
+
+Options:
+
+{classes}
+
+The format for your answers should be:
+- id label: your score
+"""
+
+
+class GPT4VModel(Model):
+    def __init__(self, n_frames: int, cache_dir: str, task_mode: str):
         self.id = "gpt4v"
         dotenv.load_dotenv()
         self._n_frames = n_frames
         self._client = openai.OpenAI()
         self._cache_dir = cache_dir
 
+        if task_mode == "multiclass":
+            self.scoring_prompt = MULTICLASS_PROMPT
+        elif task_mode == "multilabel":
+            self.scoring_prompt = MULTILABEL_PROMPT
+        else:
+            raise ValueError(f"Unknown task mode {task_mode}")
+
     @staticmethod
     def _frames_to_b64(frames: t.Tensor):
         frames = einops.rearrange(frames, "t c h w -> t h w c")
         frames_np = frames.numpy()
+
         # Convert RGB to BGR
         frames_np = frames_np[:, :, :, ::-1]
 
@@ -150,6 +178,33 @@ The format for your answers should be:
             b64_frames.append(base64.b64encode(buffer).decode("utf-8"))  # type: ignore
 
         return b64_frames
+
+    @staticmethod
+    def _b64_to_frames(b64_frames: List[str], original_shape: Tuple[int, int, int, int]) -> t.Tensor:
+        n_frames, n_channels, height, width = original_shape
+
+        frames_np = []
+        for b64_frame in b64_frames:
+            # Decode base64 frame
+            decoded_frame = base64.b64decode(b64_frame, validate=True)
+            # Convert to numpy array
+            frame_np = np.frombuffer(decoded_frame, dtype=np.uint8).reshape(height, width, n_channels)
+            # Decode the image
+            frame_np = cv2.imdecode(frame_np, flags=cv2.IMREAD_COLOR)
+            # Convert BGR to RGB
+            frame_np = cv2.cvtColor(frame_np, cv2.COLOR_BGR2RGB)
+            frames_np.append(frame_np)
+
+        # Stack frames along time dimension
+        frames_np = np.stack(frames_np)
+
+        # Convert numpy array to PyTorch Tensor
+        frames_tensor = torch.from_numpy(frames_np)
+
+        # Rearrange dimensions to match PyTorch Tensor format
+        frames_tensor = frames_tensor.permute(0, 3, 1, 2)
+
+        return frames_tensor
 
     @staticmethod
     def _frame_to_payload(image):
@@ -180,13 +235,13 @@ The format for your answers should be:
         response = self._client.chat.completions.create(
             model="gpt-4-vision-preview", messages=messages, max_tokens=1200
         )
-        reponse_text = response.choices[0].message.content  # type: ignore
-        logging.info(f"GPT-4V response: {reponse_text}")
+        responce_text = response.choices[0].message.content  # type: ignore
+        logging.info(f"GPT-4V response: {responce_text}")
 
-        if reponse_text is None:
+        if responce_text is None:
             raise ValueError(f"Empty response from GPT-4. {messages=}, {response=}")
 
-        return reponse_text, [*messages, {"role": "assistant", "content": reponse_text}]
+        return responce_text, [*messages, {"role": "assistant", "content": responce_text}]
 
     def _predict_video(self, item: dict, task: Task, cache: dict):
         path = item["path"]
@@ -207,7 +262,7 @@ The format for your answers should be:
                     for label, description in list(task.label_prompts.items())
                 ]
             )
-            scoring_prompt = GPT4VModel.scoring_prompt.format(classes=class_list)
+            scoring_prompt = self.scoring_prompt.format(classes=class_list)
             answer, history = self._send_request(scoring_prompt, history)
 
             label_scores = {label: 0.0 for label in task.labels} | {
@@ -269,6 +324,16 @@ The format for your answers should be:
                 {"cache": cache, "task": task, "evaluator": evaluator}, f, indent=2
             )
 
+    @staticmethod
+    def _log_video(cache_dir, item):
+        video_logging_dir = Path(cache_dir) / "gpt_input_images"
+        video_logging_dir.mkdir(parents=True, exist_ok=True)
+
+        frames = self._b64_to_frames(item["frames"], item["original_shape"])
+        video_as_grid = make_grid(frames, nrow=math.floor(math.sqrt(frames.shape[0])), normalize=True)
+        video_as_grid = t.nn.functional.to_pil_image(video_as_grid)
+        video_as_grid.save(video_logging_dir / (item["path"].stem + ".png"))
+
     def predict(self, videos: list[Video], tasks: list[Task]) -> pl.DataFrame:
         subsample = partial(utils.subsample, n_frames=self._n_frames)
         transforms = [subsample, GPT4VModel._frames_to_b64]
@@ -276,6 +341,8 @@ The format for your answers should be:
 
         results = []
         for item in dataset:
+            # TODO: log(item)
+            self._log_video(self._cache_dir, item)
             for task in [task for task in tasks if item["labels"][task.id]]:
                 task_info = {
                     "id": task.id,

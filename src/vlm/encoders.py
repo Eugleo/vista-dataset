@@ -45,13 +45,15 @@ class CLIP(Encoder):
     ):
         super().__init__()
 
+        print("Initializing CLIP...", flush=True)
         self._model: open_clip.model.CLIP = open_clip.create_model(
             model_name=model_name,
             pretrained=pretrained,
             cache_dir=model_cache_dir,
-            device="cuda" if torch.cuda.is_available() else "cpu",
+            "cuda" if torch.cuda.is_available() else "cpu",
         )  # type: ignore
         assert isinstance(self._model, open_clip.model.CLIP)
+        print("CLIP initialized", flush=True)
         size = self._model.visual.image_size
         image_size: int = size if isinstance(size, int) else size[0]  # type: ignore
         self.transform = image_transform(image_size)  # type: ignore
@@ -64,9 +66,11 @@ class CLIP(Encoder):
 
     @torch.inference_mode()
     def encode_text(self, x: List[str]) -> torch.Tensor:
+        print("Encoding text...", flush=True)
         tokens = open_clip.tokenize(x)
+        device = "cuda" if torch.cuda.is_available() else "cpu",
         encoded = self._model.encode_text(
-            tokens.to("cuda" if torch.cuda.is_available() else "cpu")
+            tokens.to(device)
         ).float()
         encoded = encoded / encoded.norm(dim=-1, keepdim=True)
 
@@ -79,6 +83,7 @@ class CLIP(Encoder):
 
     @torch.inference_mode()
     def encode_videos(self, videos: torch.Tensor) -> torch.Tensor:
+        print("Encoding videos...", flush=True)
         _, n_frames, *_ = videos.shape
         videos = rearrange(videos, "b t c h w -> (b t) c h w")
         encoded_frames = self._model.encode_image(videos, normalize=True)

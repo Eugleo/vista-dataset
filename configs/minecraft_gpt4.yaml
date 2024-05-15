@@ -1,0 +1,16 @@
+tasks:
+  - break
+  - combat
+  - craft
+  - find
+  - mine
+  - pickup
+  - place
+models:
+  - kind: gpt
+    n_frames: 10
+    task_mode: multilabel
+task_dir: tasks/minecraft
+video_dir: "."
+cache_dir: .cache
+output_dir: experiments

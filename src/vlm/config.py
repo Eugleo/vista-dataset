@@ -45,6 +45,7 @@ class ModelConfig(BaseModel):
     encoder: Optional[Literal["clip", "s3d", "viclip"]] = None
     heads: Optional[list[HeadConfig]] = None
     n_frames: Optional[int] = None
+    task_mode: Optional[str] = None
     hf_model: Optional[str] = None
 
     @model_validator(mode="before")
@@ -82,6 +83,8 @@ class ModelConfig(BaseModel):
                 raise ValueError("A GPT model requires the number of frames")
             if "batch_size" in data:
                 raise ValueError("A GPT model should not have a batch size")
+            if "task_mode" not in data:
+                raise ValueError("A GPT model needs a clarification on task mode (multilabel/multiclass -- this influences system prompt)")
         return data
 
     @model_validator(mode="before")
@@ -135,7 +138,7 @@ class ModelConfig(BaseModel):
 
             def get_gpt():
                 assert self.n_frames is not None
-                return GPT4VModel(n_frames=self.n_frames, cache_dir=cache_dir)
+                return GPT4VModel(n_frames=self.n_frames, cache_dir=cache_dir, task_mode=self.task_mode)
 
             return get_gpt
 
