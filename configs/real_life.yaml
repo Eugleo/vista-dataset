@@ -1,5 +1,6 @@
 tasks:
   - opening_or_closing/door
+  - object/small
 models:
   - kind: gpt
     n_frames: 5
@@ -18,7 +19,7 @@ models:
     encoder: s3d
     heads:
       - kind: cosine
-task_dir: /data/datasets/vlm_benchmark_evan/tasks/real_life
-video_dir: /data/datasets/vlm_benchmark_evan/videos/real_life
-cache_dir: /data/datasets/vlm_benchmark_evan/.cache
-output_dir: /data/datasets/vlm_benchmark_evan/experiments
+task_dir: /data/datasets/vlm_benchmark/tasks/real_life
+video_dir: /data/datasets/vlm_benchmark/videos/real_life
+cache_dir: /data/datasets/vlm_benchmark/.cache
+output_dir: /data/datasets/vlm_benchmark/experiments/evan
