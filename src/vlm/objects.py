@@ -35,7 +35,7 @@ class Video:
 class Model(Protocol):
     id: str
 
-    def predict(self, videos: list[Video], tasks: list[Task]) -> pl.DataFrame:
+    def predict(self, videos: list[Video], tasks: list[Task]) -> Optional[pl.DataFrame]:
         """Predict the probability of each label in each task for each video.
         Returns a DataFrame with the following columns:
         - task: The task ID
@@ -67,9 +67,9 @@ class Experiment:
             model = get_model()
             print(f"Running model {model.id}")
             result = model.predict(self.videos, self.tasks)
+            if result is None:
+                continue
             results.append(result.drop("metadata"))
-        print(results[0])
-        print(results[1])
         result = pl.concat(results)
 
         output_dir = Path(self.output_dir) / self.id

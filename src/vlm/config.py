@@ -45,6 +45,8 @@ class ModelConfig(BaseModel):
     encoder: Optional[Literal["clip", "s3d", "viclip"]] = None
     heads: Optional[list[HeadConfig]] = None
     n_frames: Optional[int] = None
+    async_batch: bool = False
+    model: str = "gpt-4-vision-preview"
     hf_model: Optional[str] = None
 
     @model_validator(mode="before")
@@ -72,6 +74,10 @@ class ModelConfig(BaseModel):
                 raise ValueError(
                     "Number of frames and HuggingFace model should only be present for a CLIP encoder"
                 )
+            if "model" in data:
+                raise ValueError("Only models of kind 'gpt' can have a model specified")
+            if "async_batch" in data:
+                raise ValueError("Only models of kind 'gpt' can have async_batch")
 
         return data
 
@@ -135,7 +141,12 @@ class ModelConfig(BaseModel):
 
             def get_gpt():
                 assert self.n_frames is not None
-                return GPT4VModel(n_frames=self.n_frames, cache_dir=cache_dir)
+                return GPT4VModel(
+                    n_frames=self.n_frames,
+                    cache_dir=cache_dir,
+                    async_batch=self.async_batch,
+                    model=self.model,
+                )
 
             return get_gpt
 

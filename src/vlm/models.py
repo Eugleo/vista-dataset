@@ -5,12 +5,13 @@ import logging
 import re
 from functools import partial
 from pathlib import Path
-from typing import Callable
+from typing import Callable, Optional
 
 import backoff
 import cv2
 import dotenv
 import einops
+import jsonlines
 import openai
 import polars as pl
 import torch as t
@@ -141,12 +142,34 @@ The format for your answers should be:
 But first, include some step-by-step thinking on the matter.
 """
 
-    def __init__(self, n_frames: int, cache_dir: str):
-        self.id = "gpt4v"
+    scoring_prompt_v2 = """
+
+# SECOND TASK
+
+Your second task, only after you finish describing the frames, will be — given the original frames and your description — to score the following potential video descriptions from 0 to 1 based on how well they describe the video you've seen.
+
+NOTE 1: If none of the descriptions seem to match, e.g. if they mention an object you have not described above, you should try to reinterpret the frames, or your description of them. Probably they mean something different than you originally thought. In any case, we are SURE there is exactly one correct description that should be given a score of 1.
+
+NOTE 2: Some details in the descriptions might be incorrect, or might have been unseen by you since you only got 5 frames from the video. The important things are the actions, the objects they DIRECTLY involve, and the order of the actions, nothing else. For example, feel free to ignore details such as "we turn left" and "to the right of a laptop" and similar if they are not relevant to the actions. Pay VERY good attention to the order.
+
+Options, in the format (id label) description:
+
+{classes}
+
+The format for your answers should be:
+- id label: your score
+
+Write your answer in three sections: frame descriptions, discussion of offered descriptions, final scores in correct format
+"""
+
+    def __init__(self, n_frames: int, cache_dir: str, async_batch: bool, model: str):
+        self.id = model
         dotenv.load_dotenv()
         self._n_frames = n_frames
         self._client = openai.OpenAI()
         self._cache_dir = cache_dir
+        self._model = model
+        self._async_batch = async_batch
 
     @staticmethod
     def _frames_to_b64(frames: t.Tensor):
@@ -189,13 +212,13 @@ But first, include some step-by-step thinking on the matter.
     def _send_request(self, message, history):
         messages = history + [{"role": "user", "content": message}]
         response = self._client.chat.completions.create(
-            model="gpt-4-vision-preview", messages=messages, max_tokens=1200
+            model=self._model, messages=messages, max_tokens=1200
         )
         reponse_text = response.choices[0].message.content  # type: ignore
-        logging.info(f"GPT-4V response: {reponse_text}")
+        logging.info(f"GPT response: {reponse_text}")
 
         if reponse_text is None:
-            raise ValueError(f"Empty response from GPT-4. {messages=}, {response=}")
+            raise ValueError(f"Empty response from GPT. {messages=}, {response=}")
 
         return reponse_text, [*messages, {"role": "assistant", "content": reponse_text}]
 
@@ -252,39 +275,74 @@ But first, include some step-by-step thinking on the matter.
             ]
         )
 
-    @staticmethod
-    def _generate_cache_key(task, evaluator) -> str:
-        combined = utils.serialize_dict(task) + utils.serialize_dict(evaluator)
-        return hashlib.sha256(combined.encode("utf-8")).hexdigest()
+    def _build_batch_message(self, item: dict, task: Task):
+        path = item["path"]
+        assert task.prompt_gpt is not None
 
-    @staticmethod
-    def _load_cache(dir, task, evaluator):
-        key = GPT4VModel._generate_cache_key(task, evaluator)
-        filepath = Path(dir) / "gpt_scores" / f"{key}.json"
-        if filepath.exists():
-            logging.info(f"Loading cache from {filepath}")
-            with open(filepath, "r") as f:
-                return json.load(f)["cache"]
-        else:
-            logging.info(f"No cache found for {task=}, {evaluator=}")
-            return {}
+        logging.info(f"Predicting task {task.id} for video: {path}")
+        logging.info(f"True label: {item['labels'][task.id]}")
 
-    @staticmethod
-    def _save_cache(cache, dir, task, evaluator):
-        key = GPT4VModel._generate_cache_key(task, evaluator)
-        dir = Path(dir) / "gpt_scores"
-        dir.mkdir(parents=True, exist_ok=True)
-        with open(dir / f"{key}.json", "w") as f:
-            logging.info(f"Saving cache to {dir / f'{key}.json'}")
-            json.dump(
-                {"cache": cache, "task": task, "evaluator": evaluator}, f, indent=2
-            )
+        class_list = "\n".join(
+            [
+                f"- ({label}) {description}"
+                for label, description in list(task.label_prompts.items())
+            ]
+        )
+        scoring_prompt = GPT4VModel.scoring_prompt_v2.format(classes=class_list)
 
-    def predict(self, videos: list[Video], tasks: list[Task]) -> pl.DataFrame:
+        heading = {"type": "text", "text": "Input frames:"}
+        frames = [GPT4VModel._frame_to_payload(f) for f in item["frames"]]
+
+        history = [
+            {"role": "system", "content": task.prompt_gpt + scoring_prompt},
+            {"role": "user", "content": [heading, *frames]},
+        ]
+
+        return history
+
+    def predict(self, videos: list[Video], tasks: list[Task]) -> Optional[pl.DataFrame]:
         subsample = partial(utils.subsample, n_frames=self._n_frames)
         transforms = [subsample, GPT4VModel._frames_to_b64]
         dataset = list(VideoDataset(videos, tasks, transforms))
 
+        if self._async_batch:
+            print("WARNING: Ignoring all cache when using async_batch")
+            # TODO Create the jsonl file
+
+            task_list = [
+                {
+                    "custom_id": f"{item['path']},{task.id}",
+                    "method": "POST",
+                    "url": "/v1/chat/completions",
+                    "body": {
+                        "model": self._model,
+                        "messages": self._build_batch_message(item, task),
+                        "max_tokens": 1200,
+                    },
+                }
+                for item in dataset
+                for task in tasks
+                if item["labels"][task.id]
+            ]
+
+            with jsonlines.open(".cache/batchinput.jsonl", "w") as writer:
+                writer.write_all(task_list)
+
+            batch_input_file = self._client.files.create(
+                file=open(".cache/batchinput.jsonl", "rb"), purpose="batch"
+            )
+
+            batch_object = self._client.batches.create(
+                input_file_id=batch_input_file.id,
+                endpoint="/v1/chat/completions",
+                completion_window="24h",
+            )
+
+            logging.info(f"Created batch object: {batch_object}")
+
+            return None
+
+        print("WARNING: Evaluating synchronously")
         results = []
         for item in dataset:
             for task in [task for task in tasks if item["labels"][task.id]]:
@@ -296,9 +354,9 @@ But first, include some step-by-step thinking on the matter.
                     ],
                 }
                 model_info = {"id": self.id, "n_frames": self._n_frames}
-                cache = GPT4VModel._load_cache(self._cache_dir, task_info, model_info)
+                cache = utils.load_cache(self._cache_dir, task_info, model_info)
                 results.append(self._predict_video(item, task, cache))
-                GPT4VModel._save_cache(cache, self._cache_dir, task_info, model_info)
+                utils.save_cache(cache, self._cache_dir, task_info, model_info)
         result = pl.concat(results)
 
         return result

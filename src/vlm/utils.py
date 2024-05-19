@@ -1,4 +1,7 @@
+import hashlib
 import json
+import logging
+from pathlib import Path
 
 import numpy as np
 import plotly.express as px
@@ -73,3 +76,29 @@ def accuracy(group: pl.Series):
         y_true=group.struct.field("true_label").to_numpy(),
         y_pred=group.struct.field("label").to_numpy(),
     )
+
+
+def _generate_cache_key(task, evaluator) -> str:
+    combined = serialize_dict(task) + serialize_dict(evaluator)
+    return hashlib.sha256(combined.encode("utf-8")).hexdigest()
+
+
+def load_cache(dir, task, model):
+    key = _generate_cache_key(task, model)
+    filepath = Path(dir) / "scores" / f"{key}.json"
+    if filepath.exists():
+        logging.info(f"Loading cache from {filepath}")
+        with open(filepath, "r") as f:
+            return json.load(f)["cache"]
+    else:
+        logging.info(f"No cache found for {task=}, {model=}")
+        return {}
+
+
+def save_cache(cache, dir, task, model):
+    key = _generate_cache_key(task, model)
+    dir = Path(dir) / "scores"
+    dir.mkdir(parents=True, exist_ok=True)
+    with open(dir / f"{key}.json", "w") as f:
+        logging.info(f"Saving cache to {dir / f'{key}.json'}")
+        json.dump({"cache": cache, "task": task, "model": model}, f, indent=2)

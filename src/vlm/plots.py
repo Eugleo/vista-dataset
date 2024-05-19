@@ -1,5 +1,3 @@
-from functools import partial
-
 import numpy as np
 import plotly.express as px
 import polars as pl
@@ -23,7 +21,7 @@ def mean_average_precision(task_labels: dict, group):
     )
     if len(lb.classes_) == 2:
         # LabelBinarizer returns a 1-column array in this case
-        y_true = np.concatenate([y_true, 1 - y_true], axis=1)
+        y_true = np.concatenate([y_true, 1 - y_true], axis=1)  # type: ignore
     y_score = scores.reshape(n_samples, len(lb.classes_))
 
     return skm.average_precision_score(y_true=y_true, y_score=y_score, average=None)
