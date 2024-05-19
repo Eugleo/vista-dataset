@@ -1,6 +1,6 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Callable, Optional, Protocol, Union
+from typing import Any, Callable, Optional, Protocol, Union
 
 import polars as pl
 import yaml
@@ -10,6 +10,7 @@ import yaml
 class Task:
     id: str
     label_prompts: dict[str, str]
+    concepts: dict[str, Any] = field(default_factory=dict)
 
     prompt_gpt: Optional[str] = None
     prompt_baseline: Optional[str] = None

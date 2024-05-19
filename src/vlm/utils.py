@@ -1,5 +1,6 @@
 import json
 
+import numpy as np
 import plotly.express as px
 import polars as pl
 import sklearn.metrics as skm
@@ -15,31 +16,25 @@ def subsample(x: t.Tensor, n_frames: int) -> t.Tensor:
     total_frames, *_ = x.shape
     if total_frames <= n_frames:
         raise ValueError("Video is too short to subsample.")
-    step = total_frames // n_frames
-    x = x[::step, ...][:n_frames, ...]
+    step = (total_frames - 1) // (n_frames - 1)
+    indices = (t.arange(n_frames) * step).clamp(max=total_frames - 1)
+    x = t.index_select(x, 0, indices)
     return x
 
 
-# A wrapper around a sklearn metric function
-def mcc(group: pl.Series):
-    # group is a pl.Series object with two named fields, true_label and predicted_label
-    # we can access those fields using group.struct.field
-    return skm.matthews_corrcoef(
-        y_true=group.struct.field("true_label").to_numpy(),
-        y_pred=group.struct.field("label").to_numpy(),
+def standardize(df: pl.DataFrame) -> pl.DataFrame:
+    scores_stats = df.groupby(["model", "task", "label"]).agg(
+        c("score").mean().alias("mean_score"), c("score").std().alias("std_score")
     )
+    df = df.join(scores_stats, on=["model", "task", "label"]).with_columns(
+        score=pl.when(c("model") != "gpt4v")
+        .then((c("score") - c("mean_score")) / c("std_score"))
+        .otherwise(c("score"))
+    )
+    return df
 
 
-def get_predictions(df: pl.DataFrame, standardize: bool = False) -> pl.DataFrame:
-    if standardize:
-        scores_stats = df.groupby(["model", "task", "label"]).agg(
-            c("score").mean().alias("mean_score"), c("score").std().alias("std_score")
-        )
-        df = df.join(scores_stats, on=["model", "task", "label"]).with_columns(
-            score=pl.when(c("model") != "gpt4v")
-            .then((c("score") - c("mean_score")) / c("std_score"))
-            .otherwise(c("score"))
-        )
+def get_predictions(df: pl.DataFrame) -> pl.DataFrame:
     return df.group_by(["video", "task", "model"]).agg(
         # Extract the label with the highest probability
         pl.col("label").sort_by("score").last(),
@@ -64,13 +59,13 @@ def performance_per_task(data: pl.DataFrame):
     )
 
 
-def confusion_matrix(data: pl.DataFrame):
-    cm = skm.ConfusionMatrixDisplay.from_predictions(
-        data["true_label"].to_numpy(),
-        data["label"].to_numpy(),
-        xticks_rotation="vertical",
+def add_random_baseline(scores: pl.DataFrame):
+    random_model_scores = scores.filter(c("model") == scores["model"][0])
+    random_model_scores = random_model_scores.with_columns(
+        score=pl.lit(np.random.rand(len(random_model_scores))),
+        model=pl.lit("ω random"),
     )
-    return cm
+    return pl.concat([scores, random_model_scores])
 
 
 def accuracy(group: pl.Series):

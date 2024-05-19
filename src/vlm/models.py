@@ -43,7 +43,10 @@ class VideoDataset(IterableDataset):
         video = self._videos[idx]
         frames = read_video(video.path, pts_unit="sec", output_format="TCHW")[0]
         for transform in self._transforms:
-            frames = transform(frames)
+            try:
+                frames = transform(frames)
+            except Exception as e:
+                raise ValueError(f"Error transforming video {video.path}: {e}")
         return {
             "path": video.path,
             "frames": frames,
@@ -118,7 +121,13 @@ class EncoderModel(Model):
 
 
 class GPT4VModel(Model):
-    scoring_prompt = """Now, given the original frames and your description, score the following potential video descriptions from 0 to 1 based on how well they describe the video you've seen. Feel free to use values between 0 and 1, too. There should be exactly one 'correct' description with score 1. The descriptions are given in the following format:
+    scoring_prompt = """Now, given the original frames and your description, score the following potential video descriptions from 0 to 1 based on how well they describe the video you've seen.
+
+NOTE 1: If none of the descriptions seem to match, e.g. if they mention an object you have not described above, you should try to reinterpret the frames, or your description of them. Probably they mean something different than you originally thought. In any case, we are SURE there is exactly one correct description that should be given a score of 1.
+
+NOTE 2: Some details in the descriptions might be incorrect, or might have been unseen by you since you only got 5 frames from the video. The important things are the actions, the objects they DIRECTLY involve, and the order of the actions, nothing else. For example, feel free to ignore details such as "we turn left" and "to the right of a laptop" and similar if they are not relevant to the actions. Pay VERY good attention to the order.
+
+The descriptions are given in the following format:
 
 - (id label) description
 
@@ -128,6 +137,8 @@ Options:
 
 The format for your answers should be:
 - id label: your score
+
+But first, include some step-by-step thinking on the matter.
 """
 
     def __init__(self, n_frames: int, cache_dir: str):
@@ -212,7 +223,7 @@ The format for your answers should be:
 
             label_scores = {label: 0.0 for label in task.labels} | {
                 m.group(1): float(m.group(2))
-                for m in re.finditer(r"- (.+): ([\d.]+)", answer)
+                for m in re.finditer(r"- (.+): ([\d.]*\d)", answer)
             }
             scores = [label_scores[label] for label in task.labels]
             probs = t.Tensor(scores).softmax(0).tolist()
