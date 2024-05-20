@@ -121,7 +121,7 @@ class EncoderModel(Model):
         return result
 
 
-class GPT4VModel(Model):
+class GPTModel(Model):
     scoring_prompt = """Now, given the original frames and your description, score the following potential video descriptions from 0 to 1 based on how well they describe the video you've seen.
 
 NOTE 1: If none of the descriptions seem to match, e.g. if they mention an object you have not described above, you should try to reinterpret the frames, or your description of them. Probably they mean something different than you originally thought. In any case, we are SURE there is exactly one correct description that should be given a score of 1.
@@ -146,20 +146,20 @@ But first, include some step-by-step thinking on the matter.
 
 # SECOND TASK
 
-Your second task, only after you finish describing the frames, will be — given the original frames and your description — to score the following potential video descriptions from 0 to 1 based on how well they describe the video you've seen.
+Your second task, only after you finish describing the frames, will be — given the original frames and your description — to score the following potential video descriptions from 0 to 100 based on how well they describe the video you've seen.
 
 NOTE 1: If none of the descriptions seem to match, e.g. if they mention an object you have not described above, you should try to reinterpret the frames, or your description of them. Probably they mean something different than you originally thought. In any case, we are SURE there is exactly one correct description that should be given a score of 1.
 
 NOTE 2: Some details in the descriptions might be incorrect, or might have been unseen by you since you only got 5 frames from the video. The important things are the actions, the objects they DIRECTLY involve, and the order of the actions, nothing else. For example, feel free to ignore details such as "we turn left" and "to the right of a laptop" and similar if they are not relevant to the actions. Pay VERY good attention to the order.
 
-Options, in the format (id label) description:
+Options, in the format `- (id label) description`:
 
 {classes}
 
-The format for your answers should be:
+The format for your scores should be:
 - id label: your score
 
-Write your answer in three sections: frame descriptions, discussion of offered descriptions, final scores in correct format
+Write your answer in three sections: frame descriptions, discussion of a small selection of the most likely labels, final scores in the correct format. In the scores section, start with the most likely labels to make sure you fit into the token limit.
 """
 
     def __init__(self, n_frames: int, cache_dir: str, async_batch: bool, model: str):
@@ -170,20 +170,6 @@ Write your answer in three sections: frame descriptions, discussion of offered d
         self._cache_dir = cache_dir
         self._model = model
         self._async_batch = async_batch
-
-    @staticmethod
-    def _frames_to_b64(frames: t.Tensor):
-        frames = einops.rearrange(frames, "t c h w -> t h w c")
-        frames_np = frames.numpy()
-        # Convert RGB to BGR
-        frames_np = frames_np[:, :, :, ::-1]
-
-        b64_frames = []
-        for frame in frames_np:
-            _, buffer = cv2.imencode(".jpg", frame)
-            b64_frames.append(base64.b64encode(buffer).decode("utf-8"))  # type: ignore
-
-        return b64_frames
 
     @staticmethod
     def _frame_to_payload(image):
@@ -222,6 +208,38 @@ Write your answer in three sections: frame descriptions, discussion of offered d
 
         return reponse_text, [*messages, {"role": "assistant", "content": reponse_text}]
 
+    @staticmethod
+    def parse_and_cache_scores(
+        response: str,
+        path: str,
+        task_labels: list[str],
+        cache: dict,
+        normalize: bool = False,
+    ):
+        response_scores = {}
+        for m in re.finditer(
+            r"-[^a-zA-Z\d]*([a-zA-Z_\d-]+)[^a-zA-Z\d]*: ([\d.]*\d)", response
+        ):
+            label = m.group(1)
+            score = float(m.group(2))
+            response_scores[label] = score
+
+        if any(l not in response_scores for l in task_labels):
+            print(f"WARNING: Missing scores for some labels in {path}")
+            print(f"Response: {response}")
+            print(f"Missing labels: {set(task_labels) - set(response_scores.keys())}")
+
+        label_scores = {label: -0.1 for label in task_labels} | response_scores
+        scores = [label_scores[label] for label in task_labels]
+        if normalize:
+            scores = t.Tensor(scores).softmax(0).tolist()
+        label_probs = {label: prob for label, prob in zip(task_labels, scores)}
+
+        # This writes directly into the cache object we've been passed
+        cache[path] = label_probs
+
+        return label_probs
+
     def _predict_video(self, item: dict, task: Task, cache: dict):
         path = item["path"]
 
@@ -232,7 +250,7 @@ Write your answer in three sections: frame descriptions, discussion of offered d
             history = [{"role": "system", "content": system_prompt}]
 
             heading = {"type": "text", "text": "Input frames:"}
-            frames = [GPT4VModel._frame_to_payload(f) for f in item["frames"]]
+            frames = [GPTModel._frame_to_payload(f) for f in item["frames"]]
             _, history = self._send_request([heading, *frames], history)
 
             class_list = "\n".join(
@@ -241,19 +259,9 @@ Write your answer in three sections: frame descriptions, discussion of offered d
                     for label, description in list(task.label_prompts.items())
                 ]
             )
-            scoring_prompt = GPT4VModel.scoring_prompt.format(classes=class_list)
+            scoring_prompt = GPTModel.scoring_prompt.format(classes=class_list)
             answer, history = self._send_request(scoring_prompt, history)
-
-            label_scores = {label: 0.0 for label in task.labels} | {
-                m.group(1): float(m.group(2))
-                for m in re.finditer(r"- (.+): ([\d.]*\d)", answer)
-            }
-            scores = [label_scores[label] for label in task.labels]
-            probs = t.Tensor(scores).softmax(0).tolist()
-            label_probs = {label: prob for label, prob in zip(task.labels, probs)}
-
-            # This writes directly into the cache object we've been passed
-            cache[path] = label_probs
+            GPTModel.parse_and_cache_scores(answer, path, task.labels, cache)
 
         logging.info(f"Predicted scores: {cache[path]}")
 
@@ -288,10 +296,10 @@ Write your answer in three sections: frame descriptions, discussion of offered d
                 for label, description in list(task.label_prompts.items())
             ]
         )
-        scoring_prompt = GPT4VModel.scoring_prompt_v2.format(classes=class_list)
+        scoring_prompt = GPTModel.scoring_prompt_v2.format(classes=class_list)
 
         heading = {"type": "text", "text": "Input frames:"}
-        frames = [GPT4VModel._frame_to_payload(f) for f in item["frames"]]
+        frames = [GPTModel._frame_to_payload(f) for f in item["frames"]]
 
         history = [
             {"role": "system", "content": task.prompt_gpt + scoring_prompt},
@@ -302,12 +310,11 @@ Write your answer in three sections: frame descriptions, discussion of offered d
 
     def predict(self, videos: list[Video], tasks: list[Task]) -> Optional[pl.DataFrame]:
         subsample = partial(utils.subsample, n_frames=self._n_frames)
-        transforms = [subsample, GPT4VModel._frames_to_b64]
+        transforms = [subsample, utils.frames_to_b64]
         dataset = list(VideoDataset(videos, tasks, transforms))
 
         if self._async_batch:
             print("WARNING: Ignoring all cache when using async_batch")
-            # TODO Create the jsonl file
 
             task_list = [
                 {
@@ -317,7 +324,7 @@ Write your answer in three sections: frame descriptions, discussion of offered d
                     "body": {
                         "model": self._model,
                         "messages": self._build_batch_message(item, task),
-                        "max_tokens": 1200,
+                        "max_tokens": 2500,  # Hopefully not needed
                     },
                 }
                 for item in dataset

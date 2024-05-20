@@ -10,7 +10,7 @@ from pydantic import BaseModel, ValidationInfo, field_validator, model_validator
 
 from vlm.encoders import CLIP, S3D, TextEncoder, ViCLIP
 from vlm.heads import CosineHead, Head
-from vlm.models import EncoderModel, GPT4VModel, Model
+from vlm.models import EncoderModel, GPTModel, Model
 from vlm.objects import Experiment, Task, Video
 
 
@@ -141,7 +141,7 @@ class ModelConfig(BaseModel):
 
             def get_gpt():
                 assert self.n_frames is not None
-                return GPT4VModel(
+                return GPTModel(
                     n_frames=self.n_frames,
                     cache_dir=cache_dir,
                     async_batch=self.async_batch,

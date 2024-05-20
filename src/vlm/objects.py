@@ -62,6 +62,10 @@ class Experiment:
         print(
             f"Running {len(self.models)} models on {len(self.tasks)} tasks ({len(self.videos)} unique videos)"
         )
+        output_dir = Path(self.output_dir) / self.id / "results"
+        output_dir.mkdir(exist_ok=True, parents=True)
+        (output_dir / "config.yaml").write_text(Path(self.config_file).read_text())
+
         results: list[pl.DataFrame] = []
         for get_model in self.models:
             model = get_model()
@@ -69,11 +73,9 @@ class Experiment:
             result = model.predict(self.videos, self.tasks)
             if result is None:
                 continue
-            results.append(result.drop("metadata"))
+            result = result.drop("metadata")
+            result.write_json(output_dir / f"{model.id}.json")
+            results.append(result)
         result = pl.concat(results)
 
-        output_dir = Path(self.output_dir) / self.id
-        output_dir.mkdir(exist_ok=True, parents=True)
-        (output_dir / "config.yaml").write_text(Path(self.config_file).read_text())
-        result.write_json(output_dir / "results.json")
         return result

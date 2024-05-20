@@ -1,8 +1,11 @@
+import base64
 import hashlib
 import json
 import logging
 from pathlib import Path
 
+import cv2
+import einops
 import numpy as np
 import plotly.express as px
 import polars as pl
@@ -31,7 +34,7 @@ def standardize(df: pl.DataFrame) -> pl.DataFrame:
     )
     df = df.join(scores_stats, on=["model", "task", "label"]).with_columns(
         score=pl.when(c("model") != "gpt4v")
-        .then((c("score") - c("mean_score")) / c("std_score"))
+        .then((c("score") - c("mean_score")) / (c("std_score") + 1e-6))
         .otherwise(c("score"))
     )
     return df
@@ -63,7 +66,7 @@ def performance_per_task(data: pl.DataFrame):
 
 
 def add_random_baseline(scores: pl.DataFrame):
-    random_model_scores = scores.filter(c("model") == scores["model"][0])
+    random_model_scores = scores.filter(c("model") == "viclip_cosine")
     random_model_scores = random_model_scores.with_columns(
         score=pl.lit(np.random.rand(len(random_model_scores))),
         model=pl.lit("ω random"),
@@ -102,3 +105,17 @@ def save_cache(cache, dir, task, model):
     with open(dir / f"{key}.json", "w") as f:
         logging.info(f"Saving cache to {dir / f'{key}.json'}")
         json.dump({"cache": cache, "task": task, "model": model}, f, indent=2)
+
+
+def frames_to_b64(frames: t.Tensor):
+    frames = einops.rearrange(frames, "t c h w -> t h w c")
+    frames_np = frames.numpy()
+    # Convert RGB to BGR
+    frames_np = frames_np[:, :, :, ::-1]
+
+    b64_frames = []
+    for frame in frames_np:
+        _, buffer = cv2.imencode(".jpg", frame)
+        b64_frames.append(base64.b64encode(buffer).decode("utf-8"))  # type: ignore
+
+    return b64_frames
