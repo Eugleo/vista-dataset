@@ -66,7 +66,7 @@ def performance_per_task(data: pl.DataFrame):
 
 
 def add_random_baseline(scores: pl.DataFrame):
-    random_model_scores = scores.filter(c("model") == "viclip_cosine")
+    random_model_scores = scores.unique(["video", "task", "label"])
     random_model_scores = random_model_scores.with_columns(
         score=pl.lit(np.random.rand(len(random_model_scores))),
         model=pl.lit("ω random"),

@@ -215,19 +215,40 @@ Write your answer in three sections: frame descriptions, discussion of a small s
         task_labels: list[str],
         cache: dict,
         normalize: bool = False,
+        verbose: bool = False,
     ):
         response_scores = {}
-        for m in re.finditer(
-            r"-[^a-zA-Z\d]*([a-zA-Z_\d-]+)[^a-zA-Z\d]*: ([\d.]*\d)", response
-        ):
-            label = m.group(1)
-            score = float(m.group(2))
-            response_scores[label] = score
 
-        if any(l not in response_scores for l in task_labels):
+        for l in task_labels:
+            relevant_lines = [
+                line
+                for line in response.splitlines()
+                if re.findall(rf"\b{l}\b", line, flags=re.IGNORECASE)
+            ]
+
+            scores = []
+            for line in relevant_lines:
+                scores += re.findall(r"(?<!_)([0-9]+(?:\.[0-9]+)?)", line)
+            if not scores:
+                continue
+
+            response_scores[l] = max(float(s) for s in scores)
+
+        # for m in re.finditer(
+        #     r"-[^a-zA-Z\d]*([a-zA-Z_\d-]+)[^a-zA-Z\d]*:[^a-zA-Z\d]*([\d.]*\d)",
+        #     response,
+        # ):
+        #     label = m.group(1)
+        #     score = float(m.group(2))
+        #     response_scores[label] = score
+
+        if verbose and any(
+            (l not in response_scores and l in response)
+            for l in [label for label in task_labels if label in path.split("/")]
+        ):
             print(f"WARNING: Missing scores for some labels in {path}")
             print(f"Response: {response}")
-            print(f"Missing labels: {set(task_labels) - set(response_scores.keys())}")
+            print()
 
         label_scores = {label: -0.1 for label in task_labels} | response_scores
         scores = [label_scores[label] for label in task_labels]

@@ -1,3 +1,5 @@
+from typing import Optional
+
 import numpy as np
 import plotly.express as px
 import polars as pl
@@ -7,7 +9,7 @@ from polars import col as c
 from sklearn.preprocessing import LabelBinarizer
 
 
-def mean_average_precision(task_labels: dict, group):
+def average_precision(task_labels: dict, group):
     labels = task_labels[group.struct.field("task")[0]]
     lb = LabelBinarizer()
     lb.fit(labels)
@@ -21,7 +23,7 @@ def mean_average_precision(task_labels: dict, group):
     )
     if len(lb.classes_) == 2:
         # LabelBinarizer returns a 1-column array in this case
-        y_true = np.concatenate([y_true, 1 - y_true], axis=1)  # type: ignore
+        y_true = np.concatenate([1 - y_true, y_true], axis=1)  # type: ignore
     y_score = scores.reshape(n_samples, len(lb.classes_))
 
     return skm.average_precision_score(y_true=y_true, y_score=y_score, average=None)
@@ -30,18 +32,17 @@ def mean_average_precision(task_labels: dict, group):
 def map_plot(per_label_map: pl.DataFrame, title: str):
     per_task_map = (
         per_label_map.group_by("task", "model")
-        .agg(mean_mAP=c("mAP").mean(), error=c("mAP").std() / c("mAP").len().sqrt())
+        .agg(mAP=c("AP").mean(), error=c("AP").std() / c("AP").len().sqrt())
         .sort("task", "model")
     )
     fig = px.bar(
         per_task_map.to_pandas(),
-        x="mean_mAP",
+        x="mAP",
         y="task",
         color="model",
         title=title,
         barmode="group",
         error_x="error",
-        labels={"mean_mAP": "Mean AP over all classes"},
     )
     fig.update_xaxes(range=[0, 1])
     fig.update_layout(
@@ -58,7 +59,7 @@ def task_performance(
     df: pl.DataFrame,
     metric: str,
     title: str,
-    baselines: dict,
+    baselines: Optional[dict],
     labels: dict,
     tasks: list,
 ):
@@ -82,7 +83,7 @@ def task_performance(
         rows=nrows,
         cols=ncols,
         subplot_titles=[t.removeprefix(title) for t in tasks] + model_titles,
-        horizontal_spacing=0.01,
+        horizontal_spacing=0.05,
         vertical_spacing=0.1,
     )
 
@@ -97,7 +98,8 @@ def task_performance(
         subplot.update_layout(showlegend=False)
         fig.add_traces(subplot["data"], rows=1, cols=task_idx)
         if task != "average":
-            fig.add_hline(y=baselines[task], line_dash="dot", col=task_idx)  # type: ignore
+            if baselines:
+                fig.add_hline(y=baselines[task], line_dash="dot", col=task_idx)  # type: ignore
             for model_idx, model in enumerate(models, start=2):
                 task_df = df.filter(c("task") == task, c("model") == model)
                 task_labels = labels[task]
