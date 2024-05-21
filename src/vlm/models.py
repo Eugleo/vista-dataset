@@ -284,11 +284,7 @@ Write your answer in three sections: frame descriptions, discussion of a small s
         )
 
     def _build_batch_message(self, item: dict, task: Task):
-        path = item["path"]
         assert task.prompt_gpt is not None
-
-        logging.info(f"Predicting task {task.id} for video: {path}")
-        logging.info(f"True label: {item['labels'][task.id]}")
 
         class_list = "\n".join(
             [
@@ -316,36 +312,45 @@ Write your answer in three sections: frame descriptions, discussion of a small s
         if self._async_batch:
             print("WARNING: Ignoring all cache when using async_batch")
 
-            task_list = [
-                {
-                    "custom_id": f"{item['path']},{task.id}",
-                    "method": "POST",
-                    "url": "/v1/chat/completions",
-                    "body": {
-                        "model": self._model,
-                        "messages": self._build_batch_message(item, task),
-                        "max_tokens": 2500,  # Hopefully not needed
-                    },
-                }
-                for item in dataset
-                for task in tasks
-                if item["labels"][task.id]
-            ]
+            batch_ids = []
 
-            with jsonlines.open(".cache/batchinput.jsonl", "w") as writer:
-                writer.write_all(task_list)
+            for group in set("/".join(task.id.split("/")[:2]) for task in tasks):
+                logging.info(f"Sending off batch file for group {group}")
 
-            batch_input_file = self._client.files.create(
-                file=open(".cache/batchinput.jsonl", "rb"), purpose="batch"
-            )
+                task_list = [
+                    {
+                        "custom_id": f"{item['path']},{task.id}",
+                        "method": "POST",
+                        "url": "/v1/chat/completions",
+                        "body": {
+                            "model": self._model,
+                            "messages": self._build_batch_message(item, task),
+                            "max_tokens": 2500,  # Hopefully not needed
+                        },
+                    }
+                    for item in dataset
+                    for task in tasks
+                    if task.id.startswith(group) and item["labels"][task.id]
+                ]
 
-            batch_object = self._client.batches.create(
-                input_file_id=batch_input_file.id,
-                endpoint="/v1/chat/completions",
-                completion_window="24h",
-            )
+                with jsonlines.open(".cache/batchinput.jsonl", "w") as writer:
+                    writer.write_all(task_list)
 
-            logging.info(f"Created batch object: {batch_object}")
+                batch_input_file = self._client.files.create(
+                    file=open(".cache/batchinput.jsonl", "rb"), purpose="batch"
+                )
+
+                batch_object = self._client.batches.create(
+                    input_file_id=batch_input_file.id,
+                    endpoint="/v1/chat/completions",
+                    completion_window="24h",
+                )
+
+                logging.info(f"Created batch object: {batch_object} for group {group}")
+
+                batch_ids.append(batch_object.id)
+
+            logging.info(f"Created batches: {batch_ids}")
 
             return None
 

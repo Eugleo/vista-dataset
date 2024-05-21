@@ -64,7 +64,9 @@ class Experiment:
         )
         output_dir = Path(self.output_dir) / self.id / "results"
         output_dir.mkdir(exist_ok=True, parents=True)
-        (output_dir / "config.yaml").write_text(Path(self.config_file).read_text())
+        (Path(self.output_dir) / self.id / "config.yaml").write_text(
+            Path(self.config_file).read_text()
+        )
 
         results: list[pl.DataFrame] = []
         for get_model in self.models:

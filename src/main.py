@@ -10,6 +10,7 @@ import openai
 import polars as pl
 import typer
 from polars import col as c
+from rich.pretty import pprint
 from rich.progress import Progress, SpinnerColumn, TextColumn
 from vlm import plots, utils
 from vlm.config import ExperimentConfig
@@ -20,23 +21,29 @@ app = typer.Typer()
 
 
 @app.command()
+def cancel_batch(
+    batch_ids: Annotated[list[str], typer.Argument()],
+):
+    dotenv.load_dotenv()
+    client = openai.Client()
+    for batch_id in batch_ids:
+        client.batches.cancel(batch_id)
+        print(f"Batch {batch_id} is cancelled.")
+
+
+@app.command()
 def download_batch(
-    batch_id: Annotated[str, typer.Argument()],
+    batch_ids: Annotated[list[str], typer.Argument()],
     experiment: Annotated[Optional[str], typer.Option()] = None,
     experiment_dir: Annotated[
         str, typer.Option()
     ] = "/data/datasets/vlm_benchmark/experiments",
     task_dir: Annotated[str, typer.Option()] = "/data/datasets/vlm_benchmark/tasks",
     video_dir: Annotated[str, typer.Option()] = "/data/datasets/vlm_benchmark/videos",
+    verbose: Annotated[bool, typer.Option()] = False,
 ):
     dotenv.load_dotenv()
     client = openai.Client()
-    batch_file = client.batches.retrieve(batch_id)
-
-    if batch_file.status != "completed":
-        print(f"Batch {batch_id} is not completed yet. Status: {batch_file.status}")
-        return
-
     if experiment is None:
         experiments = [d for d in Path(experiment_dir).iterdir() if d.is_dir()]
         dir = sorted(experiments, key=lambda d: d.stat().st_mtime)[-1]
@@ -44,49 +51,70 @@ def download_batch(
     else:
         dir = Path(experiment_dir) / experiment
 
-    assert batch_file.output_file_id is not None
-    content = client.files.content(batch_file.output_file_id)
-    content.write_to_file(dir / "batch_response.jsonl")
+    task_true_labels = {}
 
-    results = []
-    with jsonlines.open(dir / "batch_response.jsonl") as reader:
-        for response in reader:
-            model = response["response"]["body"]["model"]
-            if response["response"]["status_code"] != 200:
-                print(f"WARNING: Request failed: {response}")
-                continue
-            path, task_id = response["custom_id"].split(",")
-            answer = response["response"]["body"]["choices"][0]["message"]["content"]
+    for batch_id in batch_ids:
+        batch_file = client.batches.retrieve(batch_id)
 
-            task = Task.from_file(task_id, Path(task_dir) / f"{task_id}.yaml")
-            with open(Path(task_dir) / f"{task_id}_data.json") as f:
-                true_labels = {
-                    str(Path(video_dir) / obj["path"]): obj["label"]
-                    for obj in json.load(f)
-                }
+        if batch_file.status != "completed":
+            print(f"{batch_id}: {batch_file.status}")
+            if verbose:
+                pprint(batch_file)
+            continue
 
-            label_scores = GPTModel.parse_and_cache_scores(
-                answer, path, task.labels, cache={}
-            )
+        assert batch_file.output_file_id is not None
+        batch_response_dir = dir / "batch_responses"
+        batch_response_dir.mkdir(exist_ok=True, parents=True)
+        batch_reponse_file = batch_response_dir / f"{batch_id}.jsonl"
+        if not batch_reponse_file.exists():
+            print(f"Downloading batch response for {batch_id}...")
+            content = client.files.content(batch_file.output_file_id)
+            content.write_to_file(batch_reponse_file)
 
-            results += [
-                {
-                    "task": task_id,
-                    "model": model,
-                    "video": path,
-                    "label": label,
-                    "label_idx": label_idx,
-                    "score": score,
-                    "true_label": true_labels[path],
-                    "true_label_idx": task.labels.index(true_labels[path]),
-                }
-                for label_idx, (label, score) in enumerate(label_scores.items())
-            ]
+        results = []
+        with jsonlines.open(batch_reponse_file) as reader:
+            for response in reader:
+                model = response["response"]["body"]["model"]
+                if response["response"]["status_code"] != 200:
+                    print(f"WARNING: Request failed: {response}")
+                    continue
+                path, task_id = response["custom_id"].split(",")
+                answer = response["response"]["body"]["choices"][0]["message"][
+                    "content"
+                ]
 
-    results = pl.DataFrame(results)
-    result_dir = dir / "results"
-    result_dir.mkdir(exist_ok=True, parents=True)
-    results.write_json(result_dir / f"{model}.json")
+                if task_id not in task_true_labels:
+                    task = Task.from_file(task_id, Path(task_dir) / f"{task_id}.yaml")
+                    with open(Path(task_dir) / f"{task_id}_data.json") as f:
+                        true_labels = {
+                            str(Path(video_dir) / obj["path"]): obj["label"]
+                            for obj in json.load(f)
+                        }
+                        task_true_labels[task_id] = true_labels
+                true_labels = task_true_labels[task_id]
+
+                label_scores = GPTModel.parse_and_cache_scores(
+                    answer, path, task.labels, cache={}
+                )
+
+                results += [
+                    {
+                        "task": task_id,
+                        "model": model,
+                        "video": path,
+                        "label": label,
+                        "label_idx": label_idx,
+                        "score": score,
+                        "true_label": true_labels[path],
+                        "true_label_idx": task.labels.index(true_labels[path]),
+                    }
+                    for label_idx, (label, score) in enumerate(label_scores.items())
+                ]
+
+        results = pl.DataFrame(results)
+        result_dir = dir / "results"
+        result_dir.mkdir(exist_ok=True, parents=True)
+        results.write_json(result_dir / f"{model}_{batch_id}.json")
 
 
 @app.command()
