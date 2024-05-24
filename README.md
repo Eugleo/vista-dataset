@@ -52,21 +52,28 @@ If you're running this on CAIS, you don't need to download the models (unless yo
             hf_model: ViT-bigG-14/laion2b_s39b_b160k
             # CLIP models also require the number of frames to average over
             n_frames: 32
-        # - kind: gpt
-        #   # GPT models require the number of frames that are used as input
-        #   n_frames: 5
+        - kind: gpt
+           # GPT models require the number of frames that are used as input
+           n_frames: 5
+           # GPT models also require the specific model to use (in the format you'd specify it in the OAI API)
+           model: gpt-4o
     ```
+
+    If you're using one of the GPT models, don't forget to put your OPENAI_API_KEY in the `.env` file.
+
 5. Run the experiment by running
     ```shell
     vlm evaluate [path to config file]
     ```
     This will create a new folder in `output_dir`, and inside of it, a `results.csv` with results for all the tasks, models, and videos.
 
-6. Optionally generate the plots by running
+6. Generate the plots by running
     ```shell
-    vlm plot --experiment-dir [...] [optional: experiment name]
+    vlm plot --experiment-dir [...] --task-dir [...] [optional: experiment name]
     ```
     If no experiment name is given, the latest experiment in `experiment-dir` is loaded by default. This creates a folder `plots` inside of the experiment's directory (where `results.csv` is).
+
+    It is recommended to create your own plotting function that will group the tasks in your dataset in the way you think is best (by default, each task is plotted separately). You can take a look at `plot` and `plot_alfred` in `main.py` for ideas.
 
 ## Tasks
 
@@ -75,10 +82,6 @@ A task is one multiclass classification problem. The definition of a task `[task
 ```yaml
 # in [task dir]/open_cabinet.yaml
 
-# Optional, only needed for the GPT4-V model
-prompt_gpt: [...]
-# Optional, only needed for the projection head that we currently don't support
-prompt_baseline: a container
 # Required
 label_prompts:
     # label id (used in the task data, see below): label description (given to the evaluation head / to gpt as a part of the prompt)
@@ -86,6 +89,12 @@ label_prompts:
     observing_opened: a video where we observe an open kitchen cabinet
     observing_closed: a video where we observe a closed kitchen cabinet
     actively_closing: a video where a kitchen cabinet is being closed
+# Optional, only needed for the GPT models
+prompt_gpt: [...]
+# Optional, only needed for the projection head that we currently don't support
+prompt_baseline: a container
+# Optional, not used by the evaluate code, but can be useful for custom plotting
+metadata: [any dictionary]
 ```
 
 Each task will have some labeled data. The data (videos) are stored in a separate directory, but the labels are stored with the task definition in `task_dir`. The data file for task `[task id]` have to be stored in `[task id]_data.json`. For example:
@@ -127,7 +136,7 @@ wget -P .cache/encoders/s3d https://www.rocq.inria.fr/cluster-willow/amiech/howt
 
 **CLIP**: Nothing needs to be done, CLIP will get downloaded automatically.
 
-**GPT-4V**: Put your OpenAI API key into `.env` file in the project root:
+**OpenAI models**: Put your OpenAI API key into `.env` file in the project root:
 
 ```shell
 # inside .env
