@@ -1,16 +1,10 @@
-import base64
-import hashlib
-import json
 import logging
 import re
 from functools import partial
-from pathlib import Path
 from typing import Callable, Optional
 
 import backoff
-import cv2
 import dotenv
-import einops
 import jsonlines
 import openai
 import polars as pl
@@ -117,7 +111,7 @@ class EncoderModel(Model):
         results = []
         # for batch in track(dataloader):
         # force the dataloader to load all the videos up front, so that if any are invalid, an error will be thrown before any predictions are made
-        for batch in list(dataloader):
+        for batch in track(list(dataloader)):
             results.append(self._predict_batch(batch, tasks))
         result = pl.concat(results)
 
@@ -331,10 +325,10 @@ Write your answer in three sections: frame descriptions, discussion of a small s
 
         return history
 
-    def predict(self, videos: list[Video], tasks: list[Task]) -> pl.DataFrame:
+    def predict(self, videos: list[Video], tasks: list[Task]) -> Optional[pl.DataFrame]:
         logging.info("Configuring dataset...")
         subsample = partial(utils.subsample, n_frames=self._n_frames)
-        transforms = [subsample, GPT4VModel._frames_to_b64]
+        transforms = [subsample, utils.frames_to_b64]
         dataset_iter = VideoDataset(videos, tasks, transforms)
         # converting to a list forces all the videos to be converted up front, so that if any are invalid, an error will be thrown before any GPT-4 calls are made
         logging.info("Processing videos...")

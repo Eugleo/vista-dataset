@@ -1,3 +1,4 @@
+import uuid
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Callable, Optional, Protocol, Union
@@ -76,7 +77,7 @@ class Experiment:
             if result is None:
                 continue
             result = result.drop("metadata")
-            result.write_json(output_dir / f"{model.id}.json")
+            result.write_json(output_dir / f"{model.id}_{uuid.uuid4()}.json")
             results.append(result)
         result = pl.concat(results)
 
