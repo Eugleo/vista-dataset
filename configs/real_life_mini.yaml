@@ -1,6 +1,5 @@
 tasks:
-  - opening_or_closing/door
-  - object/small
+  - opening_or_closing_mini/door
 models:
   - kind: gpt
     n_frames: 5

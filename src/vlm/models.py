@@ -32,6 +32,7 @@ class VideoDataset(IterableDataset):
         self._videos = videos
         self._tasks = [task.id for task in tasks]
         self._transforms = transforms
+        logging.info(f"VideoDataset initialized with {len(self)} videos")
 
     def __len__(self):
         return len(self._videos)
@@ -114,7 +115,9 @@ class EncoderModel(Model):
         dataloader = DataLoader(dataset, batch_size=self._batch_size)
 
         results = []
-        for batch in track(dataloader):
+        # for batch in track(dataloader):
+        # force the dataloader to load all the videos up front, so that if any are invalid, an error will be thrown before any predictions are made
+        for batch in list(dataloader):
             results.append(self._predict_batch(batch, tasks))
         result = pl.concat(results)
 
@@ -266,7 +269,10 @@ Write your answer in three sections: frame descriptions, discussion of a small s
 
         logging.info(f"Predicting task {task.id} for video: {path}")
         logging.info(f"True label: {item['labels'][task.id]}")
-        if path not in cache:
+        if path in cache:
+            logging.info(f"Using cached scores: {cache[path]}")
+        else:
+            logging.info("No cached scores found")
             system_prompt = [{"type": "text", "text": task.prompt_gpt}]
             history = [{"role": "system", "content": system_prompt}]
 
@@ -325,10 +331,15 @@ Write your answer in three sections: frame descriptions, discussion of a small s
 
         return history
 
-    def predict(self, videos: list[Video], tasks: list[Task]) -> Optional[pl.DataFrame]:
+    def predict(self, videos: list[Video], tasks: list[Task]) -> pl.DataFrame:
+        logging.info("Configuring dataset...")
         subsample = partial(utils.subsample, n_frames=self._n_frames)
-        transforms = [subsample, utils.frames_to_b64]
-        dataset = list(VideoDataset(videos, tasks, transforms))
+        transforms = [subsample, GPT4VModel._frames_to_b64]
+        dataset_iter = VideoDataset(videos, tasks, transforms)
+        # converting to a list forces all the videos to be converted up front, so that if any are invalid, an error will be thrown before any GPT-4 calls are made
+        logging.info("Processing videos...")
+        dataset = list(dataset_iter)
+        logging.info("Predicting...")
 
         if self._async_batch:
             print("WARNING: Ignoring all cache when using async_batch")
@@ -380,7 +391,7 @@ Write your answer in three sections: frame descriptions, discussion of a small s
         for item in dataset:
             for task in [task for task in tasks if item["labels"][task.id]]:
                 task_info = {
-                    "id": task.id,
+                    # "id": task.id,  # the task ID is not given to GPT-4, so it's safe to make the cache not depend on it
                     "gpt4_prompt": task.prompt_gpt,
                     "labels": [
                         description for description in task.label_prompts.values()
