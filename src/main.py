@@ -21,6 +21,19 @@ from vlm.objects import Task
 app = typer.Typer()
 
 
+def get_tasks(df, prefix):
+    return [t for t in df.get_column("task").unique() if t.startswith(prefix)]
+
+
+def get_experiment_dir(experiment_dir, experiment_id):
+    if experiment_id is None:
+        experiments = [d for d in Path(experiment_dir).iterdir() if d.is_dir()]
+        print(f"Loading the most recent experiment: {dir}...")
+        return sorted(experiments, key=lambda d: d.stat().st_mtime)[-1]
+    else:
+        return Path(experiment_dir) / experiment_id
+
+
 @app.command()
 def cancel_batch(
     batch_ids: Annotated[list[str], typer.Argument()],
@@ -45,13 +58,7 @@ def download_batch(
 ):
     dotenv.load_dotenv()
     client = openai.Client()
-    if experiment is None:
-        experiments = [d for d in Path(experiment_dir).iterdir() if d.is_dir()]
-        dir = sorted(experiments, key=lambda d: d.stat().st_mtime)[-1]
-        print(f"Loading the most recent experiment: {dir}...")
-    else:
-        dir = Path(experiment_dir) / experiment
-
+    dir = get_experiment_dir(experiment_dir, experiment)
     task_true_labels = {}
 
     for batch_id in batch_ids:
@@ -144,12 +151,7 @@ def plot_alfred(
     ] = "/data/datasets/vlm_benchmark/experiments",
     task_dir: Annotated[str, typer.Option()] = "/data/datasets/vlm_benchmark/tasks",
 ):
-    if experiment is None:
-        experiments = [d for d in Path(experiment_dir).iterdir() if d.is_dir()]
-        dir = sorted(experiments, key=lambda d: d.stat().st_mtime)[-1]
-        print(f"Loading the most recent experiment: {dir}...")
-    else:
-        dir = Path(experiment_dir) / experiment
+    dir = get_experiment_dir(experiment_dir, experiment)
 
     with Progress(
         SpinnerColumn(),
@@ -208,7 +210,7 @@ def plot_alfred(
         problems = plots.incorrect_video_labels(predictions)
         plot_dir = dir / "plots"
         plot_dir.mkdir(exist_ok=True, parents=True)
-        problems.write_csv(plot_dir / "problems.csv")
+        problems.write_csv(plot_dir / "misclassification_num.csv")
 
         def get_tasks(prefix):
             return [t for t in df.get_column("task").unique() if t.startswith(prefix)]
@@ -230,11 +232,11 @@ def plot_alfred(
                 "Action: Toggling On v. Off": get_tasks("foundation/toggle"),
             }
             | {
-                f"Level {n}, permutation": get_tasks(f"level_{n}/permutation")
+                f"Level {n}: permutation": get_tasks(f"level_{n}/permutation")
                 for n in range(2, 9)
             }
-            | {f"Level {n}, remix": get_tasks(f"level_{n}/remix") for n in range(2, 9)}
-            | {f"Level {n}, overall": get_tasks(f"level_{n}") for n in range(2, 9)}
+            | {f"Level {n}: remix": get_tasks(f"level_{n}/remix") for n in range(2, 9)}
+            | {f"Level {n}: overall": get_tasks(f"level_{n}") for n in range(2, 9)}
         )
 
         for name, tasks in groups.items():
@@ -253,21 +255,22 @@ def plot_alfred(
                 metric_label="Mean AP over all labels",
                 title=f"{name} (standardized)",
             )
-            plot.write_image(plot_dir / f"{filename}_mAP, overall.png", scale=2)
+            plot.write_image(plot_dir / f"{filename}_mAP.png", scale=2)
 
-            if "remix" in name:
-                plot = plots.task_performance(
-                    per_label_metrics.filter(pl.col("task").is_in(tasks))
-                    .group_by("task", "model")
-                    .agg(mAP=c("AP").mean()),
-                    predictions.filter(pl.col("task").is_in(tasks)),
-                    metric="mAP",
-                    title=f"{name} (standardized)",
-                    baselines=None,
-                    labels=task_labels,
-                    tasks=tasks,
-                )
-                plot.write_image(plot_dir / f"{filename}_details.png", scale=2)
+            details_dir = plot_dir / "details"
+            details_dir.mkdir(exist_ok=True, parents=True)
+            plot = plots.task_performance(
+                per_label_metrics.filter(pl.col("task").is_in(tasks))
+                .group_by("task", "model")
+                .agg(mAP=c("AP").mean()),
+                predictions.filter(pl.col("task").is_in(tasks)),
+                metric="mAP",
+                title=f"{name} (standardized)",
+                baselines=None,
+                labels=task_labels,
+                tasks=tasks,
+            )
+            plot.write_image(details_dir / f"{filename}_matrices.png", scale=2)
 
 
 @app.command()
@@ -278,75 +281,100 @@ def plot(
     ] = "/data/datasets/vlm_benchmark/experiments",
     task_dir: Annotated[str, typer.Option()] = "/data/datasets/vlm_benchmark/tasks",
 ):
-    if experiment is None:
-        experiments = [d for d in Path(experiment_dir).iterdir() if d.is_dir()]
-        dir = sorted(experiments, key=lambda d: d.stat().st_mtime)[-1]
-        print(f"Loading the most recent experiment: {dir}...")
-    else:
-        dir = Path(experiment_dir) / experiment
+    dir = get_experiment_dir(experiment_dir, experiment)
 
     with Progress(
         SpinnerColumn(),
         TextColumn("[progress.description]{task.description}"),
     ) as progress:
         progress.add_task("Creating plots...")
-        df = pl.read_json(dir / "results.json")
-
-        scores = utils.standardize(df)
-        predictions = utils.get_predictions(scores)
-        metrics = (
-            predictions.group_by(["task", "model"])
-            .agg(accuracy=utils.compute_metric(utils.accuracy))
-            .sort("task", "model")
+        df = pl.concat(
+            [pl.read_json(file) for file in (dir / "results").glob("*.json")]
         )
 
+        scores = utils.standardize(df)
+        scores = utils.add_random_baseline(scores)
+
+        num_nulls = len(scores.filter(c("score").is_null()))
+        if num_nulls > 0:
+            print(f"WARNING: {num_nulls} null scores found")
+            scores = scores.filter(c("score").is_not_null())
+
+        task_labels = {}
+        per_label_baselines = []
+        for t in df.get_column("task").unique():
+            try:
+                task_labels[t] = Task.from_file(t, Path(task_dir) / f"{t}.yaml").labels
+            except FileNotFoundError:
+                continue
+            with open(Path(task_dir) / f"{t}_data.json") as f:
+                label_counts = Counter(v["label"] for v in json.load(f))
+            for l in task_labels[t]:
+                per_label_baselines.append(
+                    {
+                        "task": t,
+                        "model": "Ω random",
+                        "AP": label_counts[l] / sum(label_counts.values()),
+                    }
+                )
+        per_label_baselines = pl.DataFrame(per_label_baselines)
+
+        per_label_metrics = (
+            # This sort is very important
+            scores.sort("task", "model", "video", "label")
+            .group_by("task", "model")
+            .agg(
+                AP=pl.struct("task", "label", "score", "true_label").map(
+                    partial(plots.average_precision, task_labels)
+                )
+            )
+            .explode("AP")
+            .sort("task", "model")
+        )
+        per_label_metrics = pl.concat([per_label_metrics, per_label_baselines])
+        per_label_metrics.write_csv(dir / "per_label_metrics.csv")
+
+        predictions = utils.get_predictions(scores)
         problems = plots.incorrect_video_labels(predictions)
         plot_dir = dir / "plots"
         plot_dir.mkdir(exist_ok=True, parents=True)
-        problems.write_csv(plot_dir / "problems.csv")
+        problems.write_csv(plot_dir / "misclassification_num.csv")
 
-        group_names = set(t.split("/")[1] for t in df.get_column("task").unique())
         groups = {
-            name: [t for t in df.get_column("task").unique() if t.startswith(name)]
-            for name in group_names
+            f"Task: {t}": [t]
+            for t in df.get_column("task").unique()
+            if (Path(task_dir) / f"{t}.yaml").exists()
         }
 
         for name, tasks in groups.items():
-            tasks = [t for t in tasks if len(df.filter(c("task") == t)) > 0]
-            if not tasks:
-                continue
-            labels = {
-                t: list(
-                    Task.from_file(t, Path(task_dir) / f"{t}.yaml").label_prompts.keys()
-                )
-                for t in tasks
-            }
-            baselines = {t: 1 / len(labels[t]) for t in tasks for t in tasks}
-            plot = plots.task_performance(
-                metrics.filter(pl.col("task").is_in(tasks)),
-                predictions.filter(pl.col("task").is_in(tasks)),
-                metric="accuracy",
-                title=f"{name}",
-                baselines=baselines,
-                labels=labels,
-                tasks=tasks,
+            filename = name.replace(": ", "_").replace(" ", "-").replace("/", "_")
+            plot = plots.map_plot(
+                per_label_metrics.filter(pl.col("task").is_in(tasks)),
+                f"{name} (standardized)",
             )
             plot_dir = dir / "plots"
             plot_dir.mkdir(exist_ok=True, parents=True)
-            plot.write_image(plot_dir / f"{name}_performance.pdf")
+            plot.write_image(plot_dir / f"{filename}_mAP.png", scale=2)
 
             plot = plots.overall_performance(
-                metrics.filter(pl.col("task").is_in(tasks)),
-                metric="accuracy",
+                per_label_metrics.filter(pl.col("task").is_in(tasks)),
+                metric="AP",
+                metric_label="Mean AP over all labels",
                 title=f"{name} (standardized)",
             )
-            plot.write_image(plot_dir / f"{name}_overall.pdf")
+            plot.write_image(plot_dir / f"{filename}_mAP.png", scale=2)
 
-        print("Plots seed")
-
-
-if __name__ == "__main__":
-    plot_alfred(
-        experiment_dir="experiments",
-        task_dir="tasks/alfred",
-    )
+            details_dir = plot_dir / "details"
+            details_dir.mkdir(exist_ok=True, parents=True)
+            plot = plots.task_performance(
+                per_label_metrics.filter(pl.col("task").is_in(tasks))
+                .group_by("task", "model")
+                .agg(mAP=c("AP").mean()),
+                predictions.filter(pl.col("task").is_in(tasks)),
+                metric="mAP",
+                title=f"{name} (standardized)",
+                baselines=None,
+                labels=task_labels,
+                tasks=tasks,
+            )
+            plot.write_image(details_dir / f"{filename}_matrices.png", scale=2)
