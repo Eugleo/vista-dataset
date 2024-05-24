@@ -4,6 +4,7 @@ from pathlib import Path
 import jsonlines
 import plotly.express as px
 import polars as pl
+import sklearn.metrics as skm
 import streamlit as st
 import typer
 
@@ -20,16 +21,28 @@ def load_logs(log_dir):
 def display_message(msg):
     with st.chat_message(msg["role"]):
         if isinstance(msg["content"], str):
-            st.markdown(msg["content"])
+            text = (
+                msg["content"]
+                .replace("# FIRST TASK", "**FIRST TASK**")
+                .replace("# SECOND TASK", "**SECOND TASK**")
+                .replace("## EXAMPLE", "**EXAMPLE**\n")
+            )
+            st.markdown(text)
         else:
             with st.container():
                 for content in msg["content"]:
                     if isinstance(content, str):
-                        st.markdown(content)
+                        text = (
+                            content.replace("# FIRST TASK", "**FIRST TASK**")
+                            .replace("# SECOND TASK", "**FIRST TASK**")
+                            .replace("## EXAMPLE", "**EXAMPLE**\n")
+                        )
+                        st.markdown(text)
                     elif content["type"] == "text":
                         text = (
                             content["text"]
                             .replace("# FIRST TASK", "**FIRST TASK**")
+                            .replace("# SECOND TASK", "**FIRST TASK**")
                             .replace("## EXAMPLE", "**EXAMPLE**\n")
                         )
                         st.markdown(text)
@@ -58,6 +71,27 @@ def select_video(index):
     st.session_state.video_index = index
 
 
+def confusion_matrix(true_labels, predicted_labels, labels):
+    matrix = skm.confusion_matrix(
+        true_labels,
+        predicted_labels,
+        labels=labels,
+    )
+    fig = px.imshow(
+        matrix,
+        x=labels,
+        y=labels,
+        text_auto=True,
+        color_continuous_scale="Purples",
+    )
+    fig.update_layout(
+        showlegend=False,
+        coloraxis_showscale=False,
+        margin=dict(l=60, r=50, t=0, pad=0),
+    )
+    return fig
+
+
 def main(log_dir: str):
     st.set_page_config(layout="wide")
 
@@ -72,11 +106,20 @@ def main(log_dir: str):
     video = st.sidebar.selectbox(
         "Select Video", videos, index=st.session_state.video_index
     )
-
     log = next(log for log in logs if log["task"] == task_id and log["video"] == video)
 
-    left_col, right_col = st.columns([1, 3])
+    task_logs = [log for log in logs if log["task"] == task_id]
+    true_labels = [log["true_label"] for log in task_logs]
+    predicted_labels = [log["predicted_label"] for log in task_logs]
+    labels = list(log["label_descriptions"].keys())
 
+    st.sidebar.markdown("---")
+    st.sidebar.plotly_chart(
+        confusion_matrix(true_labels, predicted_labels, labels),
+        use_container_width=True,
+    )
+
+    left_col, right_col = st.columns([1, 3])
     with left_col:
         st.video(log["video"])
 
@@ -105,15 +148,13 @@ def main(log_dir: str):
             color="color",
             color_discrete_map={"green": "green", "blue": "blue", "gray": "gray"},
         )
+        fig.update_yaxes(range=[0, 5])
         st.plotly_chart(fig, use_container_width=True)
 
         for label, description in label_descriptions.items():
-            color = (
-                "green"
-                if label == true_label
-                else ("blue" if label == predicted_label else "gray")
-            )
-            st.markdown(
+            color = "green" if label == true_label else "gray"
+            label = f"{label} 👈" if label == predicted_label else label
+            st.sidebar.markdown(
                 f"**{label}**<br><span style='color:{color}'>{description}</span>",
                 unsafe_allow_html=True,
             )
