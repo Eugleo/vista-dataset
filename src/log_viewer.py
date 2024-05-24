@@ -1,4 +1,3 @@
-import base64
 from pathlib import Path
 
 import jsonlines
@@ -83,11 +82,12 @@ def confusion_matrix(true_labels, predicted_labels, labels):
         y=labels,
         text_auto=True,
         color_continuous_scale="Purples",
+        height=200,
     )
     fig.update_layout(
         showlegend=False,
         coloraxis_showscale=False,
-        margin=dict(l=60, r=50, t=0, pad=0),
+        margin=dict(l=60, r=50, t=0, b=0, pad=0),
     )
     return fig
 
@@ -128,17 +128,27 @@ def main(log_dir: str):
         predicted_label = log["predicted_label"]
         label_descriptions = log["label_descriptions"]
 
-        scores_df = pl.DataFrame(
-            {"label": list(parsed_scores.keys()), "score": list(parsed_scores.values())}
-        )
-        scores_df = scores_df.with_columns(
-            pl.col("label")
-            .apply(
-                lambda x: "green"
-                if x == true_label
-                else ("blue" if x == predicted_label else "gray")
+        # parsed_scores = GPTModel.parse_and_cache_scores(
+        #     log["history"][-1]["content"], "", labels, {}
+        # )
+
+        scores_df = (
+            pl.DataFrame(
+                [
+                    {"label": label, "score": score}
+                    for label, score in parsed_scores.items()
+                ]
             )
-            .alias("color")
+            .with_columns(
+                pl.col("label")
+                .apply(
+                    lambda x: "green"
+                    if x == true_label
+                    else ("blue" if x == predicted_label else "gray")
+                )
+                .alias("color")
+            )
+            .sort("label")
         )
 
         fig = px.bar(
@@ -149,13 +159,14 @@ def main(log_dir: str):
             color_discrete_map={"green": "green", "blue": "blue", "gray": "gray"},
         )
         fig.update_yaxes(range=[0, 5])
+        fig.update_layout(showlegend=False)
         st.plotly_chart(fig, use_container_width=True)
 
         for label, description in label_descriptions.items():
             color = "green" if label == true_label else "gray"
-            label = f"{label} 👈" if label == predicted_label else label
+            label = f"**{label}** 👈" if label == predicted_label else label
             st.sidebar.markdown(
-                f"**{label}**<br><span style='color:{color}'>{description}</span>",
+                f"{label}<br><span style='color:{color}'>{description}</span>",
                 unsafe_allow_html=True,
             )
 

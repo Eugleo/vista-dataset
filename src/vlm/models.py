@@ -11,7 +11,7 @@ import jsonlines
 import openai
 import polars as pl
 import torch as t
-from rich.progress import track
+from rich.progress import Progress, track
 from torch.utils.data import DataLoader, IterableDataset
 from torchvision.io import read_video
 
@@ -123,44 +123,37 @@ class EncoderModel(Model):
 
 
 class GPTModel(Model):
-    scoring_prompt = """Now, given the original frames and your description, score the following potential video descriptions from 0 to 1 based on how well they describe the video you've seen.
-
-NOTE 1: If none of the descriptions seem to match, e.g. if they mention an object you have not described above, you should try to reinterpret the frames, or your description of them. Probably they mean something different than you originally thought. In any case, we are SURE there is exactly one correct description that should be given a score of 1.
-
-NOTE 2: Some details in the descriptions might be incorrect, or might have been unseen by you since you only got 5 frames from the video. The important things are the actions, the objects they DIRECTLY involve, and the order of the actions, nothing else. For example, feel free to ignore details such as "we turn left" and "to the right of a laptop" and similar if they are not relevant to the actions. Pay VERY good attention to the order.
-
-The descriptions are given in the following format:
-
-- (id label) description
-
-Options:
-
-{classes}
-
-The format for your answers should be:
-- id label: your score
-
-But first, include some step-by-step thinking on the matter.
-"""
-
     scoring_prompt_v2 = """
 
 # SECOND TASK
 
-Your second task, only after you finish describing the frames, will be — given the original frames and your description — to score the following potential video descriptions from 0 to 100 based on how well they describe the video you've seen.
+After you finish the first task, your second task will be to summarize your frame descriptions into a natural language description of the whole video, start to finish. Some of the frames will only contain filler information, such as the agent moving from one place to the next, or the agent looking around. These frames are not very relevant to the task. Focus on the frames that contain objects or actions that are relevant to the task, and their order.
 
-NOTE 1: If none of the descriptions seem to match, e.g. if they mention an object you have not described above, you should try to reinterpret the frames, or your description of them. Probably they mean something different than you originally thought. In any case, we are SURE there is exactly one correct description that should be given a score of 1.
+Note that you're guaranteed to receive the very first and very last frames from the video. Thus, if in the first frame we hold an object, we actually start out holding it — not pick-up action is thus performed at the beginning of the video in that case.
 
-NOTE 2: Some details in the descriptions might be incorrect, or might have been unseen by you since you only got 5 frames from the video. The important things are the actions, the objects they DIRECTLY involve, and the order of the actions, nothing else. For example, feel free to ignore details such as "we turn left" and "to the right of a laptop" and similar if they are not relevant to the actions. Pay VERY good attention to the order.
+# THIRD TASK
 
-Options, in the format `- (id label) description`:
+After you finish the second task, you should now compare your description with the following potential descriptions, which are given in the format `- (label) description`:
 
 {classes}
 
-The format for your scores should be:
-- id label: your score
+For each of these, without repeating the whole descriptions, list one or two main differences to your description, and comment on whether the descriptions could still be a match, e.g. because you missed something in your frame descriptions. For example, if the only difference between your description and the given one is that you mentioned a sofa, while the otherwise perfect match description mentioned an arm chair, you might consider trying to reevaluate the frames to see if you maybe just misinterpreted the object.
 
-Write your answer in three sections: frame descriptions, discussion of a small selection of the most likely labels, final scores in the correct format. In the scores section, start with the most likely labels to make sure you fit into the token limit.
+# FOURTH TASK
+
+After you finish the third task, your fourth and final task will be to score the following potential video descriptions on a scale from 0 to 5 based on how well they describe the video you've seen. 5 means the description seems to be the most likely one to match the frames, 0 means it for sure doesn't match. We are SURE there is exactly one correct description that should be given a score of 5.
+
+Make sure one description clearly has the highest score, even if it's not a perfect match. Do not give multiple descriptions the same score, except for 0.
+
+Write your answer in four sections, with their titles being verbatim: Frame Descriptions, Description Summary, Description Comparison, Final Scores
+
+The final scores in the last section should be in the following format, verbatim:
+
+```
+- (label) your score
+```
+
+Be sure not to alter the label in any way, since we will use it to match your scores to the potential descriptions we've given you.
 """
 
     def __init__(self, n_frames: int, cache_dir: str, async_batch: bool, model: str):
@@ -196,18 +189,14 @@ Write your answer in three sections: frame descriptions, discussion of a small s
             openai.APIResponseValidationError,
         ),
     )
-    def _send_request(self, message, history):
-        messages = history + [{"role": "user", "content": message}]
+    def _send_request(self, history):
         response = self._client.chat.completions.create(
-            model=self._model, messages=messages, max_tokens=1200
+            model=self._model, messages=history, max_tokens=2500
         )
         reponse_text = response.choices[0].message.content  # type: ignore
-        logging.info(f"GPT response: {reponse_text}")
-
-        if reponse_text is None:
-            raise ValueError(f"Empty response from GPT. {messages=}, {response=}")
-
-        return reponse_text, [*messages, {"role": "assistant", "content": reponse_text}]
+        return reponse_text or "", history + [
+            {"role": "assistant", "content": reponse_text}
+        ]
 
     @staticmethod
     def parse_and_cache_scores(
@@ -219,6 +208,8 @@ Write your answer in three sections: frame descriptions, discussion of a small s
         verbose: bool = False,
     ):
         response_scores = {}
+
+        response = response.split("Final Scores")[-1]
 
         for l in task_labels:
             relevant_lines = [
@@ -273,21 +264,9 @@ Write your answer in three sections: frame descriptions, discussion of a small s
             logging.info(f"Using cached scores: {cache[path]}")
         else:
             logging.info("No cached scores found")
-            system_prompt = [{"type": "text", "text": task.prompt_gpt}]
-            history = [{"role": "system", "content": system_prompt}]
+            history = self._build_batch_message(item, task)
+            answer, history = self._send_request(history)
 
-            heading = {"type": "text", "text": "Input frames:"}
-            frames = [GPTModel._frame_to_payload(f) for f in item["frames"]]
-            _, history = self._send_request([heading, *frames], history)
-
-            class_list = "\n".join(
-                [
-                    f"- ({label}) {description}"
-                    for label, description in list(task.label_prompts.items())
-                ]
-            )
-            scoring_prompt = GPTModel.scoring_prompt.format(classes=class_list)
-            answer, history = self._send_request(scoring_prompt, history)
             GPTModel.parse_and_cache_scores(answer, path, task.labels, cache)
 
             log_writer.write(
@@ -304,8 +283,6 @@ Write your answer in three sections: frame descriptions, discussion of a small s
                     "label_descriptions": task.label_prompts,
                 }
             )
-
-        logging.info(f"Predicted scores: {cache[path]}")
 
         return pl.DataFrame(
             [
@@ -346,6 +323,49 @@ Write your answer in three sections: frame descriptions, discussion of a small s
 
         return history
 
+    def _build_async_message(
+        self, item: dict, task: Task, log_writer: jsonlines.Writer
+    ):
+        video = item["path"]
+        history = self._build_batch_message(item, task)
+        log_writer.write(
+            {
+                "video": video,
+                "task": task.id,
+                "model": self.id,
+                "history": history,
+                "true_label": item["labels"][task.id],
+                "label_descriptions": task.label_prompts,
+            }
+        )
+
+        return {
+            "custom_id": f"{video},{task.id}",
+            "method": "POST",
+            "url": "/v1/chat/completions",
+            "body": {
+                "model": self._model,
+                "messages": history,
+                "max_tokens": 2500,
+            },
+        }
+
+    def _build_async_requests(self, dataset, tasks, group, log_writer):
+        requests = []
+        with Progress() as progress:
+            processing_task = progress.add_task(
+                "Predicting...", total=len(dataset) * len(tasks)
+            )
+
+            for item in dataset:
+                for task in tasks:
+                    progress.update(processing_task, advance=1)
+                    if task.id.startswith(group) and item["labels"][task.id]:
+                        requests.append(
+                            self._build_async_message(item, task, log_writer)
+                        )
+        return requests
+
     def predict(
         self, videos: list[Video], tasks: list[Task], log_dir: Path
     ) -> Optional[pl.DataFrame]:
@@ -358,72 +378,74 @@ Write your answer in three sections: frame descriptions, discussion of a small s
         dataset = list(dataset_iter)
         logging.info("Predicting...")
 
-        run_id = str(uuid.uuid4())
-
-        if self._async_batch:
-            print("WARNING: Ignoring all cache when using async_batch")
-
-            batch_ids = []
-
-            for group in set("/".join(task.id.split("/")[:2]) for task in tasks):
-                logging.info(f"Sending off batch file for group {group}")
-
-                task_list = [
-                    {
-                        "custom_id": f"{item['path']},{task.id}",
-                        "method": "POST",
-                        "url": "/v1/chat/completions",
-                        "body": {
-                            "model": self._model,
-                            "messages": self._build_batch_message(item, task),
-                            "max_tokens": 2500,  # Hopefully not needed
-                        },
-                    }
-                    for item in dataset
-                    for task in tasks
-                    if task.id.startswith(group) and item["labels"][task.id]
-                ]
-
-                with jsonlines.open(".cache/batchinput.jsonl", "w") as writer:
-                    writer.write_all(task_list)
-
-                batch_input_file = self._client.files.create(
-                    file=open(".cache/batchinput.jsonl", "rb"), purpose="batch"
-                )
-
-                batch_object = self._client.batches.create(
-                    input_file_id=batch_input_file.id,
-                    endpoint="/v1/chat/completions",
-                    completion_window="24h",
-                )
-
-                logging.info(f"Created batch object: {batch_object} for group {group}")
-
-                batch_ids.append(batch_object.id)
-
-            logging.info(f"Created batches: {batch_ids}")
-
-            return None
-
-        print("WARNING: Evaluating synchronously")
-        results = []
-        (log_dir / self.id).mkdir(exist_ok=True, parents=True)
+        log_dir = (
+            log_dir / self.id
+            if not self._async_batch
+            else log_dir / f"requests_{self.id}"
+        )
+        log_dir.mkdir(exist_ok=True, parents=True)
         with jsonlines.open(
-            log_dir / self.id / f"{run_id}.jsonl", "w", sort_keys=True
+            log_dir / f"{uuid.uuid4()}.jsonl", "w", sort_keys=True
         ) as log_writer:
-            for item in dataset:
-                for task in [task for task in tasks if item["labels"][task.id]]:
-                    task_info = {
-                        # "id": task.id,  # the task ID is not given to GPT-4, so it's safe to make the cache not depend on it
-                        "gpt4_prompt": task.prompt_gpt,
-                        "labels": [
-                            description for description in task.label_prompts.values()
-                        ],
-                    }
-                    model_info = {"id": self.id, "n_frames": self._n_frames}
-                    cache = utils.load_cache(self._cache_dir, task_info, model_info)
-                    results.append(self._predict_video(item, task, cache, log_writer))
-                    utils.save_cache(cache, self._cache_dir, task_info, model_info)
-        result = pl.concat(results)
+            if self._async_batch:
+                print("WARNING: Ignoring all cache when using async_batch")
 
-        return result
+                batch_ids = []
+
+                for group in set("/".join(task.id.split("/")[:2]) for task in tasks):
+                    task_list = self._build_async_requests(
+                        dataset, tasks, group, log_writer
+                    )
+
+                    with jsonlines.open(".cache/batchinput.jsonl", "w") as writer:
+                        writer.write_all(task_list)
+
+                    batch_input_file = self._client.files.create(
+                        file=open(".cache/batchinput.jsonl", "rb"), purpose="batch"
+                    )
+
+                    batch_object = self._client.batches.create(
+                        input_file_id=batch_input_file.id,
+                        endpoint="/v1/chat/completions",
+                        completion_window="24h",
+                    )
+
+                    batch_ids.append(batch_object.id)
+
+                logging.info(f"Created batches: {batch_ids}")
+
+                return None
+
+            else:
+                print("WARNING: Evaluating synchronously")
+                results = []
+
+                with Progress() as progress:
+                    processing_task = progress.add_task(
+                        "Predicting...", total=len(dataset) * len(tasks)
+                    )
+                    for item in dataset:
+                        for task in tasks:
+                            progress.update(processing_task, advance=1)
+                            if not item["labels"][task.id]:
+                                continue
+                            task_info = {
+                                "prompt_gpt": task.prompt_gpt,
+                                "labels": [
+                                    description
+                                    for description in task.label_prompts.values()
+                                ],
+                            }
+                            model_info = {"id": self.id, "n_frames": self._n_frames}
+                            cache = utils.load_cache(
+                                self._cache_dir, task_info, model_info
+                            )
+                            results.append(
+                                self._predict_video(item, task, cache, log_writer)
+                            )
+                            utils.save_cache(
+                                cache, self._cache_dir, task_info, model_info
+                            )
+                result = pl.concat(results)
+
+                return result

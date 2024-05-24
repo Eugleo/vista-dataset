@@ -8,6 +8,7 @@ from typing import Annotated, Optional
 
 import dotenv
 import jsonlines
+import log_viewer
 import openai
 import polars as pl
 import typer
@@ -53,6 +54,7 @@ def cancel_batch(
 @app.command()
 def download_batch(
     batch_ids: Annotated[list[str], typer.Argument()],
+    log_dir: Annotated[str, typer.Option()],
     experiment: Annotated[Optional[str], typer.Option()] = None,
     experiment_dir: Annotated[
         str, typer.Option()
@@ -65,6 +67,8 @@ def download_batch(
     client = openai.Client()
     dir = utils.get_experiment_dir(experiment_dir, experiment)
     task_true_labels = {}
+
+    logs = log_viewer.load_logs(dir / "logs" / log_dir)
 
     for batch_id in batch_ids:
         batch_file = client.batches.retrieve(batch_id)
@@ -112,19 +116,34 @@ def download_batch(
                     answer, path, task.labels, cache={}, verbose=verbose
                 )
 
-                results += [
-                    {
-                        "task": task_id,
-                        "model": model,
-                        "video": path,
-                        "label": label,
-                        "label_idx": label_idx,
-                        "score": score,
-                        "true_label": true_labels[path],
-                        "true_label_idx": task.labels.index(true_labels[path]),
-                    }
-                    for label_idx, (label, score) in enumerate(label_scores.items())
-                ]
+                for label_idx, (label, score) in enumerate(label_scores.items()):
+                    results.append(
+                        {
+                            "task": task_id,
+                            "model": model,
+                            "video": path,
+                            "label": label,
+                            "label_idx": label_idx,
+                            "score": score,
+                            "true_label": true_labels[path],
+                            "true_label_idx": task.labels.index(true_labels[path]),
+                        }
+                    )
+
+                for log in logs:
+                    if (
+                        log["task"] == task_id
+                        and log["video"] == path
+                        and "predicted_label" not in log
+                    ):
+                        log["parsed_scores"] = label_scores
+                        log["predicted_label"] = max(label_scores, key=label_scores.get)
+                        log["label_descriptions"] = task.labels
+                        log["true_label"] = true_labels[path]
+
+        (dir / "logs" / model).mkdir(exist_ok=True, parents=True)
+        with jsonlines.open(dir / "logs" / model / "responses.jsonl", "w") as f:
+            f.write_all(log)
 
         results = pl.DataFrame(results)
         result_dir = dir / "results"

@@ -32,10 +32,20 @@ def subsample(x: t.Tensor, n_frames: int) -> t.Tensor:
     total_frames, *_ = x.shape
     if total_frames <= n_frames:
         raise ValueError("Video is too short to subsample.")
-    step = (total_frames - 1) // (n_frames - 1)
-    indices = (t.arange(n_frames) * step).clamp(max=total_frames - 1)
-    x = t.index_select(x, 0, indices)
-    return x
+
+    if (total_frames - n_frames) % (n_frames - 1) != 0:
+        # Replicate the last frame to make sure it will be selected
+        last_frame = einops.repeat(
+            x[-1], "... -> n ...", n=(n_frames - (total_frames % (n_frames - 1)))
+        )
+        x = t.cat([x, last_frame])
+        total_frames, *_ = x.shape
+        assert (total_frames - n_frames) % (n_frames - 1) == 0
+    step = (total_frames - n_frames) // (n_frames - 1) + 1
+    x_subsampled = x[::step]
+    assert len(x_subsampled) == n_frames
+    assert (x[0] == x_subsampled[0]).all() and (x[-1] == x_subsampled[-1]).all()
+    return x_subsampled
 
 
 def standardize(df: pl.DataFrame) -> pl.DataFrame:
