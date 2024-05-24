@@ -20,6 +20,7 @@ dependencies = [
     "torch",
     "torchvision",
     "typer",
+    "streamlit",
 ]
 name = "vlm-benchmark"
 version = "0.0.1"

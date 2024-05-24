@@ -1,6 +1,8 @@
 import logging
 import re
+import uuid
 from functools import partial
+from pathlib import Path
 from typing import Callable, Optional
 
 import backoff
@@ -99,7 +101,9 @@ class EncoderModel(Model):
 
         return result
 
-    def predict(self, videos: list[Video], tasks: list[Task]) -> pl.DataFrame:
+    def predict(
+        self, videos: list[Video], tasks: list[Task], _log_dir: Path
+    ) -> pl.DataFrame:
         device = t.device("cuda" if t.cuda.is_available() else "cpu")
         self._encoder.to(device)
 
@@ -258,7 +262,9 @@ Write your answer in three sections: frame descriptions, discussion of a small s
 
         return label_probs
 
-    def _predict_video(self, item: dict, task: Task, cache: dict):
+    def _predict_video(
+        self, item: dict, task: Task, cache: dict, log_writer: jsonlines.Writer
+    ):
         path = item["path"]
 
         logging.info(f"Predicting task {task.id} for video: {path}")
@@ -283,6 +289,21 @@ Write your answer in three sections: frame descriptions, discussion of a small s
             scoring_prompt = GPTModel.scoring_prompt.format(classes=class_list)
             answer, history = self._send_request(scoring_prompt, history)
             GPTModel.parse_and_cache_scores(answer, path, task.labels, cache)
+
+            log_writer.write(
+                {
+                    "video": path,
+                    "task": task.id,
+                    "model": self.id,
+                    "history": history,
+                    "parsed_scores": {
+                        label: cache[path][label] for label in task.labels
+                    },
+                    "predicted_label": max(cache[path], key=cache[path].get),
+                    "true_label": item["labels"][task.id],
+                    "label_descriptions": task.label_prompts,
+                }
+            )
 
         logging.info(f"Predicted scores: {cache[path]}")
 
@@ -325,7 +346,9 @@ Write your answer in three sections: frame descriptions, discussion of a small s
 
         return history
 
-    def predict(self, videos: list[Video], tasks: list[Task]) -> Optional[pl.DataFrame]:
+    def predict(
+        self, videos: list[Video], tasks: list[Task], log_dir: Path
+    ) -> Optional[pl.DataFrame]:
         logging.info("Configuring dataset...")
         subsample = partial(utils.subsample, n_frames=self._n_frames)
         transforms = [subsample, utils.frames_to_b64]
@@ -334,6 +357,8 @@ Write your answer in three sections: frame descriptions, discussion of a small s
         logging.info("Processing videos...")
         dataset = list(dataset_iter)
         logging.info("Predicting...")
+
+        run_id = str(uuid.uuid4())
 
         if self._async_batch:
             print("WARNING: Ignoring all cache when using async_batch")
@@ -382,19 +407,23 @@ Write your answer in three sections: frame descriptions, discussion of a small s
 
         print("WARNING: Evaluating synchronously")
         results = []
-        for item in dataset:
-            for task in [task for task in tasks if item["labels"][task.id]]:
-                task_info = {
-                    # "id": task.id,  # the task ID is not given to GPT-4, so it's safe to make the cache not depend on it
-                    "gpt4_prompt": task.prompt_gpt,
-                    "labels": [
-                        description for description in task.label_prompts.values()
-                    ],
-                }
-                model_info = {"id": self.id, "n_frames": self._n_frames}
-                cache = utils.load_cache(self._cache_dir, task_info, model_info)
-                results.append(self._predict_video(item, task, cache))
-                utils.save_cache(cache, self._cache_dir, task_info, model_info)
+        (log_dir / self.id).mkdir(exist_ok=True, parents=True)
+        with jsonlines.open(
+            log_dir / self.id / f"{run_id}.jsonl", "w", sort_keys=True
+        ) as log_writer:
+            for item in dataset:
+                for task in [task for task in tasks if item["labels"][task.id]]:
+                    task_info = {
+                        # "id": task.id,  # the task ID is not given to GPT-4, so it's safe to make the cache not depend on it
+                        "gpt4_prompt": task.prompt_gpt,
+                        "labels": [
+                            description for description in task.label_prompts.values()
+                        ],
+                    }
+                    model_info = {"id": self.id, "n_frames": self._n_frames}
+                    cache = utils.load_cache(self._cache_dir, task_info, model_info)
+                    results.append(self._predict_video(item, task, cache, log_writer))
+                    utils.save_cache(cache, self._cache_dir, task_info, model_info)
         result = pl.concat(results)
 
         return result

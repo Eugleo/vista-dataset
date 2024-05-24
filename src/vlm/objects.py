@@ -36,7 +36,9 @@ class Video:
 class Model(Protocol):
     id: str
 
-    def predict(self, videos: list[Video], tasks: list[Task]) -> Optional[pl.DataFrame]:
+    def predict(
+        self, videos: list[Video], tasks: list[Task], log_dir: Path
+    ) -> Optional[pl.DataFrame]:
         """Predict the probability of each label in each task for each video.
         Returns a DataFrame with the following columns:
         - task: The task ID
@@ -65,6 +67,9 @@ class Experiment:
         )
         output_dir = Path(self.output_dir) / self.id / "results"
         output_dir.mkdir(exist_ok=True, parents=True)
+        log_dir = Path(self.output_dir) / self.id / "logs"
+        log_dir.mkdir(exist_ok=True, parents=True)
+
         (Path(self.output_dir) / self.id / "config.yaml").write_text(
             Path(self.config_file).read_text()
         )
@@ -73,7 +78,7 @@ class Experiment:
         for get_model in self.models:
             model = get_model()
             print(f"Running model {model.id}")
-            result = model.predict(self.videos, self.tasks)
+            result = model.predict(self.videos, self.tasks, log_dir)
             if result is None:
                 continue
             result = result.drop("metadata")

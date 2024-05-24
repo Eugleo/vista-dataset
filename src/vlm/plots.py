@@ -9,6 +9,21 @@ from polars import col as c
 from sklearn.preprocessing import LabelBinarizer
 
 
+def levels_line_plot(data: pl.DataFrame):
+    """Data should have columns: model, group, level, score"""
+
+    return px.line(
+        data.sort("group", "model", "level").to_pandas(),
+        x="level",
+        y="score",
+        color="model",
+        facet_row="group",
+        title="mAP by level",
+        error_y="error",
+        height=1000,
+    )
+
+
 def average_precision(task_labels: dict, group):
     labels = task_labels[group.struct.field("task")[0]]
     lb = LabelBinarizer()

@@ -14,6 +14,16 @@ import torch as t
 from polars import col as c
 
 
+def get_experiment_dir(experiment_dir, experiment_id):
+    if experiment_id is None:
+        experiments = [d for d in Path(experiment_dir).iterdir() if d.is_dir()]
+        dir = sorted(experiments, key=lambda d: d.stat().st_mtime)[-1]
+        print(f"Loading the most recent experiment: {dir}...")
+        return dir
+    else:
+        return Path(experiment_dir) / experiment_id
+
+
 def serialize_dict(d) -> str:
     return json.dumps(d, sort_keys=True)
 
