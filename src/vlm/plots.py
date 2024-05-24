@@ -18,22 +18,28 @@ def average_precision(task_labels: dict, group):
     scores = group.struct.field("score").to_numpy()
 
     n_samples = len(true_labels) // len(lb.classes_)
-    y_true = lb.transform(
-        true_labels.reshape(n_samples, len(lb.classes_))[:n_samples, 0]
-    )
-    if len(lb.classes_) == 2:
-        # LabelBinarizer returns a 1-column array in this case
-        y_true = np.concatenate([1 - y_true, y_true], axis=1)  # type: ignore
-    y_score = scores.reshape(n_samples, len(lb.classes_))
-
-    return skm.average_precision_score(y_true=y_true, y_score=y_score, average=None)
+    try:
+        y_true = lb.transform(
+            true_labels.reshape(n_samples, len(lb.classes_))[:n_samples, 0]
+        )
+        if len(lb.classes_) == 2:
+            # LabelBinarizer returns a 1-column array in this case
+            y_true = np.concatenate([1 - y_true, y_true], axis=1)  # type: ignore
+        y_score = scores.reshape(n_samples, len(lb.classes_))
+        return skm.average_precision_score(y_true=y_true, y_score=y_score, average=None)
+    except Exception:
+        print(group.struct.field("task")[0], task_labels[group.struct.field("task")[0]])
+        print(f"{y_true=}")
+        print(f"{y_score=}")
+        print(f"{group=}")
+        print()
 
 
 def map_plot(per_label_map: pl.DataFrame, title: str):
     per_task_map = (
         per_label_map.group_by("task", "model")
         .agg(mAP=c("AP").mean(), error=c("AP").std() / c("AP").len().sqrt())
-        .sort("task", "model")
+        .sort("task", "model", descending=[False, True])
     )
     fig = px.bar(
         per_task_map.to_pandas(),
@@ -83,8 +89,8 @@ def task_performance(
         rows=nrows,
         cols=ncols,
         subplot_titles=[t.removeprefix(title) for t in tasks] + model_titles,
-        horizontal_spacing=0.05,
-        vertical_spacing=0.1,
+        horizontal_spacing=0.01,
+        vertical_spacing=0.01,
     )
 
     for task_idx, task in enumerate(tasks, start=1):

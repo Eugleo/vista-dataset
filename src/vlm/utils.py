@@ -33,7 +33,7 @@ def standardize(df: pl.DataFrame) -> pl.DataFrame:
         c("score").mean().alias("mean_score"), c("score").std().alias("std_score")
     )
     df = df.join(scores_stats, on=["model", "task", "label"]).with_columns(
-        score=pl.when(c("model") != "gpt4v")
+        score=pl.when(~c("model").str.contains("gpt"))
         .then((c("score") - c("mean_score")) / (c("std_score") + 1e-6))
         .otherwise(c("score"))
     )

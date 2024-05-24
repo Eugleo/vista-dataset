@@ -10,7 +10,7 @@ import yaml
 class Task:
     id: str
     label_prompts: dict[str, str]
-    concepts: dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
     prompt_gpt: Optional[str] = None
     prompt_baseline: Optional[str] = None

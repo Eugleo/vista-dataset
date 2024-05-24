@@ -158,14 +158,25 @@ def plot_alfred(
         progress.add_task("Creating plots...")
         df = pl.concat(
             [pl.read_json(file) for file in (dir / "results").glob("*.json")]
+        ).filter(
+            ~c("task").str.contains("permuted"), ~c("task").str.contains("substituted")
         )
 
         scores = utils.standardize(df)
+        scores = utils.add_random_baseline(scores)
+
+        num_nulls = len(scores.filter(c("score").is_null()))
+        if num_nulls > 0:
+            print(f"WARNING: {num_nulls} null scores found")
+            scores = scores.filter(c("score").is_not_null())
 
         task_labels = {}
         per_label_baselines = []
         for t in df.get_column("task").unique():
-            task_labels[t] = Task.from_file(t, Path(task_dir) / f"{t}.yaml").labels
+            try:
+                task_labels[t] = Task.from_file(t, Path(task_dir) / f"{t}.yaml").labels
+            except FileNotFoundError:
+                continue
             with open(Path(task_dir) / f"{t}_data.json") as f:
                 label_counts = Counter(v["label"] for v in json.load(f))
             for l in task_labels[t]:
@@ -181,9 +192,9 @@ def plot_alfred(
         per_label_metrics = (
             # This sort is very important
             scores.sort("task", "model", "video", "label")
-            .group_by("task", "model")
+            .group_by("task", "model", maintain_order=True)
             .agg(
-                AP=pl.struct("task", "label", "score", "true_label").map_batches(
+                AP=pl.struct("task", "label", "score", "true_label").map(
                     partial(plots.average_precision, task_labels)
                 )
             )
@@ -202,21 +213,29 @@ def plot_alfred(
         def get_tasks(prefix):
             return [t for t in df.get_column("task").unique() if t.startswith(prefix)]
 
-        groups = {
-            "The whole Foundation Level": get_tasks("foundation"),
-            "Object Recognition": get_tasks("foundation/objects"),
-            "Container Recognition": get_tasks("foundation/containers"),
-            "State: On v. Off": get_tasks("foundation/on_v_off"),
-            "State: Sliced v. Whole": get_tasks("foundation/sliced_v_whole"),
-            "Action: Cleaning": get_tasks("foundation/clean"),
-            "Action: Heating": get_tasks("foundation/heat"),
-            "Action: Cooling": get_tasks("foundation/cool"),
-            "Action: Putting down v. Picking up": get_tasks("foundation/pick_v_put"),
-            "Action: Slicing": get_tasks("foundation/slice"),
-            "Action: Toggling On v. Off": get_tasks("foundation/toggle"),
-            "Level 3": get_tasks("level_3"),
-            "Level 6": get_tasks("level_6"),
-        }
+        groups = (
+            {
+                "The whole Foundation Level": get_tasks("foundation"),
+                "Object Recognition": get_tasks("foundation/objects"),
+                "Container Recognition": get_tasks("foundation/containers"),
+                "State: On v. Off": get_tasks("foundation/on_v_off"),
+                "State: Sliced v. Whole": get_tasks("foundation/sliced_v_whole"),
+                "Action: Cleaning": get_tasks("foundation/clean"),
+                "Action: Heating": get_tasks("foundation/heat"),
+                "Action: Cooling": get_tasks("foundation/cool"),
+                "Action: Putting down v. Picking up": get_tasks(
+                    "foundation/pick_v_put"
+                ),
+                "Action: Slicing": get_tasks("foundation/slice"),
+                "Action: Toggling On v. Off": get_tasks("foundation/toggle"),
+            }
+            | {
+                f"Level {n}, permutation": get_tasks(f"level_{n}/permutation")
+                for n in range(2, 9)
+            }
+            | {f"Level {n}, remix": get_tasks(f"level_{n}/remix") for n in range(2, 9)}
+            | {f"Level {n}, overall": get_tasks(f"level_{n}") for n in range(2, 9)}
+        )
 
         for name, tasks in groups.items():
             filename = name.replace(": ", "_").replace(" ", "-")
@@ -226,7 +245,7 @@ def plot_alfred(
             )
             plot_dir = dir / "plots"
             plot_dir.mkdir(exist_ok=True, parents=True)
-            plot.write_image(plot_dir / f"{filename}_mAP.pdf")
+            plot.write_image(plot_dir / f"{filename}_mAP.png", scale=2)
 
             plot = plots.overall_performance(
                 per_label_metrics.filter(pl.col("task").is_in(tasks)),
@@ -234,9 +253,9 @@ def plot_alfred(
                 metric_label="Mean AP over all labels",
                 title=f"{name} (standardized)",
             )
-            plot.write_image(plot_dir / f"{filename}_mAP, overall.pdf")
+            plot.write_image(plot_dir / f"{filename}_mAP, overall.png", scale=2)
 
-            if "Slicing" in name:
+            if "remix" in name:
                 plot = plots.task_performance(
                     per_label_metrics.filter(pl.col("task").is_in(tasks))
                     .group_by("task", "model")
@@ -248,7 +267,7 @@ def plot_alfred(
                     labels=task_labels,
                     tasks=tasks,
                 )
-                plot.write_image(plot_dir / f"{filename}_details.pdf")
+                plot.write_image(plot_dir / f"{filename}_details.png", scale=2)
 
 
 @app.command()
@@ -324,3 +343,10 @@ def plot(
             plot.write_image(plot_dir / f"{name}_overall.pdf")
 
         print("Plots seed")
+
+
+if __name__ == "__main__":
+    plot_alfred(
+        experiment_dir="experiments",
+        task_dir="tasks/alfred",
+    )
