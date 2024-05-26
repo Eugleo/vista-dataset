@@ -1,3 +1,4 @@
+import math
 import base64
 import hashlib
 import json
@@ -6,7 +7,6 @@ import re
 from functools import partial
 from pathlib import Path
 from typing import Callable, List, Tuple
-from math import sqrt
 
 import backoff
 import cv2
@@ -16,6 +16,7 @@ import openai
 import polars as pl
 import torch as t
 import numpy as np
+import torchvision
 from rich.progress import track
 from torch.utils.data import DataLoader, IterableDataset
 from torchvision.io import read_video
@@ -45,13 +46,11 @@ class VideoDataset(IterableDataset):
     def __getitem__(self, idx: int) -> dict:
         video = self._videos[idx]
         frames = read_video(video.path, pts_unit="sec", output_format="TCHW")[0]
-        original_shape = frames.shape
         for transform in self._transforms:
             frames = transform(frames)
         return {
             "path": video.path,
             "frames": frames,
-            "original_shape": original_shape,
             "labels": {task: "" for task in self._tasks} | video.labels,
             "task_mask": t.tensor([task in video.labels for task in self._tasks]),
         }
@@ -180,15 +179,13 @@ class GPT4VModel(Model):
         return b64_frames
 
     @staticmethod
-    def _b64_to_frames(b64_frames: List[str], original_shape: Tuple[int, int, int, int]) -> t.Tensor:
-        n_frames, n_channels, height, width = original_shape
-
+    def _b64_to_frames(b64_frames: List[str]) -> t.Tensor:
         frames_np = []
         for b64_frame in b64_frames:
             # Decode base64 frame
             decoded_frame = base64.b64decode(b64_frame, validate=True)
             # Convert to numpy array
-            frame_np = np.frombuffer(decoded_frame, dtype=np.uint8).reshape(height, width, n_channels)
+            frame_np = np.frombuffer(decoded_frame, dtype=np.uint8)
             # Decode the image
             frame_np = cv2.imdecode(frame_np, flags=cv2.IMREAD_COLOR)
             # Convert BGR to RGB
@@ -199,7 +196,10 @@ class GPT4VModel(Model):
         frames_np = np.stack(frames_np)
 
         # Convert numpy array to PyTorch Tensor
-        frames_tensor = torch.from_numpy(frames_np)
+        frames_tensor = t.from_numpy(frames_np)
+
+        # Convert to [0, 1]
+        frames_tensor = frames_tensor.float() / 255
 
         # Rearrange dimensions to match PyTorch Tensor format
         frames_tensor = frames_tensor.permute(0, 3, 1, 2)
@@ -269,12 +269,9 @@ class GPT4VModel(Model):
                 m.group(1): float(m.group(2))
                 for m in re.finditer(r"- (.+): ([\d.]+)", answer)
             }
-            scores = [label_scores[label] for label in task.labels]
-            probs = t.Tensor(scores).softmax(0).tolist()
-            label_probs = {label: prob for label, prob in zip(task.labels, probs)}
 
             # This writes directly into the cache object we've been passed
-            cache[path] = label_probs
+            cache[path] = label_scores
 
         logging.info(f"Predicted scores: {cache[path]}")
 
@@ -329,10 +326,10 @@ class GPT4VModel(Model):
         video_logging_dir = Path(cache_dir) / "gpt_input_images"
         video_logging_dir.mkdir(parents=True, exist_ok=True)
 
-        frames = self._b64_to_frames(item["frames"], item["original_shape"])
-        video_as_grid = make_grid(frames, nrow=math.floor(math.sqrt(frames.shape[0])), normalize=True)
-        video_as_grid = t.nn.functional.to_pil_image(video_as_grid)
-        video_as_grid.save(video_logging_dir / (item["path"].stem + ".png"))
+        frames = GPT4VModel._b64_to_frames(item["frames"])
+        video_as_grid = make_grid(frames, nrow=math.ceil(math.sqrt(frames.shape[0])), normalize=True)
+        video_as_grid = torchvision.transforms.functional.to_pil_image(video_as_grid)
+        video_as_grid.save(video_logging_dir / (Path(item["path"]).stem + ".png"))
 
     def predict(self, videos: list[Video], tasks: list[Task]) -> pl.DataFrame:
         subsample = partial(utils.subsample, n_frames=self._n_frames)
@@ -343,6 +340,7 @@ class GPT4VModel(Model):
         for item in dataset:
             # TODO: log(item)
             self._log_video(self._cache_dir, item)
+
             for task in [task for task in tasks if item["labels"][task.id]]:
                 task_info = {
                     "id": task.id,

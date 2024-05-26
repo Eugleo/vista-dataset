@@ -8,7 +8,7 @@ import pandas as pd
 
 def parse_args():
     parser = ArgumentParser(prog="compose_dataset", description="Compose per-video .json labeling into one dataframe.")
-    parser.add_argument("-s", "--source-dirs", nargs="+", help="Directories with .json files")
+    parser.add_argument("-s", "--source-dirs", nargs="+", help="Directories with .json files", required=True)
 
     return parser.parse_args()
 
@@ -91,5 +91,5 @@ def main():
         create_task_data_file(task, data)
 
 if __name__ == "__main__":
-    make_dataframe(parse_args().source_dirs)
-    #main()
+    # make_dataframe(parse_args().source_dirs)
+    main()

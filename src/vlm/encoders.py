@@ -50,7 +50,7 @@ class CLIP(Encoder):
             model_name=model_name,
             pretrained=pretrained,
             cache_dir=model_cache_dir,
-            "cuda" if torch.cuda.is_available() else "cpu",
+            device="cuda" if torch.cuda.is_available() else "cpu",
         )  # type: ignore
         assert isinstance(self._model, open_clip.model.CLIP)
         print("CLIP initialized", flush=True)

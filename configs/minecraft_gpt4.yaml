@@ -10,6 +10,15 @@ models:
   - kind: gpt
     n_frames: 10
     task_mode: multilabel
+  - kind: encoder
+    encoder: viclip
+    heads:
+      - kind: cosine
+    batch_size: 16
+  - kind: encoder
+    encoder: s3d
+    heads:
+      - kind: cosine
 task_dir: tasks/minecraft
 video_dir: "."
 cache_dir: .cache
