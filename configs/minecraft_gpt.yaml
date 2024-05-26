@@ -1,0 +1,11 @@
+tasks:
+  - multilabel
+models:
+  - kind: gpt
+    model: gpt-4o
+    n_frames: 10
+    task_mode: multilabel
+task_dir: tasks/minecraft
+video_dir: "."
+cache_dir: .cache
+output_dir: experiments

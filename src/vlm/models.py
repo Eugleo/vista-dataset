@@ -1,4 +1,5 @@
 import logging
+import math
 import re
 import uuid
 from functools import partial
@@ -13,13 +14,13 @@ import polars as pl
 import torch as t
 from rich.progress import Progress, track
 from torch.utils.data import DataLoader, IterableDataset
+import torchvision
 from torchvision.io import read_video
 
 import vlm.utils as utils
 from vlm.encoders import VideoEncoder
 from vlm.heads import Head
 from vlm.objects import Model, Task, Video
-
 
 class VideoDataset(IterableDataset):
     def __init__(
@@ -87,7 +88,9 @@ class EncoderModel(Model):
                     "label_idx": i,
                     "score": score,
                     "true_label": true_label,
-                    "true_label_idx": task.labels.index(true_label),
+                    "true_label_idx": ",".join(str(task.labels.index(label)) for label in true_label.split(",")),
+                    # in multilabel regime, joins correct indices separated by comma,
+                    # in multiclass regime keeps a single index (converted to str type)
                 }
                 for head in self._heads[task.id]
                 for video_path, true_label, label_scores in zip(
@@ -122,32 +125,16 @@ class EncoderModel(Model):
         return result
 
 
-class GPTModel(Model):
-    scoring_prompt_v2 = """
 
-# SECOND TASK
+MULTICLASS_PROMPT = """Then, given the original frames and your description, score the following potential video descriptions from 0 to 1 based on how well they describe the video you've seen. Feel free to use values between 0 and 1, too. There should be exactly one 'correct' description with score 1. The descriptions are given in the following format:
 
-After you finish the first task, your second task will be to summarize your frame descriptions into a natural language description of the whole video, start to finish. Some of the frames will only contain filler information, such as the agent moving from one place to the next, or the agent looking around. These frames are not very relevant to the task. Focus on the frames that contain objects or actions that are relevant to the task, and their order.
+- (label) description
 
-Note that you're guaranteed to receive the very first and very last frames from the video. Thus, if in the first frame we hold an object, we actually start out holding it — not pick-up action is thus performed at the beginning of the video in that case.
-
-# THIRD TASK
-
-After you finish the second task, you should now compare your description with the following potential descriptions, which are given in the format `- (label) description`:
+Options:
 
 {classes}
 
-For each of these, without repeating the whole descriptions, list one or two main differences to your description, and comment on whether the descriptions could still be a match, e.g. because you missed something in your frame descriptions. For example, if the only difference between your description and the given one is that you mentioned a sofa, while the otherwise perfect match description mentioned an arm chair, you might consider trying to reevaluate the frames to see if you maybe just misinterpreted the object.
-
-# FOURTH TASK
-
-After you finish the third task, your fourth and final task will be to score the following potential video descriptions on a scale from 0 to 5 based on how well they describe the video you've seen. 5 means the description seems to be the most likely one to match the frames, 0 means it for sure doesn't match. We are SURE there is exactly one correct description that should be given a score of 5.
-
-Make sure one description clearly has the highest score, even if it's not a perfect match. Do not give multiple descriptions the same score, except for 0.
-
-Write your answer in four sections, with their titles being verbatim: Frame Descriptions, Description Summary, Description Comparison, Final Scores
-
-The final scores in the last section should be in the following format, verbatim:
+The final scores should be in the following format, verbatim:
 
 ```
 - (label) your score
@@ -156,14 +143,41 @@ The final scores in the last section should be in the following format, verbatim
 Be sure not to alter the label in any way, since we will use it to match your scores to the potential descriptions we've given you.
 """
 
-    def __init__(self, n_frames: int, cache_dir: str, async_batch: bool, model: str):
+MULTILABEL_PROMPT = """Then, given the original frames and your description, score the following potential video descriptions from 0 to 1 based on how well they describe the video you've seen. Feel free to use values between 0 and 1, too. There could be more than one 'correct' description with score 1. The descriptions are given in the following format:
+
+- (label) description
+
+Options:
+
+{classes}
+
+The final scores should be in the following format, verbatim:
+
+```
+- (label) your score
+```
+
+Be sure not to alter the label in any way, since we will use it to match your scores to the potential descriptions we've given you.
+"""
+
+
+class GPTModel(Model):
+    def __init__(self, n_frames: int, cache_dir: str, async_batch: bool, model: str, task_mode: str):
         self.id = model
         dotenv.load_dotenv()
         self._n_frames = n_frames
         self._client = openai.OpenAI()
         self._cache_dir = cache_dir
         self._model = model
+        self._task_mode = task_mode
         self._async_batch = async_batch
+
+        if task_mode == "multiclass":
+            self.scoring_prompt = MULTICLASS_PROMPT
+        elif task_mode == "multilabel":
+            self.scoring_prompt = MULTILABEL_PROMPT
+        else:
+            raise ValueError(f"Unknown task mode {task_mode}")
 
     @staticmethod
     def _frame_to_payload(image):
@@ -209,13 +223,11 @@ Be sure not to alter the label in any way, since we will use it to match your sc
     ):
         response_scores = {}
 
-        response = response.split("Final Scores")[-1]
-
         for l in task_labels:
             relevant_lines = [
                 line
                 for line in response.splitlines()
-                if re.findall(rf"\b{l}\b", line, flags=re.IGNORECASE)
+                if re.findall(rf"\({l}\)", line, flags=re.IGNORECASE)
             ]
 
             scores = []
@@ -238,9 +250,9 @@ Be sure not to alter the label in any way, since we will use it to match your sc
             (l not in response_scores and l in response)
             for l in [label for label in task_labels if label in path.split("/")]
         ):
-            print(f"WARNING: Missing scores for some labels in {path}")
-            print(f"Response: {response}")
-            print()
+            print(f"WARNING: Missing scores for some labels in {path}", flush=True)
+            print(f"Response: {response}", flush=True)
+            print("", flush=True)
 
         label_scores = {label: -0.1 for label in task_labels} | response_scores
         scores = [label_scores[label] for label in task_labels]
@@ -296,7 +308,8 @@ Be sure not to alter the label in any way, since we will use it to match your sc
                     # All labels should be present in the cache by construction
                     "score": cache[path][label],
                     "true_label": item["labels"][task.id],
-                    "true_label_idx": task.labels.index(item["labels"][task.id]),
+                    "true_label_idx": task.labels.index(item["labels"][task.id]) if self._task_mode == "multiclass" \
+                        else ",".join(str(task.labels.index(label)) for label in item["labels"][task.id].split(",")),    # multi-label regime
                 }
                 for label_idx, label in enumerate(task.labels)
             ]
@@ -311,7 +324,7 @@ Be sure not to alter the label in any way, since we will use it to match your sc
                 for label, description in list(task.label_prompts.items())
             ]
         )
-        scoring_prompt = GPTModel.scoring_prompt_v2.format(classes=class_list)
+        scoring_prompt = self.scoring_prompt.format(classes=class_list)
 
         heading = {"type": "text", "text": "Input frames:"}
         frames = [GPTModel._frame_to_payload(f) for f in item["frames"]]
@@ -366,6 +379,16 @@ Be sure not to alter the label in any way, since we will use it to match your sc
                         )
         return requests
 
+    @staticmethod
+    def _log_video(cache_dir, item):
+        video_logging_dir = Path(cache_dir) / "gpt_input_images"
+        video_logging_dir.mkdir(parents=True, exist_ok=True)
+
+        frames = utils.b64_to_frames(item["frames"])
+        video_as_grid = torchvision.utils.make_grid(frames, nrow=math.ceil(math.sqrt(frames.shape[0])), normalize=True)
+        video_as_grid = torchvision.transforms.functional.to_pil_image(video_as_grid)
+        video_as_grid.save(video_logging_dir / (Path(item["path"]).stem + ".png"))
+
     def predict(
         self, videos: list[Video], tasks: list[Task], log_dir: Path
     ) -> Optional[pl.DataFrame]:
@@ -376,6 +399,10 @@ Be sure not to alter the label in any way, since we will use it to match your sc
         # converting to a list forces all the videos to be converted up front, so that if any are invalid, an error will be thrown before any GPT-4 calls are made
         logging.info("Processing videos...")
         dataset = list(dataset_iter)
+
+        # for item in dataset:
+        #     GPTModel._log_video(self._cache_dir, item)
+
         logging.info("Predicting...")
 
         log_dir = (
@@ -388,7 +415,7 @@ Be sure not to alter the label in any way, since we will use it to match your sc
             log_dir / f"{uuid.uuid4()}.jsonl", "w", sort_keys=True
         ) as log_writer:
             if self._async_batch:
-                print("WARNING: Ignoring all cache when using async_batch")
+                print("WARNING: Ignoring all cache when using async_batch", flush=True)
 
                 batch_ids = []
 
@@ -417,7 +444,7 @@ Be sure not to alter the label in any way, since we will use it to match your sc
                 return None
 
             else:
-                print("WARNING: Evaluating synchronously")
+                print("WARNING: Evaluating synchronously", flush=True)
                 results = []
 
                 with Progress() as progress:
@@ -446,6 +473,7 @@ Be sure not to alter the label in any way, since we will use it to match your sc
                             utils.save_cache(
                                 cache, self._cache_dir, task_info, model_info
                             )
+                            raise RuntimeError("debuggin break point")
                 result = pl.concat(results)
 
                 return result

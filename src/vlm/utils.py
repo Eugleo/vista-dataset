@@ -3,6 +3,7 @@ import hashlib
 import json
 import logging
 from pathlib import Path
+from typing import List
 
 import cv2
 import einops
@@ -139,3 +140,31 @@ def frames_to_b64(frames: t.Tensor):
         b64_frames.append(base64.b64encode(buffer).decode("utf-8"))  # type: ignore
 
     return b64_frames
+
+
+def b64_to_frames(b64_frames: List[str]) -> t.Tensor:
+    frames_np = []
+    for b64_frame in b64_frames:
+        # Decode base64 frame
+        decoded_frame = base64.b64decode(b64_frame, validate=True)
+        # Convert to numpy array
+        frame_np = np.frombuffer(decoded_frame, dtype=np.uint8)
+        # Decode the image
+        frame_np = cv2.imdecode(frame_np, flags=cv2.IMREAD_COLOR)
+        # Convert BGR to RGB
+        frame_np = cv2.cvtColor(frame_np, cv2.COLOR_BGR2RGB)
+        frames_np.append(frame_np)
+
+    # Stack frames along time dimension
+    frames_np = np.stack(frames_np)
+
+    # Convert numpy array to PyTorch Tensor
+    frames_tensor = t.from_numpy(frames_np)
+
+    # Convert to [0, 1]
+    frames_tensor = frames_tensor.float() / 255
+
+    # Rearrange dimensions to match PyTorch Tensor format
+    frames_tensor = frames_tensor.permute(0, 3, 1, 2)
+
+    return frames_tensor

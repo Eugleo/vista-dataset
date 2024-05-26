@@ -45,6 +45,7 @@ class ModelConfig(BaseModel):
     encoder: Optional[Literal["clip", "s3d", "viclip"]] = None
     heads: Optional[list[HeadConfig]] = None
     n_frames: Optional[int] = None
+    task_mode: Optional[str] = None
     async_batch: bool = False
     model: str = "gpt-4-vision-preview"
     hf_model: Optional[str] = None
@@ -88,6 +89,8 @@ class ModelConfig(BaseModel):
                 raise ValueError("A GPT model requires the number of frames")
             if "batch_size" in data:
                 raise ValueError("A GPT model should not have a batch size")
+            if "task_mode" not in data:
+                raise ValueError("A GPT model needs a clarification on task mode (multilabel/multiclass -- this influences system prompt)")
         return data
 
     @model_validator(mode="before")
@@ -146,6 +149,7 @@ class ModelConfig(BaseModel):
                     cache_dir=cache_dir,
                     async_batch=self.async_batch,
                     model=self.model,
+                    task_mode=self.task_mode
                 )
 
             return get_gpt
@@ -192,10 +196,13 @@ class ExperimentConfig(BaseModel):
                 labels = videos.setdefault(item["path"], {})
                 if task.id in labels:
                     raise ValueError(f"Duplicate label for video {item['path']}")
-                if item["label"] not in task.labels:
-                    raise ValueError(
-                        f"Invalid label '{item['label']}' for task '{task.id}'"
-                    )
+                # in multitask mode, true labels are separated by comma (e.g. "break,mine")
+                # in multiclass mode, true label does not contain a comma (e.g. "pickup"), hence the result of split is ["pickup"] and code still works correctly
+                for it in item["label"].split(","):
+                    if it not in task.labels:
+                        raise ValueError(
+                            f"Invalid label '{it}' for task '{task.id}'"
+                        )
                 labels[task.id] = item["label"]
         # TODO: Change this to a use Path
         return [
