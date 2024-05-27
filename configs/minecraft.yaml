@@ -1,0 +1,22 @@
+tasks:
+  - multilabel
+models:
+  - kind: encoder
+    encoder: s3d
+    heads:
+      - kind: cosine
+    batch_size: 8
+  - kind: encoder
+    encoder: viclip
+    heads:
+      - kind: cosine
+    batch_size: 16
+  - kind: gpt
+    model: gpt-4o
+    n_frames: 10
+    task_mode: multilabel
+    async_batch: True
+task_dir: tasks/minecraft
+video_dir: "."
+cache_dir: .cache
+output_dir: experiments

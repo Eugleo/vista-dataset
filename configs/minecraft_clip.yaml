@@ -1,0 +1,13 @@
+tasks:
+  - multilabel
+models:
+  - kind: encoder
+    encoder: clip
+    heads:
+      - kind: cosine
+    hf_model: ViT-bigG-14/laion2b_s39b_b160k
+    n_frames: 8
+task_dir: tasks/minecraft
+video_dir: "."
+cache_dir: .cache
+output_dir: experiments
