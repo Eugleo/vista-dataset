@@ -400,8 +400,8 @@ class GPTModel(Model):
         logging.info("Processing videos...")
         dataset = list(dataset_iter)
 
-        # for item in dataset:
-        #     GPTModel._log_video(self._cache_dir, item)
+        for item in dataset:
+            GPTModel._log_video(self._cache_dir, item)
 
         logging.info("Predicting...")
 
@@ -473,7 +473,6 @@ class GPTModel(Model):
                             utils.save_cache(
                                 cache, self._cache_dir, task_info, model_info
                             )
-                            raise RuntimeError("debuggin break point")
                 result = pl.concat(results)
 
                 return result
