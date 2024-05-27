@@ -86,14 +86,13 @@ def performance_per_task(data: pl.DataFrame):
     )
 
 
-def add_random_baseline(scores: pl.DataFrame):
+def add_random_baseline(scores: pl.DataFrame, name="ω random"):
     random_model_scores = scores.unique(["video", "task", "label"])
     random_model_scores = random_model_scores.with_columns(
         score=pl.lit(np.random.rand(len(random_model_scores))),
-        model=pl.lit("ω random"),
+        model=pl.lit(name),
     )
     return pl.concat([scores, random_model_scores])
-
 
 def accuracy(group: pl.Series):
     return skm.accuracy_score(
