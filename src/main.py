@@ -188,7 +188,8 @@ def plot_alfred(
             ~c("task").str.contains("permuted"), ~c("task").str.contains("substituted")
         )
 
-        scores = utils.standardize(df)
+        scores = utils.rescale(df, in_each="label")
+        scores = utils.rescale(df, in_each="video")
         scores = utils.add_random_baseline(scores)
 
         num_nulls = len(scores.filter(c("score").is_null()))
@@ -248,21 +249,26 @@ def plot_alfred(
             | {f"Level {n}: overall": get_tasks(f"level_{n}") for n in range(2, 9)}
         )
 
-        # groups = {
-        #     "The whole Foundation Level": get_tasks("foundation"),
-        #     "Object Recognition": get_tasks("foundation/objects"),
-        #     "Container Recognition": get_tasks("foundation/containers"),
-        #     "State: On v. Off": get_tasks("foundation/on_v_off"),
-        #     "State: Sliced v. Whole": get_tasks("foundation/sliced_v_whole"),
-        #     "Action: Cleaning": get_tasks("foundation/clean"),
-        #     "Action: Heating": get_tasks("foundation/heat"),
-        #     "Action: Cooling": get_tasks("foundation/cool"),
-        #     "Action: Putting down v. Picking up": get_tasks("foundation/pick_v_put"),
-        #     "Action: Slicing": get_tasks("foundation/slice"),
-        #     "Action: Toggling On v. Off": get_tasks("foundation/toggle"),
-        # } | level_groups
+        groups = (
+            {
+                # "The whole Foundation Level": get_tasks("foundation"),
+                # "Object Recognition": get_tasks("foundation/objects"),
+                # "Container Recognition": get_tasks("foundation/containers"),
+                # "State: On v. Off": get_tasks("foundation/on_v_off"),
+                # "State: Sliced v. Whole": get_tasks("foundation/sliced_v_whole"),
+                # "Action: Cleaning": get_tasks("foundation/clean"),
+                # "Action: Heating": get_tasks("foundation/heat"),
+                # "Action: Cooling": get_tasks("foundation/cool"),
+                # "Action: Putting down v. Picking up": get_tasks("foundation/pick_v_put"),
+                # "Action: Slicing": get_tasks("foundation/slice"),
+                # "Action: Toggling On v. Off": get_tasks("foundation/toggle"),
+            }
+            | level_groups
+        )
 
+        # group_task = progress.add_task("Creating group plots...", total=len(groups))
         # for name, tasks in groups.items():
+        #     progress.advance(group_task, 1)
         #     filename = name.replace(": ", "_").replace(" ", "-")
         #     plot = plots.map_plot(
         #         per_label_metrics.filter(pl.col("task").is_in(tasks)),
@@ -283,10 +289,16 @@ def plot_alfred(
         #     details_dir = plot_dir / "details"
         #     details_dir.mkdir(exist_ok=True, parents=True)
         #     plot = plots.task_performance(
-        #         per_label_metrics.filter(pl.col("task").is_in(tasks))
+        #         metric_per_task=per_label_metrics.filter(pl.col("task").is_in(tasks))
         #         .group_by("task", "model")
-        #         .agg(mAP=c("AP").mean()),
-        #         predictions.filter(pl.col("task").is_in(tasks)),
+        #         .agg(mAP=c("AP").mean())
+        #         .filter(pl.col("model") != "Ω random"),
+        #         predictions_per_task=predictions.filter(
+        #             pl.col("task").is_in(tasks)
+        #         ).filter(pl.col("model") != "Ω random"),
+        #         scores=scores.filter(pl.col("task").is_in(tasks)).filter(
+        #             pl.col("model") != "Ω random"
+        #         ),
         #         metric="mAP",
         #         title=f"{name} (standardized)",
         #         baselines=None,
@@ -298,9 +310,13 @@ def plot_alfred(
         performance_by_level = pl.concat(
             [
                 per_label_metrics.filter(c("task").is_in(tasks))
-                .group_by("model")
+                .group_by("model", "task")
                 .agg(
                     score=c("AP").mean(),
+                )
+                .group_by("model")
+                .agg(
+                    score=c("score").mean(),
                     error=c("AP").std() / (c("AP").len().sqrt() + 1e-6),
                 )
                 .with_columns(level=pl.lit(n), group=pl.lit(name))
@@ -335,7 +351,7 @@ def plot(
             [pl.read_json(file) for file in (dir / "results").glob("*.json")]
         )
 
-        scores = utils.standardize(df)
+        scores = utils.rescale(df)
         scores = utils.add_random_baseline(scores)
 
         num_nulls = len(scores.filter(c("score").is_null()))

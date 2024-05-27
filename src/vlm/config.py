@@ -46,6 +46,7 @@ class ModelConfig(BaseModel):
     heads: Optional[list[HeadConfig]] = None
     n_frames: Optional[int] = None
     async_batch: bool = False
+    is_one_shot: bool = False
     model: str = "gpt-4-vision-preview"
     hf_model: Optional[str] = None
 
@@ -78,6 +79,8 @@ class ModelConfig(BaseModel):
                 raise ValueError("Only models of kind 'gpt' can have a model specified")
             if "async_batch" in data:
                 raise ValueError("Only models of kind 'gpt' can have async_batch")
+            if "is_one_shot" in data:
+                raise ValueError("Only models of kind 'gpt' can have is_one_shot")
 
         return data
 
@@ -146,6 +149,7 @@ class ModelConfig(BaseModel):
                     cache_dir=cache_dir,
                     async_batch=self.async_batch,
                     model=self.model,
+                    is_one_shot=self.is_one_shot,
                 )
 
             return get_gpt

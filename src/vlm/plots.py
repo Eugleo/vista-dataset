@@ -21,6 +21,7 @@ def levels_line_plot(data: pl.DataFrame):
         title="mAP by level",
         error_y="error",
         height=1000,
+        color_discrete_sequence=px.colors.qualitative.Bold,
     )
 
 
@@ -41,13 +42,16 @@ def average_precision(task_labels: dict, group):
             # LabelBinarizer returns a 1-column array in this case
             y_true = np.concatenate([1 - y_true, y_true], axis=1)  # type: ignore
         y_score = scores.reshape(n_samples, len(lb.classes_))
+
+        # print(group.struct.field("task")[0], task_labels[group.struct.field("task")[0]])
+        # print(f"{y_true=}")
+        # print(f"{y_score=}")
+        # print(f"{group=}")
+        # print()
+
         return skm.average_precision_score(y_true=y_true, y_score=y_score, average=None)
     except Exception:
-        print(group.struct.field("task")[0], task_labels[group.struct.field("task")[0]])
-        print(f"{y_true=}")
-        print(f"{y_score=}")
-        print(f"{group=}")
-        print()
+        pass
 
 
 def map_plot(per_label_map: pl.DataFrame, title: str):
@@ -76,25 +80,26 @@ def map_plot(per_label_map: pl.DataFrame, title: str):
 
 
 def task_performance(
-    data: pl.DataFrame,
-    df: pl.DataFrame,
+    metric_per_task: pl.DataFrame,
+    predictions_per_task: pl.DataFrame,
+    scores: pl.DataFrame,
     metric: str,
     title: str,
     baselines: Optional[dict],
     labels: dict,
     tasks: list,
 ):
-    models = data["model"].unique().sort().to_list()
+    models = metric_per_task["model"].unique().sort().to_list()
     avg_data = (
-        data.group_by("model")
+        metric_per_task.group_by("model")
         .agg(pl.col(metric).mean())
         .with_columns(task=pl.lit("average"))
         .select(["task", "model", metric])
     )
-    data = pl.concat([data, avg_data])
+    metric_per_task = pl.concat([metric_per_task, avg_data])
     tasks.append("average")
     tasks = sorted(tasks)
-    data = data.sort("model")
+    metric_per_task = metric_per_task.sort("model")
 
     nrows = 1 + len(models)
     ncols = len(tasks)
@@ -105,16 +110,17 @@ def task_performance(
         cols=ncols,
         subplot_titles=[t.removeprefix(title) for t in tasks] + model_titles,
         horizontal_spacing=0.01,
-        vertical_spacing=0.01,
+        vertical_spacing=0.03,
     )
 
     for task_idx, task in enumerate(tasks, start=1):
         subplot = px.bar(
-            data.filter(c("task") == task).to_pandas(),
+            metric_per_task.filter(c("task") == task).to_pandas(),
             x="model",
             color="model",
             y=metric,
             range_y=[0, 1],
+            color_discrete_sequence=px.colors.qualitative.Bold,
         )
         subplot.update_layout(showlegend=False)
         fig.add_traces(subplot["data"], rows=1, cols=task_idx)
@@ -122,18 +128,34 @@ def task_performance(
             if baselines:
                 fig.add_hline(y=baselines[task], line_dash="dot", col=task_idx)  # type: ignore
             for model_idx, model in enumerate(models, start=2):
-                task_df = df.filter(c("task") == task, c("model") == model)
+                # task_df = predictions_per_task.filter(
+                #     c("task") == task, c("model") == model
+                # )
                 task_labels = labels[task]
-                matrix = skm.confusion_matrix(
-                    task_df["true_label"].to_numpy(),
-                    task_df["label"].to_numpy(),
-                    labels=task_labels,
+                # matrix = skm.confusion_matrix(
+                #     task_df["true_label"].to_numpy(),
+                #     task_df["label"].to_numpy(),
+                #     labels=task_labels,
+                # )
+                # print(tasres.filter(c("task") == task, c("model") == model))
+                rankings = (
+                    scores.filter(c("task") == task, c("model") == model)
+                    .with_columns(
+                        pl.col("score")
+                        .rank("max", descending=True)
+                        .over("label")
+                        .alias("rank")
+                    )
+                    .pivot(values="rank", index="true_label", columns="label")
+                    .sort("true_label")
+                    .select(pl.all().exclude("true_label"))
                 )
+
                 heatmap = px.imshow(
-                    matrix,
+                    rankings.to_numpy(),
                     x=task_labels,
                     y=task_labels,
-                    labels=dict(x="Predicted label", y="True label"),
+                    labels=dict(x="Candidate Label", y="Video True Label"),
                     text_auto=True,
                 )
                 heatmap.update_layout(showlegend=False)
@@ -146,10 +168,10 @@ def task_performance(
     fig.update_layout(
         coloraxis_showscale=False,
         width=500 * ncols,
-        height=300 * nrows,
+        height=330 * nrows,
         showlegend=False,
         title=title,
-        coloraxis_colorscale="Purples",
+        coloraxis_colorscale=px.colors.sequential.Viridis_r,
     )
     fig.update_yaxes(range=[0, 1], row=1)
     return fig

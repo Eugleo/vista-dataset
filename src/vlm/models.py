@@ -81,7 +81,6 @@ class EncoderModel(Model):
                 {
                     "task": task.id,
                     "model": self._encoder.id + "_" + head.id,
-                    "metadata": {"head": head.id, "encoder": self._encoder.metadata},
                     "video": video_path,
                     "label": label,
                     "label_idx": i,
@@ -103,7 +102,7 @@ class EncoderModel(Model):
 
     def predict(
         self, videos: list[Video], tasks: list[Task], _log_dir: Path
-    ) -> pl.DataFrame:
+    ) -> tuple[pl.DataFrame, dict]:
         device = t.device("cuda" if t.cuda.is_available() else "cpu")
         self._encoder.to(device)
 
@@ -119,7 +118,10 @@ class EncoderModel(Model):
             results.append(self._predict_batch(batch, tasks))
         result = pl.concat(results)
 
-        return result
+        # TODO This doesn't work if we have multiple heads
+        metadata = {"encoder": self._encoder.metadata}
+
+        return result, metadata
 
 
 class GPTModel(Model):
@@ -127,25 +129,15 @@ class GPTModel(Model):
 
 # SECOND TASK
 
-After you finish the first task, your second task will be to summarize your frame descriptions into a natural language description of the whole video, start to finish. Some of the frames will only contain filler information, such as the agent moving from one place to the next, or the agent looking around. These frames are not very relevant to the task. Focus on the frames that contain objects or actions that are relevant to the task, and their order.
-
-Note that you're guaranteed to receive the very first and very last frames from the video. Thus, if in the first frame we hold an object, we actually start out holding it — not pick-up action is thus performed at the beginning of the video in that case.
-
-# THIRD TASK
-
-After you finish the second task, you should now compare your description with the following potential descriptions, which are given in the format `- (label) description`:
+Consider your sequence of frame descriptions. Which if the following descriptions best fits your sequence of descriptions the most? (format: `- (label) description`)
 
 {classes}
 
-For each of these, without repeating the whole descriptions, list one or two main differences to your description, and comment on whether the descriptions could still be a match, e.g. because you missed something in your frame descriptions. For example, if the only difference between your description and the given one is that you mentioned a sofa, while the otherwise perfect match description mentioned an arm chair, you might consider trying to reevaluate the frames to see if you maybe just misinterpreted the object.
+# THIRD TASK
 
-# FOURTH TASK
+Based on your findings in the previous sections, score the descriptions from 0 to 5, where 0 is "likely does not describe the video" and 5 is "most likely describes the video". Make sure to score each description individually.
 
-After you finish the third task, your fourth and final task will be to score the following potential video descriptions on a scale from 0 to 5 based on how well they describe the video you've seen. 5 means the description seems to be the most likely one to match the frames, 0 means it for sure doesn't match. We are SURE there is exactly one correct description that should be given a score of 5.
-
-Make sure one description clearly has the highest score, even if it's not a perfect match. Do not give multiple descriptions the same score, except for 0.
-
-Write your answer in four sections, with their titles being verbatim: Frame Descriptions, Description Summary, Description Comparison, Final Scores
+Write your answer in three sections, with their titles being verbatim: Frame Descriptions, Frame-based Description Analysis, Final Scores
 
 The final scores in the last section should be in the following format, verbatim:
 
@@ -156,7 +148,14 @@ The final scores in the last section should be in the following format, verbatim
 Be sure not to alter the label in any way, since we will use it to match your scores to the potential descriptions we've given you.
 """
 
-    def __init__(self, n_frames: int, cache_dir: str, async_batch: bool, model: str):
+    def __init__(
+        self,
+        n_frames: int,
+        cache_dir: str,
+        async_batch: bool,
+        model: str,
+        is_one_shot: bool,
+    ):
         self.id = model
         dotenv.load_dotenv()
         self._n_frames = n_frames
@@ -164,6 +163,7 @@ Be sure not to alter the label in any way, since we will use it to match your sc
         self._cache_dir = cache_dir
         self._model = model
         self._async_batch = async_batch
+        self.is_one_shot = is_one_shot
 
     @staticmethod
     def _frame_to_payload(image):
@@ -191,7 +191,7 @@ Be sure not to alter the label in any way, since we will use it to match your sc
     )
     def _send_request(self, history):
         response = self._client.chat.completions.create(
-            model=self._model, messages=history, max_tokens=2500
+            model=self._model, messages=history, max_tokens=2500, temperature=0.7
         )
         reponse_text = response.choices[0].message.content  # type: ignore
         return reponse_text or "", history + [
@@ -226,14 +226,6 @@ Be sure not to alter the label in any way, since we will use it to match your sc
 
             response_scores[l] = max(float(s) for s in scores)
 
-        # for m in re.finditer(
-        #     r"-[^a-zA-Z\d]*([a-zA-Z_\d-]+)[^a-zA-Z\d]*:[^a-zA-Z\d]*([\d.]*\d)",
-        #     response,
-        # ):
-        #     label = m.group(1)
-        #     score = float(m.group(2))
-        #     response_scores[label] = score
-
         if verbose and any(
             (l not in response_scores and l in response)
             for l in [label for label in task_labels if label in path.split("/")]
@@ -248,7 +240,6 @@ Be sure not to alter the label in any way, since we will use it to match your sc
             scores = t.Tensor(scores).softmax(0).tolist()
         label_probs = {label: prob for label, prob in zip(task_labels, scores)}
 
-        # This writes directly into the cache object we've been passed
         cache[path] = label_probs
 
         return label_probs
@@ -258,23 +249,96 @@ Be sure not to alter the label in any way, since we will use it to match your sc
     ):
         path = item["path"]
 
+        assert task.prompt_gpt is not None
+
+        if self.is_one_shot:
+            assert task.example_gpt is not None
+
         logging.info(f"Predicting task {task.id} for video: {path}")
         logging.info(f"True label: {item['labels'][task.id]}")
         if path in cache:
             logging.info(f"Using cached scores: {cache[path]}")
         else:
             logging.info("No cached scores found")
-            history = self._build_batch_message(item, task)
-            answer, history = self._send_request(history)
 
-            GPTModel.parse_and_cache_scores(answer, path, task.labels, cache)
+            system_prompt = """
+You are an autoregressive language model that has been fine-tuned with instruction-tuning and RLHF. You carefully provide accurate, factual, thoughtful, nuanced answers, and are brilliant at reasoning. Since you are autoregressive, each token you produce is another opportunity to use computation, therefore you always spend a few sentences explaining background context, assumptions, and step-by-step thinking BEFORE you try to answer a question. You always use precise, plain scientific language, without unneeded flourish. You provide details where it might help the explanation.
+"""[1:]
+
+            task_prompt_prefix = f"""
+You will be given {self._n_frames} frames from a first-person video. The frames are given to you in chronological order.
+
+"""
+
+            task_prompt_postfix = f"\n\n{task.example_gpt}" if self.is_one_shot else ""
+
+            heading = {
+                "type": "text",
+                "text": "Input frames. Describe each frame separately.",
+            }
+            frames = [GPTModel._frame_to_payload(f) for f in item["frames"]]
+            first_request_history = [
+                {"role": "system", "content": system_prompt},
+                {
+                    "role": "user",
+                    "content": task_prompt_prefix
+                    + task.prompt_gpt
+                    + task_prompt_postfix,
+                },
+                {"role": "user", "content": [heading, *frames]},
+            ]
+            frame_descriptions, first_history = self._send_request(
+                first_request_history
+            )
+
+            class_list = "\n".join(
+                [
+                    f"- ({label}) {description}"
+                    for label, description in list(task.label_prompts.items())
+                ]
+            )
+            analysis_prompt = f"""
+Consider the following sequence of frame-by-frame descriptions:
+
+{frame_descriptions}
+
+Break down each of the following summaries into individual steps/actions and compare them to the sequence of frame descriptions above. For each step in each summary, mention whether it matches some frames from the sequence, and if so, which ones. Also note "almost-matches" that only differ in some details.
+
+After that, for each summary, provide a one-sentence commentary on how well the summary matches the sequence of the frame descriptions above overall. For this, pay attention to whether the steps in the summary align with the sequence of frame descriptions and whether they are in an order that agrees with the order of the frames. It is okay for the summary to not mention the agent moving, as long as the remaining steps are in the correct order.
+
+Summaries, given in the format `- (label) summary`:
+{class_list}
+"""[1:]
+
+            second_request_history = [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": analysis_prompt},
+            ]
+            frame_descriptions, second_history = self._send_request(
+                second_request_history
+            )
+
+            scoring_prompt = """
+Based on your notes above, distribute scores 1–100 to the summaries, where a higher number means better match, and a 100 is perfect alignment. Use each of these numbers !!at most once!!, based on how well the summaries match the long description. It is okay if the summaries are not perfect. You should follow the format below, verbatim:
+
+```
+- label, one-sentence commentary,  score
+```
+"""[1:]
+
+            third_request_history = second_history + [
+                {"role": "user", "content": scoring_prompt}
+            ]
+            scores, third_history = self._send_request(third_request_history)
+
+            GPTModel.parse_and_cache_scores(scores, path, task.labels, cache)
 
             log_writer.write(
                 {
                     "video": path,
                     "task": task.id,
                     "model": self.id,
-                    "history": history,
+                    "history": first_history + third_history,
                     "parsed_scores": {
                         label: cache[path][label] for label in task.labels
                     },
@@ -289,7 +353,6 @@ Be sure not to alter the label in any way, since we will use it to match your sc
                 {
                     "task": task.id,
                     "model": self.id,
-                    "metadata": {"n_frames": self._n_frames},
                     "video": path,
                     "label": label,
                     "label_idx": label_idx,
@@ -368,7 +431,7 @@ Be sure not to alter the label in any way, since we will use it to match your sc
 
     def predict(
         self, videos: list[Video], tasks: list[Task], log_dir: Path
-    ) -> Optional[pl.DataFrame]:
+    ) -> tuple[Optional[pl.DataFrame], dict]:
         logging.info("Configuring dataset...")
         subsample = partial(utils.subsample, n_frames=self._n_frames)
         transforms = [subsample, utils.frames_to_b64]
@@ -388,6 +451,9 @@ Be sure not to alter the label in any way, since we will use it to match your sc
             log_dir / f"{uuid.uuid4()}.jsonl", "w", sort_keys=True
         ) as log_writer:
             if self._async_batch:
+                raise ValueError(
+                    "Async batch is not updated to support the multi-prompt setup we use with GPT. Please use the synchronous mode."
+                )
                 print("WARNING: Ignoring all cache when using async_batch")
 
                 batch_ids = []
@@ -448,4 +514,11 @@ Be sure not to alter the label in any way, since we will use it to match your sc
                             )
                 result = pl.concat(results)
 
-                return result
+                metadata = {
+                    "n_frames": self._n_frames,
+                    "is_one_shot": self.is_one_shot,
+                    "model": self._model,
+                    "async_batch": self._async_batch,
+                }
+
+                return result, metadata

@@ -14,6 +14,7 @@ class Task:
     metadata: dict[str, Any] = field(default_factory=dict)
 
     prompt_gpt: Optional[str] = None
+    example_gpt: Optional[str] = None
     prompt_baseline: Optional[str] = None
 
     @property
@@ -38,7 +39,7 @@ class Model(Protocol):
 
     def predict(
         self, videos: list[Video], tasks: list[Task], log_dir: Path
-    ) -> Optional[pl.DataFrame]:
+    ) -> tuple[Optional[pl.DataFrame], dict]:
         """Predict the probability of each label in each task for each video.
         Returns a DataFrame with the following columns:
         - task: The task ID
@@ -78,11 +79,17 @@ class Experiment:
         for get_model in self.models:
             model = get_model()
             print(f"Running model {model.id}")
-            result = model.predict(self.videos, self.tasks, log_dir)
+            result, metadata = model.predict(self.videos, self.tasks, log_dir)
             if result is None:
                 continue
-            result = result.drop("metadata")
-            result.write_json(output_dir / f"{model.id}_{uuid.uuid4()}.json")
+
+            run_id = uuid.uuid4()
+
+            with open(output_dir / f"{model.id}_{run_id}.yaml", "w") as f:
+                config = {"model_metadata": metadata}
+                yaml.dump(config, f)
+
+            result.write_json(output_dir / f"{model.id}_{run_id}.json")
             results.append(result)
         result = pl.concat(results)
 

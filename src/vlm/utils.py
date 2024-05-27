@@ -3,6 +3,7 @@ import hashlib
 import json
 import logging
 from pathlib import Path
+from typing import Literal
 
 import cv2
 import einops
@@ -48,15 +49,28 @@ def subsample(x: t.Tensor, n_frames: int) -> t.Tensor:
     return x_subsampled
 
 
-def standardize(df: pl.DataFrame) -> pl.DataFrame:
-    scores_stats = df.groupby(["model", "task", "label"]).agg(
-        c("score").mean().alias("mean_score"), c("score").std().alias("std_score")
-    )
-    df = df.join(scores_stats, on=["model", "task", "label"]).with_columns(
-        score=pl.when(~c("model").str.contains("gpt"))
-        .then((c("score") - c("mean_score")) / (c("std_score") + 1e-6))
-        .otherwise(c("score"))
-    )
+def rescale(df: pl.DataFrame, in_each: Literal["label", "video"]) -> pl.DataFrame:
+    if in_each == "video":
+        df = df.with_columns(
+            (c("score").exp() / c("score").exp().sum())
+            .over("model", "task", "video")
+            .alias("score")
+        )
+        # scores_stats = df.groupby(["model", "task", "video"]).agg(
+        #     c("score").mean().alias("mean_score"), c("score").std().alias("std_score")
+        # )
+        # df = df.join(scores_stats, on=["model", "task", "video"]).with_columns(
+        #     score=(c("score") - c("mean_score")) / (c("std_score") + 1e-6)
+        # )
+    elif in_each == "label":
+        scores_stats = df.groupby(["model", "task", "label"]).agg(
+            c("score").mean().alias("mean_score"), c("score").std().alias("std_score")
+        )
+        df = df.join(scores_stats, on=["model", "task", "label"]).with_columns(
+            score=pl.when(~c("model").str.contains("gpt"))
+            .then((c("score") - c("mean_score")) / (c("std_score") + 1e-6))
+            .otherwise(c("score"))
+        )
     return df
 
 
