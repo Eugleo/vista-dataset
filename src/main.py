@@ -421,3 +421,121 @@ def plot(
                 tasks=tasks,
             )
             plot.write_image(details_dir / f"{filename}_matrices.png", scale=2)
+
+@app.command()
+def plot_minecraft(
+    experiment: Annotated[Optional[str], typer.Argument()] = None,
+    experiment_dir: Annotated[
+        str, typer.Option()
+    ] = "/data/datasets/vlm_benchmark/experiments",
+    task_dir: Annotated[str, typer.Option()] = "/data/datasets/vlm_benchmark/tasks",
+    standardize: bool = False,
+):
+    dir = utils.get_experiment_dir(experiment_dir, experiment)
+
+    with Progress(
+        SpinnerColumn(),
+        TextColumn("[progress.description]{task.description}"),
+    ) as progress:
+        progress.add_task("Creating plots...")
+        scores = pl.concat(
+            [pl.read_json(file) for file in (dir / "results").glob("*.json")]
+        )
+
+        if standardize:
+            scores = utils.standardize(scores)
+
+        for i in range(3):
+            scores = utils.add_random_baseline(scores, f"random_{i}")
+
+        num_nulls = len(scores.filter(c("score").is_null()))
+        if num_nulls > 0:
+            print(f"WARNING: {num_nulls} null scores found")
+            scores = scores.filter(c("score").is_not_null())
+
+        def compute_false_negatives(args):
+            true_label_column, score_column, label_column = args
+            # all elements in true_label_column are the same, so we just take the first one
+            true_labels = true_label_column[0].split(",")
+            k = len(true_labels)
+            # Select k labels, which get highest scores from the model
+            top_labels = label_column.take(score_column.arg_sort(descending=True)).head(k).to_list()
+            top_labels = set(top_labels)
+            true_labels = set(true_labels)
+            false_negatives = ",".join(true_labels - top_labels)
+            return false_negatives
+
+        def compute_false_positives(args):
+            true_label_column, score_column, label_column = args
+            # all elements in true_label_column are the same, so we just take the first one
+            true_labels = true_label_column[0].split(",")
+            k = len(true_labels)
+            # Select k labels, which get highest scores from the model
+            top_labels = label_column.take(score_column.arg_sort(descending=True)).head(k).to_list()
+            top_labels = set(top_labels)
+            true_labels = set(true_labels)
+            false_positives = ",".join(top_labels - true_labels)
+            return false_positives
+
+        plot_dir = dir / "plots"
+        plot_dir.mkdir(parents=True, exist_ok=True)
+
+        false_negatives_per_video = scores.filter(~pl.col("model").str.contains("random"))\
+            .groupby("task", "model", "video")\
+            .agg(
+                pl.apply(
+                    exprs=["true_label", "score", "label"],
+                    function=compute_false_negatives
+                ).alias("false_negatives")
+            )
+
+        false_positives_per_video = scores.filter(~pl.col("model").str.contains("random"))\
+            .groupby("task", "model", "video")\
+            .agg(
+                pl.apply(
+                    exprs=["true_label", "score", "label"],
+                    function=compute_false_positives
+                ).alias("false_positives")
+            )
+
+        errors = false_positives_per_video.join(false_negatives_per_video, on=["task", "video", "model"])
+        errors.write_csv(plot_dir / "errors.csv")
+
+        for column in ("false_positives", "false_negatives"):
+            counts = errors.group_by("task", "model").agg(pl.col(column).value_counts(sort=True)).explode(column).unnest(column)
+            for model in errors.select("model").unique().rows():
+                model = model[0]
+                plot = plots.errors_minecraft(counts.filter(pl.col("model") == model), column, f"{model} {column} in Minecraft")
+                plot.write_image(plot_dir / f"{model}_{column}_Minecraft.png", scale=2)
+
+            counts.write_csv(plot_dir / f"{column}_counts.csv")
+
+        def compute_recall(args):
+            true_label_column, score_column, label_column = args
+            # all elements in true_label_column are the same, so we just take the first one
+            true_labels = true_label_column[0].split(",")
+            k = len(true_labels)
+            # Select k labels, which get highest scores from the model
+            top_labels = label_column.take(score_column.arg_sort(descending=True)).head(k).to_list()
+            top_labels = set(top_labels)
+            true_labels = set(true_labels)
+            computed_recall = len(top_labels & true_labels) / k
+            return computed_recall
+
+        recalls_per_video = scores\
+            .groupby("task", "model", "video")\
+            .agg(
+                pl.apply(
+                    exprs=["true_label", "score", "label"],
+                    function=compute_recall
+                ).alias("recall")
+            )
+        print(recalls_per_video)
+
+        recalls = recalls_per_video.group_by("task", "model")\
+            .agg(recall=pl.col("recall").mean(), error=pl.col("recall").std() / pl.col("recall").len().sqrt())\
+            .sort("task", "model", descending=[False, True])
+        print(recalls)
+
+        plot = plots.overall_performance_minecraft(recalls, "recall", "Recall", "Minecraft multilabel activity recognition")
+        plot.write_image(plot_dir / f"Minecraft_recall.png", scale=2)
