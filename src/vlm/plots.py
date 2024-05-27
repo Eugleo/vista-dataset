@@ -180,6 +180,37 @@ def overall_performance(
     return fig
 
 
+def overall_performance_minecraft(
+    metrics: pl.DataFrame, metric: str, metric_label: str, title: str
+):
+    fig = px.bar(
+        metrics.to_pandas(),
+        x="model",
+        y=metric,
+        color=metric,
+        range_y=[0, 1],
+        range_color=[0, 1],
+        color_continuous_scale="YlGn",
+        title=title,
+        labels={metric: metric_label},
+        error_y="error",
+    )
+    fig.update_layout(showlegend=False, coloraxis_showscale=False)
+    return fig
+
+def errors_minecraft(
+    error_counts: pl.DataFrame, error_type: str, title: str,
+):
+    print(error_counts)
+    fig = px.bar(
+        error_counts.to_pandas(),
+        x=error_type,
+        y="count",
+        title=title,
+    )
+    fig.update_layout(showlegend=False, coloraxis_showscale=False)
+    return fig
+
 def incorrect_video_labels(predictions: pl.DataFrame):
     incorrect_count = (
         predictions.filter(c("label") != c("true_label"))
