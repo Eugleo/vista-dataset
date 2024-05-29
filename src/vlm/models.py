@@ -213,7 +213,7 @@ Be sure not to alter the label in any way, since we will use it to match your sc
 
         for l in task_labels:
             relevant_lines = [
-                line
+                line.split(l)[-1]
                 for line in response.splitlines()
                 if re.findall(rf"\b{l}\b", line, flags=re.IGNORECASE)
             ]
@@ -300,11 +300,11 @@ You will be given {self._n_frames} frames from a first-person video. The frames 
             analysis_prompt = f"""
 Consider the following sequence of frame-by-frame descriptions:
 
+```
 {frame_descriptions}
+```
 
-Break down each of the following summaries into individual steps/actions and compare them to the sequence of frame descriptions above. For each step in each summary, mention whether it matches some frames from the sequence, and if so, which ones. Also note "almost-matches" that only differ in some details.
-
-After that, for each summary, provide a one-sentence commentary on how well the summary matches the sequence of the frame descriptions above overall. For this, pay attention to whether the steps in the summary align with the sequence of frame descriptions and whether they are in an order that agrees with the order of the frames. It is okay for the summary to not mention the agent moving, as long as the remaining steps are in the correct order.
+Break down each of the following summaries into individual steps, and mention what frames or frame ranges each step matches in parentheses after each step. Note even partial matches, e.g. matching a kind of action (put, pick, ...) even though the object might be incorrect. Also provide a one-sentence commentary on how well each summary matches the sequence of the frame descriptions. In the commentary, the most important thing is to match the kinds of actions performed and their order. For example if put (of anything) was described before a pick (of anything) in the frames, maintaining this order in the summary is more important than getting the exact object right. Do not comment on the overall quality of the summaries.
 
 Summaries, given in the format `- (label) summary`:
 {class_list}
@@ -319,10 +319,10 @@ Summaries, given in the format `- (label) summary`:
             )
 
             scoring_prompt = """
-Based on your notes above, distribute scores 1–100 to the summaries, where a higher number means better match, and a 100 is perfect alignment. Use each of these numbers !!at most once!!, based on how well the summaries match the long description. It is okay if the summaries are not perfect. You should follow the format below, verbatim:
+Based on your findings in the previous section, score the summaries from 0 to 5, where 0 is "likely does not describe the video" and 5 is "among the given options, this one most likely describes the video". Make sure to score each summary individually. At least one score should be non-zero, even if it's not a perfect match. Whatever scores you pick, there !must be! exactly one summary with the highest score. Follow the format below, verbatim:
 
 ```
-- label, one-sentence commentary,  score
+- (label) score
 ```
 """[1:]
 
@@ -502,7 +502,12 @@ Based on your notes above, distribute scores 1–100 to the summaries, where a h
                                     for description in task.label_prompts.values()
                                 ],
                             }
-                            model_info = {"id": self.id, "n_frames": self._n_frames}
+                            model_info = {
+                                "id": self.id,
+                                "n_frames": self._n_frames,
+                                "is_one_shot": self.is_one_shot,
+                                "model": self._model,
+                            }
                             cache = utils.load_cache(
                                 self._cache_dir, task_info, model_info
                             )

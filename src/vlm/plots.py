@@ -146,7 +146,12 @@ def task_performance(
                         .over("label")
                         .alias("rank")
                     )
-                    .pivot(values="rank", index="true_label", columns="label")
+                    .pivot(
+                        values="rank",
+                        index="true_label",
+                        columns="label",
+                        aggregate_function="mean",
+                    )
                     .sort("true_label")
                     .select(pl.all().exclude("true_label"))
                 )

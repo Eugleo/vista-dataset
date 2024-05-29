@@ -5,21 +5,21 @@ import jsonlines
 import numpy as np
 import plotly.express as px
 import polars as pl
-import sklearn.metrics as skm
 import streamlit as st
 import typer
 from polars import col as c
 from vlm import plots, utils
+from vlm.models import GPTModel
 from vlm.objects import Task
 
 
 def load_logs(log_dir):
     logs = []
     for file in (log_dir).glob("gpt*/*.jsonl"):
-        if "gpt-4o-5" in str(file):
-            with jsonlines.open(file) as reader:
-                for line in reader:
-                    logs.append(line)
+        # if "59a" in str(file):
+        with jsonlines.open(file) as reader:
+            for line in reader:
+                logs.append(line)
     return logs
 
 
@@ -77,12 +77,12 @@ def select_video(index):
 
 
 def select_task(index):
-    print(index)
     st.session_state.task_index = index
 
 
-def ranking_matrix(scores):
+def ranking_matrix(scores: pl.DataFrame):
     task_labels = scores["label"].unique().sort().to_list()
+
     rankings = (
         scores.with_columns(
             # add a small random number to each score to break ties
@@ -91,7 +91,12 @@ def ranking_matrix(scores):
         .with_columns(
             pl.col("score").rank("max", descending=True).over("label").alias("rank")
         )
-        .pivot(values="rank", index="true_label", columns="label")
+        .pivot(
+            values="rank",
+            index="true_label",
+            columns="label",
+            aggregate_function="mean",
+        )
         .sort("true_label")
         .select(task_labels)
     )
@@ -119,7 +124,23 @@ def ranking_matrix(scores):
 def main(log_dir: str):
     st.set_page_config(layout="wide")
 
-    logs = load_logs(Path(log_dir))
+    logs = []
+    task_dir, task_labels = Path("tasks") / "alfred", {}
+    for log in load_logs(Path(log_dir)):
+        if "task" not in log:
+            continue
+        task = log["task"]
+        if task not in task_labels:
+            # task_labels[task] = Task.from_file(
+            #     task, Path(task_dir) / f"{task}.yaml"
+            # ).labels
+            task_labels[task] = list(sorted(log["label_descriptions"].keys()))
+
+        scores = GPTModel.parse_and_cache_scores(
+            log["history"][-1]["content"], "", task_labels[task], {}
+        )
+        log["parsed_scores"] = scores
+        logs.append(log)
 
     if "video_index" not in st.session_state:
         st.session_state.video_index = 0
@@ -128,14 +149,6 @@ def main(log_dir: str):
         st.session_state.task_index = 0
 
     st.sidebar.markdown("## Select Task")
-
-    task_labels = {}
-    task_dir = Path("tasks") / "alfred"
-    for t in set(log["task"] for log in logs):
-        try:
-            task_labels[t] = Task.from_file(t, Path(task_dir) / f"{t}.yaml").labels
-        except FileNotFoundError:
-            continue
 
     scores_df = pl.DataFrame(
         [
@@ -190,15 +203,10 @@ def main(log_dir: str):
 
     videos = sorted([log["video"] for log in logs if log["task"] == task_id])
     video = videos[st.session_state.video_index]
-    print(videos)
-    print(st.session_state.video_index, video)
     # video = st.sidebar.selectbox(
     #     "Select Video", videos, index=st.session_state.video_index
     # )
     log = next(log for log in logs if log["task"] == task_id and log["video"] == video)
-
-    task_logs = [log for log in logs if log["task"] == task_id]
-    print(list(task_logs[0].keys()))
 
     st.sidebar.markdown("---")
     st.sidebar.plotly_chart(
@@ -218,7 +226,7 @@ def main(log_dir: str):
             x="label",
             y="score",
         )
-        fig.update_yaxes(range=[0, 1])
+        # fig.update_yaxes(range=[0, 1])
         fig.update_layout(showlegend=False)
         st.plotly_chart(fig, use_container_width=True)
 

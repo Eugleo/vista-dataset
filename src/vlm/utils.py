@@ -52,6 +52,11 @@ def subsample(x: t.Tensor, n_frames: int) -> t.Tensor:
 def rescale(df: pl.DataFrame, in_each: Literal["label", "video"]) -> pl.DataFrame:
     if in_each == "video":
         df = df.with_columns(
+            score=pl.when(c("label") == c("true_label"))
+            # Breaks ties by subtracting a small number
+            .then(c("score") - 0.01)
+            .otherwise(c("score"))
+        ).with_columns(
             (c("score").exp() / c("score").exp().sum())
             .over("model", "task", "video")
             .alias("score")
