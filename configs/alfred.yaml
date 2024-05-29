@@ -1,339 +1,402 @@
 cache_dir: .cache
 models:
-# - async_batch: true
+- async_batch: false
+  is_one_shot: true
+  kind: gpt
+  model: gpt-4o
+  n_frames: 16
+# - async_batch: false
+#   is_one_shot: false
+#   kind: gpt
+#   model: gpt-4o
+#   n_frames: 16
+# - async_batch: false
+#   is_one_shot: false
 #   kind: gpt
 #   model: gpt-4o
 #   n_frames: 5
-- encoder: s3d
-  heads:
-  - kind: cosine
-  kind: encoder
+# - encoder: s3d
+#   heads:
+#   - kind: cosine
+#   kind: encoder
 - encoder: viclip
   heads:
   - kind: cosine
   kind: encoder
-- encoder: clip
-  heads:
-  - kind: cosine
-  hf_model: ViT-bigG-14/laion2b_s39b_b160k
-  kind: encoder
-  n_frames: 4
+# - encoder: clip
+#   heads:
+#   - kind: cosine
+#   hf_model: ViT-bigG-14/laion2b_s39b_b160k
+#   kind: encoder
+#   n_frames: 4
+# - batch_size: 1
+#   encoder: clip
+#   heads:
+#   - kind: cosine
+#   hf_model: ViT-bigG-14/laion2b_s39b_b160k
+#   kind: encoder
+#   n_frames: 32
 output_dir: experiments
 task_dir: tasks/alfred
 tasks:
-- level_2/permutation/014c31da-cf6e-4d2c-9e19-3116cb244118
-- level_2/permutation/171157b2-e13a-4c6d-ab28-783d6ced80ef
-- level_2/permutation/9722a0b4-b53c-4a09-9965-cca7884af6a5
-- level_2/permutation/a6e505df-314c-4b11-81f9-c6f83d9c9c1a
-- level_2/permutation/622b9fd3-1a25-4bdb-a717-04f0bcccb54d
-- level_2/permutation/b0fb3956-d7cb-4936-b774-b74048bf1d34
-- level_2/permutation/0de0dbc1-5b48-49c8-a2cf-5268c7e39318
-- level_2/permutation/831dfff7-10c5-4089-a80f-5f8641447306
-- level_2/permutation/ad4791cc-9eaf-4e88-b469-ee7e6366d479
-- level_2/permutation/c042e16b-7333-4d8a-ab4b-612d497a9790
-- level_2/permutation/1009fe68-2c73-4377-a85d-b6c932c4f4d2
-- level_2/permutation/09a6c3b2-2453-4865-8859-29b4ffbbb123
-- level_2/permutation/2e719423-18cf-4b0e-98a3-fa6bd63abd02
-- level_2/permutation/f92eda2e-97a2-4226-9707-902cece09b5e
-- level_2/permutation/1090ba59-e325-49cc-9254-586ca730bdc1
-- level_2/permutation/50365b1c-40b8-4d00-9257-e1a5ec2efc40
-- level_2/permutation/5a8affdb-94c2-4442-abae-f43eab41b0c5
-- level_2/permutation/f622e209-df79-4c8d-9b80-b8a3ee39a246
-- level_2/permutation/4f9e7aa4-730c-48e1-9752-84ed5bf5bf1c
-- level_2/permutation/be58c094-656c-4949-9819-d423ede2afab
-- level_2/permutation/1f83b152-e5a7-483d-bf1f-e762996b3f5e
-- level_2/permutation/458b4a11-fc5a-45dc-be34-1bfcd2c75b9e
-- level_2/permutation/50c09d3c-363a-439c-837c-85d93f30fac0
-- level_2/permutation/1b0407b0-3106-4d04-a3ef-8d915d95146d
-- level_2/permutation/8dc736a1-ea7f-4790-bd71-aa951114f825
-- level_2/permutation/869ff0ba-6118-4b97-9276-47a8ff9b2118
-- level_2/permutation/128c4d0b-3b43-4f31-9607-4a728dd5afb3
-- level_2/permutation/da75493b-3554-435a-94f4-117379a7bf7f
-- level_2/permutation/a5a013b9-384b-4b6a-80ad-f502faf821eb
-- level_2/permutation/462b73db-3869-489a-baae-410934d9e2bf
-- level_2/permutation/b5e5aa6c-138c-43cb-b728-0be6b13f9b32
-- level_2/permutation/859d7886-151f-4fc0-823b-5d551255ab76
-- level_2/permutation/fcca3a1d-89f4-4055-a2c9-9c18aa6ed613
-- level_3/permutation/ee40efe6-1def-47e2-a266-2ba2e13c5f28
-- level_3/permutation/265bba54-8a2d-469b-a939-1c83bf187349
-- level_3/permutation/6d320350-ce01-4e71-9693-67093be83274
-- level_3/permutation/fedebe7f-3dbe-47f5-be15-2d493a26eeb6
-- level_3/permutation/6d69f053-ec17-4eea-b3d8-6687a9b0a748
-- level_3/permutation/0582eefa-397d-4a8e-8afb-531e263d55cb
-- level_3/permutation/95743919-6522-4323-af0d-3e10d9425c66
-- level_3/permutation/d87062c2-544c-4801-a59c-b80c8b4b0bad
-- level_3/permutation/551b0086-4dda-4133-97ec-a3c2f412a594
-- level_3/permutation/28036aa3-475b-4a13-9721-90e164cb6593
-- level_3/permutation/610631fb-101a-4dfc-906d-d51fd5feab2a
-- level_3/permutation/db558668-c329-45aa-a5e2-2f74471be66f
-- level_3/permutation/57e0ce07-85c5-42ff-a4d4-550572b83d8e
-- level_3/permutation/8afb22d5-2359-4964-9e27-a8e517976d91
-- level_3/permutation/e4877c62-1cbc-4ed1-800d-017b559a599d
-- level_3/permutation/90ba512b-4b23-4a87-b3d3-181a3bc2e85a
-- level_3/permutation/82197b21-439f-4058-ba2e-8d5c9fad3867
-- level_3/permutation/e2cb8061-ccc5-4b16-a94f-5d491432af56
-- level_3/permutation/b36ae158-c76c-4701-ac6c-3cc079f710af
-- level_3/permutation/30700506-3f64-4fe8-bb52-e5211e90a8e4
-- level_3/permutation/67ca3009-e895-47cb-b019-58e3af28fdd3
-- level_3/permutation/8dee376f-6e36-4d45-a309-5d3fc2cc4af6
-- level_3/permutation/e089c839-afef-4123-a45b-cf42e4b3eb49
-- level_3/permutation/52c0d323-8034-4ddc-a2f3-bf0156978fe0
-- level_3/permutation/75a47d09-8d3e-4043-992e-ba8330c2c411
-- level_3/permutation/0da33bb6-b8ce-40cb-8e0f-b4b5f5bb1739
-- level_3/permutation/205e01c5-6b5e-41b7-9775-6bbba531ba50
-- level_3/permutation/07eda335-0653-49a8-9dec-27cfc3fb9f2b
-- level_3/permutation/f3fda579-4e0f-4768-b60f-553036f48987
-- level_3/permutation/d0bd1865-fda2-4858-baa0-251d7afd3365
-- level_3/permutation/e3edfc6a-f8e1-415d-ad69-0f0ae7a4d4ab
-- level_3/permutation/34c247b2-7ed7-464e-8074-e6d0496f1d3f
-- level_3/permutation/4cd1b01d-b17e-4740-a6ba-d4b088e763e1
-- level_4/permutation/289f16b7-ff0e-4853-a07b-10cc84cccf58
-- level_4/permutation/ddf9c3c2-1aa7-40b3-9f84-c36acd32b7fe
-- level_4/permutation/eb450e5a-578e-4919-a453-cfce88d8f55f
-- level_4/permutation/2bfc2198-87b0-4270-93ef-182d192ace15
-- level_4/permutation/b7ae93dd-d2f7-4173-a6b2-7b0bd096cdb9
-- level_4/permutation/e66da49b-4bf2-4f85-aa46-3452f1146b99
-- level_4/permutation/8a99cd11-241c-4ab5-a163-95811d0d5d8f
-- level_4/permutation/3e72241f-4676-4aed-b17a-4a9c1dd00f98
-- level_4/permutation/71870a9f-b420-47c7-b1bb-9e826807fa08
-- level_4/permutation/3b8bc872-a49f-4029-843b-1b813c2c0b4c
-- level_4/permutation/9a4059f7-2360-485b-b1a1-0ba3c5658da9
-- level_4/permutation/cbaffbca-8796-4c80-9cb3-9400c7a5a020
-- level_4/permutation/d98adc3c-6016-471c-be55-1e2f62f307b6
-- level_4/permutation/90a7561e-cf75-41c6-8cd1-1ad3d742cdb1
-- level_4/permutation/e83aad8a-845d-4fcc-86c9-c308d9ca4f5e
-- level_4/permutation/9b9c8462-a5f8-4e62-a131-a6f8f183ccaf
-- level_4/permutation/589e3701-b109-4900-ab32-16ddc0402b98
-- level_4/permutation/b38975f0-37dc-4b8e-94ca-7b2db7ce699e
-- level_4/permutation/6a414ddf-ac27-4c2b-b595-ca75f4cd2084
-- level_4/permutation/d1218183-80a0-4a98-aed4-aa09925d9743
-- level_4/permutation/1f441c17-f45c-4b8a-9c97-a6b84f8a14c8
-- level_4/permutation/7c7777ea-1c3b-4d26-af36-04c356c6b7d1
-- level_4/permutation/e36e02ff-8fdd-49ee-bff5-2c8417a5ef5f
-- level_4/permutation/43babb65-b79c-4fab-aaa4-f8ef8271d298
-- level_4/permutation/6c3636cb-3514-4cba-a6f7-bea01cf9a4c0
-- level_4/permutation/455bfec8-821c-4ed3-a7c4-49b675fcc1dd
-- level_4/permutation/d4ad3861-e98b-429a-aadf-f53977571fd1
-- level_4/permutation/33dfc739-d7a1-4a91-ac6c-d8ade2d5b535
-- level_4/permutation/1ca725bc-4b40-472d-b041-0f58d77ff512
-- level_4/permutation/d8cd290c-d42f-4758-a578-936f9bf9b332
-- level_4/permutation/b2ab0c54-ccb9-483c-b052-10aea5364866
-- level_4/permutation/0b9dfbc1-60c1-474c-b619-37a67c674245
-- level_4/permutation/7acde05e-66ea-463d-9243-7ed68dae0e27
-- level_5/permutation/f1e88aaf-7bdf-483f-86da-5f3083bfd468
-- level_5/permutation/e092d0dc-4593-42a0-8808-d0d6dee53ea7
-- level_5/permutation/3d4fce09-93f5-46c8-aba8-d37acdfc64ab
-- level_5/permutation/3a4a23e7-0c04-41f8-9063-d4b6401fe6d6
-- level_5/permutation/5ef23d53-4b1b-4ffe-8db0-3039c15f54b0
-- level_5/permutation/4ca9c6c9-116f-49ec-b562-f852d2529e8b
-- level_5/permutation/df064656-c554-4299-a1bf-47bd19de13c1
-- level_5/permutation/3979141f-c795-454d-8b07-bd64be2cedf7
-- level_5/permutation/1407430c-9d83-45f5-8754-434036c97999
-- level_5/permutation/d8185e82-f5ad-45ac-a7a7-eabc19cf9ff4
-- level_5/permutation/4b51ed87-048a-431e-b860-b43fd0143263
-- level_5/permutation/1a6d8a02-c4ce-42db-819c-0d7e2dfa4d73
-- level_5/permutation/17ad5e5d-4091-4a3e-82cf-7f083bcef566
-- level_5/permutation/ca930a6b-5da9-4e97-89cc-2cd4bc2fa686
-- level_5/permutation/cbf19591-5634-4cb7-991a-a99cf120750e
-- level_5/permutation/7a1cbaf6-3fdb-4a1b-b353-0c8877642a29
-- level_5/permutation/85659c85-c730-4585-a4ef-ec52e2ef06b3
-- level_5/permutation/ba055422-a23a-4d7d-bcf9-76d03cfa75dc
-- level_5/permutation/ede3d66d-8216-4446-9b0d-a8436ec992d2
-- level_5/permutation/59382a8a-b21b-45b2-949e-46ee38138fcc
-- level_5/permutation/39f0743c-64c1-45fd-8135-909fdf403bfa
-- level_5/permutation/aebd18f6-0704-4a32-978e-22e2c0ff5ba7
-- level_5/permutation/4bf21ac5-ef3b-4166-971d-8f8efba2310a
-- level_5/permutation/fd914a51-4864-45db-91ae-dfaa7f2b9e0a
-- level_5/permutation/43254576-9a92-4c4f-9ff3-2cea9197ece4
-- level_5/permutation/fba60823-cc74-459e-8af8-bcf68f4de0e4
-- level_5/permutation/b07819c7-bece-47c4-85d6-d9b58bbc016c
-- level_5/permutation/a1cae797-58f9-4d9b-bbb9-be5243e7664c
-- level_5/permutation/b6310935-a9c9-4c2c-9f91-2545a59df2d2
-- level_5/permutation/409b6a1d-a855-4ee1-860d-040a048e16a2
-- level_5/permutation/b77c633e-1537-4119-9414-6ff82a0ec5be
-- level_5/permutation/a32a1733-3cda-4bfe-ac76-cb5ed7cc5b05
-- level_5/permutation/97c4549c-c05e-4533-b519-59e9bcb99079
-- level_6/permutation/9ee6803f-4fce-42c7-b7c3-d4c05ce155c2
-- level_6/permutation/8d342e76-3539-4ffc-a71a-0ac24e3a9ee8
-- level_6/permutation/115b02a3-f1ad-4972-b378-f2353e330301
-- level_6/permutation/7aff3e6c-2715-424b-abdf-584d489bf504
-- level_6/permutation/a3c43d1b-925d-4da3-b729-a4305cebf4a2
-- level_6/permutation/7bbca4d6-fa13-4c43-b649-2499551fb688
-- level_6/permutation/a8552dee-e632-4cf3-bbb7-496cc6a96277
-- level_6/permutation/99bf99f9-605e-4211-ad26-7957eba1a6bd
-- level_6/permutation/b45b9b4c-114e-40b9-9051-ca17bb03363f
-- level_6/permutation/158c0c4c-af69-4937-9372-b3229b2172a4
-- level_6/permutation/8be90ba3-9aea-4b18-8cf3-bb655c075b65
-- level_6/permutation/9bd3941e-3c42-4b25-9912-b5d6bbf5400e
-- level_6/permutation/0adec550-5481-401d-911e-831b96f86cca
-- level_6/permutation/1d2e59f4-b4a1-4860-8861-0e2b5c1af16d
-- level_6/permutation/0b7b5a79-a39c-4b89-abcc-f5d3030d48f8
-- level_6/permutation/6a048424-8649-45d4-8f5b-1a46fb6c6db5
-- level_6/permutation/5ae6c2c9-f991-47eb-9a05-e328e1d29c26
-- level_6/permutation/5259a874-448f-45e4-8ef6-ab0ad665f1f2
-- level_6/permutation/84618dfc-4db2-4d72-a6bf-bc168437c338
-- level_6/permutation/f300cba0-7fcd-4dfd-bb59-f6d029334bc8
-- level_6/permutation/50f94331-c7cb-484e-a231-a4073c451726
-- level_6/permutation/13a6ee77-a474-4660-a4d5-7dfb19c69c1a
-- level_6/permutation/36f958c3-f7bc-452d-af12-fb754d1fd4b6
-- level_6/permutation/4bd992ce-2093-484b-8f88-21ec5506c40c
-- level_6/permutation/491031e8-61e4-4d76-bff6-b5ed05cc9df7
-- level_6/permutation/b173ae75-3e74-4aad-9010-14f54e440e5d
-- level_6/permutation/7a3370a2-0e64-47e3-8ad8-384fe48e6669
-- level_6/permutation/3362f1b4-548a-4e88-aec1-04f02472db95
-- level_6/permutation/cd87d2d5-c018-4911-b5f0-5ef4852cb306
-- level_6/permutation/c889a547-7212-46ae-91d8-c6fdf19d3d98
-- level_6/permutation/b8124939-9d4e-431d-bef3-ca4cd7abef59
-- level_6/permutation/6e94d3a8-3bc9-48a4-89c2-1cb221f73eab
-- level_6/permutation/5652eb80-90ac-4306-b83f-80a520880efc
-- level_7/permutation/5b763e19-f7ae-496b-9494-795227103655
-- level_7/permutation/21498edb-da10-4ebd-a5a8-47246b693293
-- level_7/permutation/1f00c766-7253-459a-849f-7f6983ad334a
-- level_7/permutation/4efdd7a5-03f2-4c13-8454-24091a9a958a
-- level_7/permutation/f43dc929-03ae-4976-a31d-90653c7b1aa2
-- level_7/permutation/de5b3631-7ee4-4d44-9f9a-eaefcd85fbcf
-- level_7/permutation/bfdd62b3-7389-4dc4-a44a-0b8251cc4aac
-- level_7/permutation/8178e00d-1312-4ebe-9555-2afdc8a13fe2
-- level_7/permutation/88cf33d4-71ff-418c-bf56-db9efca08ec1
-- level_7/permutation/aa6caed0-1d63-42aa-8765-9619e474dbcb
-- level_7/permutation/6f149754-8ccb-4b90-b842-dca3bab2d7ab
-- level_7/permutation/3eef14e1-8118-45ae-929e-3fb939b74673
-- level_7/permutation/c29ecb23-2053-4caa-958f-e51e9f0513c0
-- level_7/permutation/a405c74d-1570-48ef-a52d-bcfedda67da3
-- level_7/permutation/5e2cc532-8427-4c5d-8e19-97e63eb0c747
-- level_7/permutation/9126d89e-e0e8-4952-a03b-2906a4cd2ef2
-- level_7/permutation/dfc8552b-650b-4e23-97b8-647a23c408ac
-- level_7/permutation/6e94f81b-5eab-4e02-bcc5-91f7221bb392
-- level_7/permutation/13ede4bb-eba4-4a67-b237-521eb26af68a
-- level_7/permutation/a766b2ba-c6b0-4350-880e-f8c318dba724
-- level_7/permutation/32c99cd7-b5d4-45fb-872f-950571565c58
-- level_7/permutation/a01d9502-8abb-496e-a2c5-b960e6940577
-- level_7/permutation/455bc110-9b23-4700-8e58-e844bb26c4df
-- level_7/permutation/9df8d6a4-339f-4119-a313-3da7336415b2
-- level_7/permutation/e3736f68-fc22-4328-8214-0fd865cbe31e
-- level_7/permutation/82ec8aca-4363-4806-a022-d0860b4709aa
-- level_7/permutation/9d5c0f19-726e-4884-b97c-cb62da2137e3
-- level_7/permutation/2900a46c-49b3-4743-8c67-9dab9472aa95
-- level_7/permutation/afb6ea59-2b79-4ca6-8893-fb7a9445b882
-- level_7/permutation/0ec886ff-5712-4787-8aa2-c639f5787ced
-- level_7/permutation/c5e2503e-0703-43ab-8c6b-8adcf07d95ee
-- level_7/permutation/6a0dded0-d6eb-4ab4-a2c7-9974c39d121e
-- level_7/permutation/ec6a1e5e-2ddf-493d-b748-37f28d537950
-- level_8/permutation/11d276ad-f397-4d42-aa0f-bc68afee3a1e
-- level_8/permutation/2f6a99c1-5920-4152-b43c-a98bac572d27
-- level_8/permutation/2a859776-5db5-4d09-8d52-3bbc99bee16c
-- level_8/permutation/7ab13dc9-fa27-4e04-b920-256f7a89b56c
-- level_8/permutation/0748a9ba-194d-48a5-981c-941c64aad726
-- level_8/permutation/ce8d16ab-8525-41be-af4b-cc24b3ab0096
-- level_8/permutation/541805c4-c01d-4e6a-a125-49758d31f12a
-- level_8/permutation/0a4c753f-d2b4-4364-962b-0c63fb12de90
-- level_8/permutation/71134727-70cc-49f7-be11-3bcdb22ede8d
-- level_8/permutation/84ce117f-7e99-4563-9e2e-7429ae88103c
-- level_8/permutation/1ddc7735-cd45-4cd4-994d-a8610add55c8
-- level_8/permutation/0a8a2106-a1a5-4580-96ac-f9e96b1e9d40
-- level_8/permutation/e8666b95-d887-43cb-b02f-082dc8af5c9b
-- level_8/permutation/514824b5-3726-4560-bf12-db11f4d7df94
-- level_8/permutation/1197a0b0-3504-48e7-99da-977ad83bc10f
-- level_8/permutation/c08f5d8c-b856-4303-ad8c-6ef90ce0aff1
-- level_8/permutation/f450059e-d652-4217-9329-eb028b6ec7ea
-- level_8/permutation/6aff4d29-b314-4157-a279-a657d4d74562
-- level_8/permutation/9103a7e6-1878-4041-9f32-c28979c104af
-- level_8/permutation/9d496b9d-49c5-4383-8089-34c3e5573670
-- level_8/permutation/c643e2c2-310f-4963-917d-14165e607ab1
-- level_8/permutation/29df81b6-b558-405e-8e71-2c1c806f8396
-- level_8/permutation/97747cb9-1d5e-4474-b132-ba612e82e0e2
-- level_8/permutation/b3f2d434-6f81-4356-8768-3c96031f1070
-- level_8/permutation/70d3ffc6-d09e-40fb-87d4-d4611bdbd37a
-- level_8/permutation/48fa69ef-2f7d-47ef-bc65-50346653c0ae
-- level_8/permutation/4fd01a58-f181-4038-b04c-78ff36473819
-- level_8/permutation/2cf6b5a1-b294-4b28-baef-72b0be84ac8d
-- level_8/permutation/09e2261d-a22e-4c7e-8ef1-a2858587a671
-- level_8/permutation/55167ef1-adea-4d4b-9f4c-7dd6ba3a75fb
-- level_8/permutation/2d4f285b-69b5-4b09-a45f-dd0848a063ac
-- level_8/permutation/8ba08f27-87cc-49fb-88ac-aab733ccaf4d
-- level_8/permutation/5109436a-9644-4a44-b3a6-04f1f85ef8e9
-- level_2/remix/df869f26-ea3b-4ce1-b4c2-361043e24dd5
-- level_2/remix/0a26be2d-7b1f-4165-b02e-212d199d790d
-- level_2/remix/d2a8f506-f3fe-41ba-9277-ded7a940879c
-- level_2/remix/c7874166-2d40-4bf7-9bfb-ac3f88703d14
-- level_2/remix/324fd237-6df1-4583-af2a-3bd88224d2bd
-- level_2/remix/a48bc232-b455-4e64-9f12-cc78afd12448
-- level_2/remix/ebc7cc8d-51c1-48bc-8caf-f2174f3f6bc7
-- level_2/remix/832945b2-e9da-4a97-bcfd-bb76f9af8e9d
-- level_2/remix/95b7aa1b-2e28-4640-af22-43374522d516
-- level_2/remix/72e0ab5b-2743-46b4-bcf0-af0897333d61
-- level_2/remix/8ef99092-71a3-42f6-a1f5-b0666b426cd8
-- level_2/remix/b4008b22-98f6-43b5-bda5-fda352d23d70
-- level_3/remix/c700755a-aa8f-4a0d-b5f9-087059773c4e
-- level_3/remix/b388fe78-5711-47f6-93ab-07c0c3ed1c57
-- level_3/remix/989b04cc-e55e-4da0-8d63-fb3606db166c
-- level_3/remix/8a74ff18-e368-4f24-8429-8787058df7c5
-- level_3/remix/8f0047fc-675d-45b2-b2c7-c9eec64c1f43
-- level_3/remix/3154739b-1d2d-4873-b59f-b328b080e7f8
-- level_3/remix/8629f907-e56c-4413-913a-a8f30097747c
-- level_3/remix/1ce546fd-0692-4e21-89ea-83e32973c464
-- level_3/remix/4e33d797-9495-4745-8edc-d6ea4b71937f
-- level_3/remix/198002c8-e83a-4954-966d-f014a0c892d2
-- level_3/remix/ab9282f6-61dd-47c2-bbf7-b9c3fd94c2b6
-- level_3/remix/a72cba40-ece1-462b-9123-0cc177ca7aee
-- level_4/remix/f1c6f25f-b5df-4f26-9950-e9db34119044
-- level_4/remix/9adeadbe-5859-4c35-830c-d31519a239d6
-- level_4/remix/ecbbd705-54f3-4582-bb78-e86e29ccc345
-- level_4/remix/d8ac7c08-4088-447e-bb03-bb65e400b1aa
-- level_4/remix/7da358dd-9d22-40df-a84a-09c2df6e9cd2
-- level_4/remix/9c3c47dc-4d7e-4486-a8ae-3872633ac955
-- level_4/remix/22e49c56-7378-441a-9932-b5d6040a4426
-- level_4/remix/27b1c785-3f1d-454b-a2f4-2a23094ffd57
-- level_4/remix/c53b606f-45fc-47fc-89ef-dede4bc953fd
-- level_4/remix/d9abf121-9ef0-4fdf-a91a-694428016335
-- level_4/remix/175a9a82-5710-4050-b893-4100060bd5e9
-- level_4/remix/dfe6c3e8-63f0-4c9e-b2a8-3c5012710020
-- level_5/remix/aeca1464-476b-4088-836f-976e68fb45a4
-- level_5/remix/3b2b4d02-b189-4270-b1b4-933294ff4012
-- level_5/remix/d57ed43c-1e40-4c1e-8014-d70a0b3641e2
-- level_5/remix/910f80cb-836c-4ed1-ab8d-d3f96c125ae4
-- level_5/remix/be4be649-7b26-4c5d-b001-48156eb7ca63
-- level_5/remix/4c4aeffe-f955-4c1b-9610-eca356a6d291
-- level_5/remix/6e69b66f-3f38-4544-b26f-d96653fe00a7
-- level_5/remix/8e2057d9-f28e-4644-bb4c-5814f538680a
-- level_5/remix/544e30f1-041a-41b8-8e81-b1e8c3c3242d
-- level_5/remix/eff5ba13-fa22-4a9c-a338-0abd8670228f
-- level_5/remix/9fcb06db-7a46-4206-b051-e7c33d04da95
-- level_5/remix/bb79d69e-abcc-425f-b65c-25cf2613004d
-- level_6/remix/a319ef9a-e3f5-4609-b097-9502434f8e9a
-- level_6/remix/6dfe4467-b21f-40e7-a971-d1263ec73dd0
-- level_6/remix/670985e1-441d-49a1-b33e-d6639d249fdd
-- level_6/remix/bbcfca5f-ab3b-4bf4-8cca-925a7fa56000
-- level_6/remix/35586129-9276-4abe-bc25-1f4f079a37d9
-- level_6/remix/0e87d2b9-be2f-493b-a2f3-d8a59045716a
-- level_6/remix/860bfe59-438c-4bc7-8655-c16a28370dbc
-- level_6/remix/3faf9316-96eb-4486-8b99-7feab2ff6868
-- level_6/remix/a767fc67-544e-4de0-b119-39ecd334b723
-- level_6/remix/4cb70a80-d777-4aec-a80b-fbaf5cd45733
-- level_6/remix/0fefbe5e-a2d4-48ca-9af2-be530ee18387
-- level_6/remix/8e83447d-f9c2-418d-b53f-8eb05a115ba5
-- level_7/remix/c33d9c34-837e-4b2f-b3b8-4d0930b0899d
-- level_7/remix/8d8e4c5c-b2d7-4831-b247-ff6dc4c530f2
-- level_7/remix/5c7ccc83-16c6-462c-86b3-8f0d91a3bf4e
-- level_7/remix/ebdad7b0-d741-47df-aab7-9e60327b8b10
-- level_7/remix/d365bdbb-82f1-4def-8bd3-74372252c3f8
-- level_7/remix/7c49040e-ef4d-42ea-83e7-759bf6106659
-- level_7/remix/cf20f83d-5f71-4de1-8485-4aa38d52677d
-- level_7/remix/f39d05b3-f5fe-44db-a890-18dabed65a7f
-- level_7/remix/6dd09f54-92b1-4c1e-8384-ce7142ea45e5
-- level_7/remix/4ae00561-ed11-426d-83ba-377485ebcdb8
-- level_7/remix/6183c494-88f2-4c08-8bb8-8db1ae8c9449
-- level_7/remix/f6828d38-9f61-4cea-8c0f-e2e11697708f
-- level_8/remix/e2d87cbf-0d06-4c73-81c1-3e033ade58e5
-- level_8/remix/a5816426-9dae-438c-8e9a-1b795136dfee
-- level_8/remix/0795d826-bbb5-49c0-b007-0cade177ce3a
-- level_8/remix/32d79e80-e8bd-4f27-a2ef-5ad5a31a4c46
-- level_8/remix/8cf78dd6-631b-4d59-8a45-ae9d5712c66c
-- level_8/remix/a6c9f691-3dcc-47d0-86ae-4f900e8c8ed3
-- level_8/remix/c12b8ccc-10a3-4488-83a5-b0b9e42019f8
-- level_8/remix/0cfdd686-24c8-4a16-bec0-2fab2a86c450
-- level_8/remix/aa2a5beb-dd91-4332-99c8-edf9e57f7ab8
-- level_8/remix/c7b4501e-b32b-4204-91e1-793576d18dc7
-- level_8/remix/44a565c6-ae27-4ec8-a57b-bce316e71d29
-- level_8/remix/c0e198bd-2794-449f-bfed-0a822ede45b0
+# - foundation/pick_v_put/fork_counter_top
+# - foundation/pick_v_put/pen_garbage_can
+# - foundation/pick_v_put/egg_microwave
+# - foundation/pick_v_put/salt_shaker_cabinet
+# - foundation/pick_v_put/cell_phone_side_table
+# - foundation/clean/fork
+# - foundation/clean/egg
+# - foundation/clean/kettle
+# - foundation/clean/apple
+# - foundation/clean/cloth
+# - foundation/objects/pick_from_counter_top
+# - foundation/objects/pick_from_dining_table
+# - foundation/objects/pick_from_somewhere
+# - foundation/containers/place_butter_knife
+# - foundation/containers/place_soap_bar
+# - foundation/containers/place_mug
+# - foundation/containers/place_key_chain
+# - foundation/heat/mug
+# - foundation/heat/potato
+# - foundation/heat/apple
+# - foundation/heat/slice_of_potato
+# - foundation/heat/bread
+# - foundation/cool/slice_of_tomato
+# - foundation/cool/egg
+# - foundation/cool/tomato
+# - foundation/cool/slice_of_bread
+# - foundation/cool/lettuce
+# - foundation/toggle/faucet
+# - foundation/toggle/microwave
+# - foundation/toggle/desk_lamp
+# - foundation/toggle/floor_lamp
+# - foundation/slice/potato
+# - foundation/slice/apple
+# - foundation/slice/bread
+# - foundation/slice/lettuce
+# - foundation/slice/tomato
+# - foundation/sliced_v_whole/lettuce
+# - foundation/sliced_v_whole/potato
+# - foundation/sliced_v_whole/bread
+# - foundation/sliced_v_whole/apple
+# - foundation/sliced_v_whole/tomato
+# - foundation/on_v_off/floor_lamp
+# - foundation/on_v_off/faucet
+# - foundation/on_v_off/microwave
+# - foundation/on_v_off/desk_lamp
+- level_2/permutation/99314b6b-a4b1-45cd-bf22-6aa39ec69b2c
+- level_2/permutation/1fe9a43e-9f94-4407-b54e-008e4f7b6dc8
+- level_2/permutation/5e791d68-7535-4c80-a93e-10e7b86ac616
+- level_2/permutation/2c463112-457f-4bb1-a363-c9448a739542
+- level_2/permutation/cd24ba68-3794-4785-8101-0ad35576bed9
+- level_2/permutation/4120eec9-a8d1-49aa-b613-f6ca72194304
+- level_2/permutation/8e2bda99-fea7-4050-afee-8d74d2ef4e31
+- level_2/permutation/1ec8028b-676c-4809-b745-35f4902ce95e
+- level_2/permutation/c2ffa5fb-f49e-41d2-a98d-9b19cc40de5c
+- level_2/permutation/08185c2a-a3a5-497d-8d4d-c097b41e86d3
+- level_2/permutation/d8bb18dd-acba-4ce4-8076-f0bbf0c515c3
+- level_2/permutation/63a426a5-52b6-414b-8afd-4b2444d71296
+- level_2/permutation/70fb40e0-cdd8-4e46-9bd1-603aa4035836
+- level_2/permutation/b7e0ced8-ea77-459a-b960-8a6ac15b0d7b
+- level_2/permutation/9f61c6e4-d4ff-4a1b-9dd9-4486c3dac6cc
+- level_2/permutation/2c4c9b72-0e11-44e2-8d7e-ebd858327244
+- level_2/permutation/8f64061b-1794-46be-8992-3f4eb06b6885
+- level_2/permutation/dba103a7-7ba1-42f6-b106-681b99e68df7
+- level_2/permutation/4af4af69-c997-4faa-b7dd-5e10d667f913
+- level_2/permutation/02166300-e419-4e2d-b315-ef258101546f
+- level_2/permutation/a6b03ed7-0e82-4c75-8a9a-c104d79283b6
+- level_2/permutation/4e2332ce-a200-4cb8-9a51-d63608211906
+- level_2/permutation/8a983b98-594a-4552-9f28-6abfb72447e7
+- level_2/permutation/735a57c1-64c4-4d6d-9aef-f037eef4972f
+- level_2/permutation/9fcddf81-5e71-448b-af9d-5d5185411754
+- level_2/permutation/894589be-b1be-4828-92ff-1a6afd2a85a1
+- level_2/permutation/c1c484dd-84bb-4bb7-a970-296a76c91a40
+- level_2/permutation/0cb3ecb3-3781-4a70-ad71-d7b81ec8e554
+- level_2/permutation/2e7f138b-aaed-4a24-98e9-795ba0b1aa73
+- level_2/permutation/bd09e03a-0e8f-4e83-8197-914a10ff853e
+- level_2/permutation/e3ef8ef4-b571-4396-ba7b-0c9726d13b01
+- level_2/permutation/49200c9d-75a5-4959-b01c-90f79f147a1a
+- level_2/permutation/03cd84e2-74f7-4805-b893-fad3594bdc92
+- level_3/permutation/659632bd-122a-4c8b-bf52-40ad1c46e5e6
+- level_3/permutation/b4afa136-e78f-423f-b356-254a9f87b806
+- level_3/permutation/c3939c8c-8637-47bb-8f28-e9bd80d904bb
+- level_3/permutation/25c47cea-b49a-498b-ae32-5dc65da5baa9
+- level_3/permutation/8027cf8d-288b-4a6b-b09e-79f5647e7bf6
+- level_3/permutation/e6eaec95-5ec3-48e2-a5aa-bde9a5ab66ac
+- level_3/permutation/c9f302ff-97c5-4a8d-8385-7b9929180b12
+- level_3/permutation/1c481efd-2bac-4024-920b-8c7d0c7ab31f
+- level_3/permutation/725113bd-6ace-4d32-9cfd-7f7710fdc647
+- level_3/permutation/02697ddb-0866-46dc-ab14-1877756c5448
+- level_3/permutation/13d306f8-de0e-4122-8ff6-d95526d6aaf9
+- level_3/permutation/6668d8fc-e7ac-4e2e-a1f2-6b6b2a1dbcd0
+- level_3/permutation/71b6da11-ee0a-4612-82ab-00f722fb4592
+- level_3/permutation/2c71451b-21cb-4ae3-95be-7d3a0eef44d5
+- level_3/permutation/7b7623d4-eadb-4551-8625-57b4319dfae7
+- level_3/permutation/5012809e-cb95-4c32-9dc0-6d71d75e6fc9
+- level_3/permutation/830a4b7c-fcf0-47d4-8177-a497f40403db
+- level_3/permutation/e1049271-99d4-418f-875c-d85be3856479
+- level_3/permutation/d018a64b-894d-4fcd-ac74-521f9795a640
+- level_3/permutation/ca4b3491-dc81-4457-895d-4e54d7503e2c
+- level_3/permutation/8909ed9c-a735-4ef4-a3c7-b9b0ff165a40
+- level_3/permutation/7f78c346-e63e-4d34-a4fd-261b4455d6c1
+- level_3/permutation/43667cb1-5fec-4be9-94f6-930e4f5e873f
+- level_3/permutation/36eb7367-8d36-4e52-a6a9-031198656865
+- level_3/permutation/67e4a31d-64ef-4cdf-aed9-92ed519f7c68
+- level_3/permutation/17f05cb9-316d-4d3a-b1a1-2b8f65ec1be5
+- level_3/permutation/c209a2f3-6f96-45d4-8a3a-c5693d3242e5
+- level_3/permutation/938658e4-6b55-42e4-b5ba-fc9a152ef063
+- level_3/permutation/c4589eb4-11a5-4247-a938-29bad132510c
+- level_3/permutation/8c8dfe12-41d8-4410-9dc1-cb1bf108b9fc
+- level_3/permutation/544e3c09-4879-4392-b901-0d3a13c906cd
+- level_3/permutation/a03cad85-7a57-45ab-95ea-6a24db976274
+- level_3/permutation/66f3c134-4f2a-444b-a704-a3698596e77e
+- level_4/permutation/a250d3fc-0900-4e12-9ace-35a0e6a40c21
+- level_4/permutation/8fbbf535-fef4-4ff8-9ca7-0946d779daed
+- level_4/permutation/674e6d37-2fcb-4f3a-a9b3-1538ef3cbfea
+- level_4/permutation/04509fe2-e279-436c-bd8d-f4b8b1d92d6a
+- level_4/permutation/a0ce52e2-8a8b-4557-8c81-41cadde55487
+- level_4/permutation/f0638724-702f-4efd-9915-a6b9cf62fbd1
+- level_4/permutation/636e47c8-2aa1-431c-a957-d1682a9feffe
+- level_4/permutation/130006ff-eac6-4cf3-a38a-cb396c334739
+- level_4/permutation/9e4cfeea-9beb-45d1-a8d9-eb786b61206f
+- level_4/permutation/4a26ddcb-2692-453d-8e3c-b73d363e77f4
+- level_4/permutation/9421b54d-e7bd-411d-bd42-40fa3a56c1e3
+- level_4/permutation/68d67bc6-9178-4458-8906-ae6bf08bf7be
+- level_4/permutation/6284b074-c963-411b-b999-86257d40464e
+- level_4/permutation/e9a13b2b-55e6-40a4-a86f-5b08501a92e5
+- level_4/permutation/aedbd8a4-6cf5-418b-975e-4feac4a850c8
+- level_4/permutation/79188585-bb16-433f-89f7-aad562eac5b0
+- level_4/permutation/94157e66-6a5d-4129-a309-d86eac282efc
+- level_4/permutation/4f1af90b-f54b-4e95-99f1-86d00a709616
+- level_4/permutation/becce993-ca8e-4510-a29f-2883080d21d9
+- level_4/permutation/887cf410-4edd-48ff-b731-002922107a7a
+- level_4/permutation/f1f4f314-01bf-420c-8e2c-247308a58440
+- level_4/permutation/0b287d60-d888-43f7-9b09-77c469497cfc
+- level_4/permutation/ce0ebb67-ec5a-4312-8961-e6df1d31814c
+- level_4/permutation/00468640-1432-412a-8a22-be9fd9c91c4f
+- level_4/permutation/850fb6b6-de81-4465-b127-3bb8ad56c978
+- level_4/permutation/33d6504e-20e5-4590-9d22-1b31b283bbad
+- level_4/permutation/557038e5-90e0-4b29-9a34-ac2354cc39fe
+- level_4/permutation/28535731-9638-40b2-870e-6410cf30d55a
+- level_4/permutation/0f5097da-3484-48eb-8ab4-1603f6e35edb
+- level_4/permutation/0fd3d570-5fa7-426a-90b9-6e4293830911
+- level_4/permutation/f83ce924-66d3-4250-8ebd-e8ff82c8f977
+- level_4/permutation/d726486f-fcad-41fa-82a1-0cc85b22b817
+- level_4/permutation/33a7d9fb-5c2c-4a6d-86bf-0286207dfead
+# - level_5/permutation/6360fc5c-38d5-4889-a1a6-10432892df9c
+# - level_5/permutation/a60f35f2-4af7-48c1-8eb0-55532e1d7785
+# - level_5/permutation/200d873d-f2aa-4d81-9ceb-b6735ca0cde3
+# - level_5/permutation/82a3891d-8435-420e-81c9-4c151af16922
+# - level_5/permutation/0ebedba6-d16f-45ec-86fa-2eaf810eb522
+# - level_5/permutation/12b87644-11b0-48a1-b635-6990c4cd5b57
+# - level_5/permutation/c52edd59-d3d4-4e9b-83d4-4c974ea9d923
+# - level_5/permutation/de574342-1b82-45f2-b998-0db4b7db76e3
+# - level_5/permutation/e02fa42a-16b1-4195-ad80-0025e1ccaaef
+# - level_5/permutation/07bffd98-2bc6-49fc-8661-61f39823f24b
+# - level_5/permutation/37fe643c-16af-44f1-ae05-0113ee6b8930
+# - level_5/permutation/b9b0c9d3-e189-4775-9f44-560b4e79c5d2
+# - level_5/permutation/f64f9c14-25a0-4ce5-9f36-094637a92ea2
+# - level_5/permutation/a0fa03d6-b606-4592-b3b8-579dd2412035
+# - level_5/permutation/7b7caccf-edfb-4e69-a78c-28796eaf5c33
+# - level_5/permutation/c6b12535-8a9e-4e50-8c99-a65894bf7467
+# - level_5/permutation/2319f27d-002c-42f3-9c36-13ba7a41c540
+# - level_5/permutation/a3fa4965-753a-4ab4-b567-bbc6f5e7a0ca
+# - level_5/permutation/f917eb6b-861c-4572-83cf-0ca5df89d977
+# - level_5/permutation/6bfdbf88-52cc-462d-8ecc-3a95b94412f7
+# - level_5/permutation/367b9959-7d84-46a2-8fe1-fe21be467794
+# - level_5/permutation/acdfd0b1-54ce-43e1-9049-a6af64accc6e
+# - level_5/permutation/6852a336-acd7-451e-b82e-59f28a69cbb3
+# - level_5/permutation/6e3f4b52-5d84-4083-ad3f-82e7f1380519
+# - level_5/permutation/016ae3e9-67d0-4647-905c-56b7e9276c96
+# - level_5/permutation/294b967e-ff53-48c0-8f4e-ad83c28b4270
+# - level_5/permutation/296014d7-d022-4110-a829-f618bf6db988
+# - level_5/permutation/f1168c01-4fb8-4080-93f1-987227253db5
+# - level_5/permutation/0a94967b-562e-459c-b4ba-558a3b84b07f
+# - level_5/permutation/5b09c9b8-9d02-4aa1-8d02-ee41a8c8353d
+# - level_5/permutation/26e494e2-2e1a-436b-8227-3479a295e31b
+# - level_5/permutation/ed81ba1a-0e3d-43fa-af5b-9928fc4931f3
+# - level_5/permutation/2c25a7d7-f029-4cf9-870e-daa07eb07c84
+# - level_6/permutation/8e3d7c92-93fe-4259-9622-6800a1d6e6b6
+# - level_6/permutation/f7da5da4-eefe-4a76-b7bf-8a15a569dbc1
+# - level_6/permutation/dfcb3113-f137-4ec7-b65f-0f7ec57f6978
+# - level_6/permutation/030aa694-d7a7-45d2-9ee6-27f7bad89a93
+# - level_6/permutation/41143562-e4b9-4e1c-86d4-f71c36f9f97f
+# - level_6/permutation/362826fa-aa2f-4b2c-ae63-fd27fd8c0988
+# - level_6/permutation/2f922af9-9e40-42c5-8037-cf5ab75d7769
+# - level_6/permutation/504f19a3-985d-4a09-bf5a-0488140602e8
+# - level_6/permutation/8c7df974-17a7-4425-bf9a-0747081bfad3
+# - level_6/permutation/c519a71b-a57c-4016-a06a-4e063a64e913
+# - level_6/permutation/dfb8563e-13e6-4212-9696-92da2664bc1c
+# - level_6/permutation/37795a9a-1a48-4c29-b0e5-018bb7d8e1b8
+# - level_6/permutation/3821ab57-b388-4d69-822b-eb6d5ea4ba16
+# - level_6/permutation/c8fa532a-9a3b-464d-bdcb-2c67bcc07fc9
+# - level_6/permutation/daedc2c7-4691-4351-9bc4-70924e05efb9
+# - level_6/permutation/9c285431-7364-4b99-b8ba-2f230e5b1bed
+# - level_6/permutation/4d21e981-7da9-4051-bd8e-77665658c58b
+# - level_6/permutation/856b95a1-f651-47b6-9654-6a9aa992c2c8
+# - level_6/permutation/ff1fdb04-45b2-4e16-a4f8-cd435db83124
+# - level_6/permutation/8c172eda-e62c-411c-9877-e5318c491c21
+# - level_6/permutation/cfda4ec8-d21f-4139-8ad5-b51be6c5b950
+# - level_6/permutation/843e579f-c5b6-447c-a695-36fe476befa5
+# - level_6/permutation/55d67626-bc4f-4f09-816b-fda175f9d3ee
+# - level_6/permutation/4f6bb41f-f470-4246-8a17-0eb8593e61f7
+# - level_6/permutation/98a95e2c-626b-4812-82b3-12406f21b56c
+# - level_6/permutation/82479e07-1ea8-408d-8f80-cf5694a02efa
+# - level_6/permutation/52a09bc8-db9a-46d5-8924-eff635dbdaa2
+# - level_6/permutation/a7efba59-8427-4cda-aa43-786e073d5ec2
+# - level_6/permutation/3f00df85-5784-413c-8d71-fee6806fa085
+# - level_6/permutation/db5c6f9f-ae65-4a8d-9195-7b6af758d85c
+# - level_6/permutation/894de1de-6946-43d5-8adf-67567eba47e6
+# - level_6/permutation/112a4d0e-4e8a-46c3-8229-65bf7cfa76ad
+# - level_6/permutation/6c74138c-ccec-495f-9f06-a5f68953cdbe
+# - level_7/permutation/0662053b-1fee-496c-b6c3-9841f32362b7
+# - level_7/permutation/699628fa-a570-44af-ad07-35936a478985
+# - level_7/permutation/b5936b14-0e5d-435b-b007-dbad3687f2aa
+# - level_7/permutation/e2109756-12ba-47ca-9ffd-5fcc76ce45ab
+# - level_7/permutation/0bd21291-f8fd-4cfa-857d-53389034f9f2
+# - level_7/permutation/4e366c96-bea1-48e4-aa9f-4359eee94a26
+# - level_7/permutation/134a2ec5-6803-407d-a70f-1db697c4d7e4
+# - level_7/permutation/534846b3-730e-427b-b520-5f3a046e5615
+# - level_7/permutation/0011ae6a-1d7e-43a6-9390-80441ad324d2
+# - level_7/permutation/a8719d21-1243-47c1-90e0-9adc0eec8de4
+# - level_7/permutation/68226e88-b606-444d-b73e-079b47315122
+# - level_7/permutation/f3573288-0981-4484-bc20-8a116c0a4100
+# - level_7/permutation/c25d0fe5-3c36-45ee-8394-7f91ee826591
+# - level_7/permutation/cd33bda8-45e3-4ab7-aa25-356ebd6d3742
+# - level_7/permutation/5d920e72-cf4a-4e45-bfe2-2ab430f67b04
+# - level_7/permutation/2cf0b75c-7e17-490f-8c84-30139e3f5455
+# - level_7/permutation/31717fd4-1f36-419e-99a0-bbc1ceacadd6
+# - level_7/permutation/d91325b1-85ab-4a9b-abd9-9715e7a9b1a6
+# - level_7/permutation/eb4153bd-a1ad-44e3-9ab6-1a8fcf649e0c
+# - level_7/permutation/62f9b34e-f1bd-4cc5-9f6c-c3e1a5cbbaf1
+# - level_7/permutation/08125978-4ccf-4776-84de-91ce248fab36
+# - level_7/permutation/d9fad62f-9758-4e24-a964-ab3caaaf8df9
+# - level_7/permutation/64e909ea-8044-4545-9e71-2a8d1d252a39
+# - level_7/permutation/608d0bba-f6f5-48c9-a0e9-1f6cabd4c275
+# - level_7/permutation/8c655f2e-84bd-4326-a85a-8f9217f00764
+# - level_7/permutation/c0466d36-d3ca-4fc3-881c-e0b1abd0844a
+# - level_7/permutation/2c3db20d-ece8-4c28-bdc0-cdf559802540
+# - level_7/permutation/962cdce2-8eec-4739-9354-c13493a365b0
+# - level_7/permutation/89a0bc4f-ab75-4d1d-9c21-842e8e899571
+# - level_7/permutation/79241743-6f5a-4fbf-aa8e-f396d75967d4
+# - level_7/permutation/06d0a3f3-b217-4b81-b6b7-75ecf05ab8aa
+# - level_7/permutation/4d85e668-26a1-43ad-bbae-1ffe778a6752
+# - level_7/permutation/a0c4ee2b-266c-4036-a3a2-f34d0f47e2da
+# - level_8/permutation/bd59e812-e105-4cb8-a068-719e5c350f21
+# - level_8/permutation/0942023b-f7ec-4317-b5c3-2caa49200755
+# - level_8/permutation/8289bb8d-43c1-4b88-b465-a9854a003dd4
+# - level_8/permutation/3b6820af-9239-4c5f-804a-775d640e5430
+# - level_8/permutation/272fb9ff-b417-4c72-b804-40e27322894a
+# - level_8/permutation/1d76bad9-ab65-4fcd-8144-3b6c216a1e17
+# - level_8/permutation/a67d144a-b53e-4160-948b-9845f2eae521
+# - level_8/permutation/db0a9f4c-3066-49f0-ac85-4840d13903c3
+# - level_8/permutation/a0a4a261-f5e3-4e40-b06a-0484a047a8a9
+# - level_8/permutation/fcf3a996-b278-439d-b9f5-5e1e1aa37005
+# - level_8/permutation/09ce5f1e-e276-4241-9898-148f8620e4c0
+# - level_8/permutation/d2efccaf-1e18-4c7f-8f6e-c203b97d7fc6
+# - level_8/permutation/eb577609-72b7-4cc2-8f86-6196faeecc09
+# - level_8/permutation/43d882d4-8b6f-4730-b8d7-ff3dd8879220
+# - level_8/permutation/d388105e-8397-4d41-8b63-918d40971da1
+# - level_8/permutation/c4f6964e-de7d-486c-b4f5-23ded4a52ee8
+# - level_8/permutation/1d9bcf80-942d-4f46-8020-02495c7275de
+# - level_8/permutation/bb956959-be76-4e57-a568-bd0316c4b929
+# - level_8/permutation/f9e04250-3a1b-4278-928f-f73851e69d29
+# - level_8/permutation/48060dd9-8278-4d62-aeb1-3b8cd5249bda
+# - level_8/permutation/a1d0ea5c-b786-4820-8165-6f453faa7661
+# - level_8/permutation/f4158ecf-4c1f-4910-9cff-19db199be4fe
+# - level_8/permutation/8a9a78a4-722c-4061-951a-009f7b804547
+# - level_8/permutation/5a4ec2f4-2b3b-4c4c-9283-4755342e0a11
+# - level_8/permutation/b92cb79f-4dce-4248-8350-f85a0b012ee3
+# - level_8/permutation/d4abc7e1-780f-48f4-a704-0e8494f0287b
+# - level_8/permutation/49937c07-df7b-4d34-9402-d78c27e1f452
+# - level_8/permutation/a0b285f5-3d76-4033-a70a-7cfef7c4d2c8
+# - level_8/permutation/b015d2e3-e53c-4a5d-8ada-7240aed690a2
+# - level_8/permutation/1f463f6c-10ea-44d9-ae69-6553ea5a007a
+# - level_8/permutation/1f62e74f-9310-465f-bc3f-8f89ce421f49
+# - level_8/permutation/33957ed1-2251-49ee-a564-97e553128049
+# - level_8/permutation/fc18a10b-a19f-4170-8c8a-834b66647202
+- level_2/remix/8d3e56b5-81a2-47a7-991f-ddcd20a2348a
+- level_2/remix/134bfe1c-fb49-4031-90e6-b5413c76d304
+- level_2/remix/dc13fb2b-d034-4fd5-9d00-e18d4ec65c19
+- level_2/remix/1a40fa68-5017-44eb-9de4-dbcd3ae7730b
+- level_2/remix/e9bc0afa-dc5a-4ded-82bc-c58fefe228b2
+- level_2/remix/32ab3254-58fd-4828-8994-dde1af100652
+- level_2/remix/55e73456-3c2f-4b86-aaeb-f855806538eb
+- level_2/remix/23e92466-ad69-4c45-8b09-40d1b7e0efd0
+- level_2/remix/bfb2c69d-5b07-425e-927b-0f919c0e8c2e
+- level_2/remix/80c83f6a-106d-4f13-b030-3db498f2c02e
+- level_2/remix/46641ff6-89d6-4ec9-9dc6-5591dbd425cd
+- level_2/remix/caf5ff9f-f5c2-4774-baa0-a815c56c9aad
+- level_3/remix/c5a3f81e-c201-4cf4-ae85-a7ebaf9b7c43
+- level_3/remix/4e7e6e92-448a-4af2-9417-23f60a238fd9
+- level_3/remix/36df9b62-4d39-4b1e-a4b9-8354fddbd690
+- level_3/remix/145d5494-b6cd-4b8a-a47d-6a142b280f4f
+- level_3/remix/ada21340-24dc-4b32-b0b4-60976bd49fd9
+- level_3/remix/6f91cbb4-fb05-40d7-ac53-4d11df9b2489
+- level_3/remix/d18a542b-12ec-4b18-b7bc-711a40bc5651
+- level_3/remix/9b35b638-f3c0-433b-9281-6d9b2517ed7f
+- level_3/remix/2306fb24-b5d7-4972-a611-10a8f067f7d5
+- level_3/remix/3f1332e2-4572-4f6f-b02c-515a3a4531d9
+- level_3/remix/c0f46859-d900-45d0-9642-3c26a4191626
+- level_3/remix/df09def8-8a20-4c57-8678-4bfbc055e524
+# - level_4/remix/76af3409-2e01-4894-a0c1-a20369a06508
+# - level_4/remix/1979403b-4174-4016-a120-e54b88ce6a64
+# - level_4/remix/963b6ddb-5c32-4008-8cae-71ea52889d1d
+# - level_4/remix/de24567e-7af8-475f-80a9-82a3b63098d9
+# - level_4/remix/d6d27207-3618-4690-a4ce-ccb9a349df16
+# - level_4/remix/00f76f52-0171-467c-9fa7-db3d99eb5094
+# - level_4/remix/3b61c794-ca3d-4adb-9997-5451444ec648
+# - level_4/remix/8fd4cbb4-ff4c-4bea-90bd-6e10a1ed7c4a
+# - level_4/remix/130b66eb-aa6f-4963-bfd7-2b7fcbd1c8ef
+# - level_4/remix/e16d35fe-5fba-4b46-9268-42ee8ff136e8
+# - level_4/remix/2975c4a4-5090-43d1-a936-8a2a95a1a728
+# - level_4/remix/3dd9ad88-f7d3-4dd3-a451-72559dba4716
+# - level_5/remix/e6cbc9c6-8681-4bcc-8006-4259e50deabf
+# - level_5/remix/698390bf-9b40-4d59-86f8-b0d571e53328
+# - level_5/remix/b49b6daf-e1bc-4fc6-abba-53dec4ec4f05
+# - level_5/remix/c7263887-3036-4997-9868-fb92c6a11e68
+# - level_5/remix/5a069146-6093-42bf-8ac3-8d9e71d4557f
+# - level_5/remix/158e30b5-088b-429a-8549-3f602d850e06
+# - level_5/remix/9e966281-974f-4a74-908e-9467f96c2d6d
+# - level_5/remix/616ebbae-e446-442b-bbd7-496540451fe3
+# - level_5/remix/21637e38-ecb2-4698-b3f1-2d5c0d0fa02a
+# - level_5/remix/da3adca8-59c3-4ed4-a7fb-25fc71eb99b2
+# - level_5/remix/c0c17500-1831-4766-8362-dd0c241f603b
+# - level_5/remix/9235033b-362e-4c31-8a40-671e46996ad9
+# - level_6/remix/f4ee8b49-9ba6-41ab-9c31-c383ffc0ed9e
+# - level_6/remix/fc99be16-b7e8-4c21-a78f-24c980121104
+# - level_6/remix/fc04dced-fbc2-42d6-a094-cc290bf19e10
+# - level_6/remix/366a3d5e-a8e9-46cf-bcc6-bd72041de3ed
+# - level_6/remix/bbd59add-02e7-4fef-b29b-91ddc1d8227c
+# - level_6/remix/f21812a9-ada9-46f8-a70e-1d33f16fc195
+# - level_6/remix/fc98e430-0f1d-4043-9994-a1b8eb936209
+# - level_6/remix/54e5bb7c-756c-4e41-a0c9-393c91910abf
+# - level_6/remix/c9e2cd02-9726-4f1d-977a-4326b7ab9746
+# - level_6/remix/c5987aa3-cc34-45d7-8d4c-4bbb0165501a
+# - level_6/remix/d5a44890-4de2-4caf-94a8-b1769658e762
+# - level_6/remix/d3561318-546d-44b0-b5c3-d69a40e01fba
+# - level_7/remix/64f1266a-21dc-49ea-9194-b45980001f1e
+# - level_7/remix/4aed4334-273d-4e1d-ae24-bd1d57932782
+# - level_7/remix/9a0ed04d-38f4-4c5e-8c9b-d39569de1288
+# - level_7/remix/4e95f753-4df8-46dd-b647-90b02174c079
+# - level_7/remix/40615d08-5bb2-4a25-90db-723098181744
+# - level_7/remix/0622d2ef-09ba-44d1-9848-5336260715b2
+# - level_7/remix/291373ac-eae9-4801-862b-d3f1619c355e
+# - level_7/remix/eb60a88e-6e55-44b5-8c8e-663e344bee20
+# - level_7/remix/abc9e10c-67d6-43d3-9e2c-b7e06369e9e2
+# - level_7/remix/f0ca8fcf-7b68-4ac5-b7b6-cf4c7f7c7d28
+# - level_7/remix/e7b07613-caee-403f-88a5-8ae32982f565
+# - level_7/remix/744c6f58-18b6-464e-9866-99a6913774ff
+# - level_8/remix/bb7ba205-42d1-41c6-b788-530a88e7b663
+# - level_8/remix/c1d292c1-cee5-4726-a138-7ce11ca7894a
+# - level_8/remix/b8f149cb-1d81-4d65-8769-0a6aa0ace5b0
+# - level_8/remix/2468924d-7b75-4c9b-a78a-566b27a1cf23
+# - level_8/remix/7aae2e86-c1fb-42e2-9871-d15570723103
+# - level_8/remix/10cb2757-43c0-454d-9591-01b5443c7a34
+# - level_8/remix/c26ef9c7-2dc4-4176-865c-a8bd5af0d1d4
+# - level_8/remix/b4f82629-e64a-4b7e-91fd-fdf40b92e4e1
+# - level_8/remix/46ee0c9b-d435-4d1d-a3c9-2d275c2e609d
+# - level_8/remix/9dd21aff-3620-4475-86da-bd0b6adacb13
+# - level_8/remix/01fdfebd-360d-476c-a4ca-768f48df2e6f
+# - level_8/remix/fd492c69-dd94-4d93-bed4-00c9e401da87
 video_dir: videos/alfred
