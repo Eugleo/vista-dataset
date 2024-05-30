@@ -190,13 +190,19 @@ Be sure not to alter the label in any way, since we will use it to match your sc
         ),
     )
     def _send_request(self, history):
-        response = self._client.chat.completions.create(
-            model=self._model, messages=history, max_tokens=2500, temperature=0.7
-        )
-        reponse_text = response.choices[0].message.content  # type: ignore
-        return reponse_text or "", history + [
-            {"role": "assistant", "content": reponse_text}
-        ]
+        try:
+            response = self._client.chat.completions.create(
+                model=self._model, messages=history, max_tokens=2500, temperature=0.7
+            )
+            reponse_text = response.choices[0].message.content  # type: ignore
+            return reponse_text or "", history + [
+                {"role": "assistant", "content": reponse_text}
+            ]
+        except openai.BadRequestError as e:
+            if "content_policy_violation" in str(e):
+                raise ValueError("Content policy violation")
+            else:
+                raise
 
     @staticmethod
     def parse_and_cache_scores(
@@ -261,77 +267,85 @@ Be sure not to alter the label in any way, since we will use it to match your sc
         else:
             logging.info("No cached scores found")
 
-            system_prompt = """
-You are an autoregressive language model that has been fine-tuned with instruction-tuning and RLHF. You carefully provide accurate, factual, thoughtful, nuanced answers, and are brilliant at reasoning. Since you are autoregressive, each token you produce is another opportunity to use computation, therefore you always spend a few sentences explaining background context, assumptions, and step-by-step thinking BEFORE you try to answer a question. You always use precise, plain scientific language, without unneeded flourish. You provide details where it might help the explanation.
-"""[1:]
+            first_history, second_history, third_history = [], [], []
+            try:
+                system_prompt = """
+    You are an autoregressive language model that has been fine-tuned with instruction-tuning and RLHF. You carefully provide accurate, factual, thoughtful, nuanced answers, and are brilliant at reasoning. Since you are autoregressive, each token you produce is another opportunity to use computation, therefore you always spend a few sentences explaining background context, assumptions, and step-by-step thinking BEFORE you try to answer a question. You always use precise, plain scientific language, without unneeded flourish. You provide details where it might help the explanation.
+    """[1:]
 
-            task_prompt_prefix = f"""
-You will be given {self._n_frames} frames from a first-person video. The frames are given to you in chronological order.
+                task_prompt_prefix = f"""
+    You will be given {self._n_frames} frames from a first-person video. The frames are given to you in chronological order.
 
-"""
+    """
 
-            task_prompt_postfix = f"\n\n{task.example_gpt}" if self.is_one_shot else ""
+                task_prompt_postfix = (
+                    f"\n\n{task.example_gpt}" if self.is_one_shot else ""
+                )
 
-            heading = {
-                "type": "text",
-                "text": "Input frames. Describe each frame separately.",
-            }
-            frames = [GPTModel._frame_to_payload(f) for f in item["frames"]]
-            first_request_history = [
-                {"role": "system", "content": system_prompt},
-                {
-                    "role": "user",
-                    "content": task_prompt_prefix
-                    + task.prompt_gpt
-                    + task_prompt_postfix,
-                },
-                {"role": "user", "content": [heading, *frames]},
-            ]
-            frame_descriptions, first_history = self._send_request(
-                first_request_history
-            )
-
-            class_list = "\n".join(
-                [
-                    f"- ({label}) {description}"
-                    for label, description in list(task.label_prompts.items())
+                heading = {
+                    "type": "text",
+                    "text": "Input frames. Describe each frame separately.",
+                }
+                frames = [GPTModel._frame_to_payload(f) for f in item["frames"]]
+                first_request_history = [
+                    {"role": "system", "content": system_prompt},
+                    {
+                        "role": "user",
+                        "content": task_prompt_prefix
+                        + task.prompt_gpt
+                        + task_prompt_postfix,
+                    },
+                    {"role": "user", "content": [heading, *frames]},
                 ]
-            )
-            analysis_prompt = f"""
-Consider the following sequence of frame-by-frame descriptions:
+                frame_descriptions, first_history = self._send_request(
+                    first_request_history
+                )
 
-```
-{frame_descriptions}
-```
+                class_list = "\n".join(
+                    [
+                        f"- ({label}) {description}"
+                        for label, description in list(task.label_prompts.items())
+                    ]
+                )
+                analysis_prompt = f"""
+    Consider the following sequence of frame-by-frame descriptions:
 
-Break down each of the following summaries into individual steps, and mention what frames or frame ranges each step matches in parentheses after each step. Note even partial matches, e.g. matching a kind of action (put, pick, ...) even though the object might be incorrect. Also provide a one-sentence commentary on how well each summary matches the sequence of the frame descriptions. In the commentary, the most important thing is to match the kinds of actions performed and their order. For example if put (of anything) was described before a pick (of anything) in the frames, maintaining this order in the summary is more important than getting the exact object right. Do not comment on the overall quality of the summaries.
+    ```
+    {frame_descriptions}
+    ```
 
-Summaries, given in the format `- (label) summary`:
-{class_list}
-"""[1:]
+    Break down each of the following summaries into individual steps, and mention what frames or frame ranges each step matches in parentheses after each step. Note even partial matches, e.g. matching a kind of action (put, pick, ...) even though the object might be incorrect. Also provide a one-sentence commentary on how well each summary matches the sequence of the frame descriptions. In the commentary, the most important thing is to match the kinds of actions performed and their order. For example if put (of anything) was described before a pick (of anything) in the frames, maintaining this order in the summary is more important than getting the exact object right. Do not comment on the overall quality of the summaries.
 
-            second_request_history = [
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": analysis_prompt},
-            ]
-            frame_descriptions, second_history = self._send_request(
-                second_request_history
-            )
+    Summaries, given in the format `- (label) summary`:
+    {class_list}
+    """[1:]
 
-            scoring_prompt = """
-Based on your findings in the previous section, score the summaries from 0 to 5, where 0 is "likely does not describe the video" and 5 is "among the given options, this one most likely describes the video". Make sure to score each summary individually. At least one score should be non-zero, even if it's not a perfect match. Whatever scores you pick, there !must be! exactly one summary with the highest score. Follow the format below, verbatim:
+                second_request_history = [
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": analysis_prompt},
+                ]
+                frame_descriptions, second_history = self._send_request(
+                    second_request_history
+                )
 
-```
-- (label) score
-```
-"""[1:]
+                scoring_prompt = """
+    Based on your findings in the previous section, score the summaries from 0 to 5, where 0 is "likely does not describe the video" and 5 is "among the given options, this one most likely describes the video". Make sure to score each summary individually. At least one score should be non-zero, even if it's not a perfect match. Whatever scores you pick, there !must be! exactly one summary with the highest score. Follow the format below, verbatim:
 
-            third_request_history = second_history + [
-                {"role": "user", "content": scoring_prompt}
-            ]
-            scores, third_history = self._send_request(third_request_history)
+    ```
+    - (label) score
+    ```
+    """[1:]
 
-            GPTModel.parse_and_cache_scores(scores, path, task.labels, cache)
+                third_request_history = second_history + [
+                    {"role": "user", "content": scoring_prompt}
+                ]
+                scores, third_history = self._send_request(third_request_history)
+
+                GPTModel.parse_and_cache_scores(scores, path, task.labels, cache)
+
+            except ValueError as e:
+                logging.error(f"Error predicting video {path}: {e}")
+                cache[path] = {label: -0.1 for label in task.labels}
 
             log_writer.write(
                 {
