@@ -207,13 +207,20 @@ def plot_alfred(
             with open(Path(task_dir) / f"{t}_data.json") as f:
                 label_counts = Counter(v["label"] for v in json.load(f))
             for l in task_labels[t]:
-                per_label_baselines.append(
+                per_label_baselines += [
                     {
                         "task": t,
                         "model": "Ω random",
                         "AP": label_counts[l] / sum(label_counts.values()),
-                    }
-                )
+                    },
+                    {
+                        "task": t,
+                        "model": "ξ random",
+                        "AP": utils.get_baseline_ap(
+                            sum(label_counts.values()), label_counts[l]
+                        ),
+                    },
+                ]
         per_label_baselines = pl.DataFrame(per_label_baselines)
 
         per_label_metrics = (
@@ -267,14 +274,14 @@ def plot_alfred(
         for name, tasks in groups.items():
             progress.advance(group_task, 1)
             filename = name.replace(": ", "_").replace(" ", "-")
-            plot = plots.map_plot(
-                per_label_metrics.filter(pl.col("task").is_in(tasks)),
-                f"{name} (standardized)",
-            )
+            # plot = plots.map_plot(
+            #     per_label_metrics.filter(pl.col("task").is_in(tasks)),
+            #     f"{name} (standardized)",
+            # )
+            # plot.write_image(plot_dir / f"{filename}_mAP.png", scale=2)
+
             plot_dir = dir / "plots"
             plot_dir.mkdir(exist_ok=True, parents=True)
-            plot.write_image(plot_dir / f"{filename}_mAP.png", scale=2)
-
             plot = plots.overall_performance(
                 per_label_metrics.filter(pl.col("task").is_in(tasks)),
                 metric="AP",
@@ -289,12 +296,12 @@ def plot_alfred(
                 metric_per_task=per_label_metrics.filter(pl.col("task").is_in(tasks))
                 .group_by("task", "model")
                 .agg(mAP=c("AP").mean())
-                .filter(pl.col("model") != "Ω random"),
+                .filter(~pl.col("model").str.contains("random")),
                 predictions_per_task=predictions.filter(
                     pl.col("task").is_in(tasks)
-                ).filter(pl.col("model") != "Ω random"),
+                ).filter(~pl.col("model").str.contains("random")),
                 scores=scores.filter(pl.col("task").is_in(tasks)).filter(
-                    pl.col("model") != "Ω random"
+                    ~pl.col("model").str.contains("random")
                 ),
                 metric="mAP",
                 title=f"{name} (standardized)",
@@ -307,7 +314,7 @@ def plot_alfred(
         performance_by_level = pl.concat(
             [
                 per_label_metrics.filter(c("task").is_in(tasks))
-                .group_by("model", "task")
+                .group_by("model")
                 .agg(
                     score=c("AP").mean(),
                     error=c("AP").std() / (c("AP").len().sqrt() + 1e-6),

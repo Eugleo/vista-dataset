@@ -13,6 +13,17 @@ import polars as pl
 import sklearn.metrics as skm
 import torch as t
 from polars import col as c
+from scipy.stats import hypergeom
+
+
+def get_baseline_ap(num_documents: int, num_relevant: int) -> float:
+    ap = 0
+    for i in range(1, num_relevant + 1):
+        for n in range(i, num_documents - num_relevant + i + 1):
+            ap += hypergeom.pmf(i, num_documents, num_relevant, n) * (i / n) ** 2
+    ap = ap / num_relevant
+    assert isinstance(ap, float)
+    return ap
 
 
 def get_experiment_dir(experiment_dir, experiment_id):
