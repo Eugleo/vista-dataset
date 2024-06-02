@@ -367,7 +367,8 @@ def plot(
             [pl.read_json(file) for file in (dir / "results").glob("*.json")]
         )
 
-        scores = utils.rescale(df)
+        # scores = utils.rescale(df, in_each="label")
+        scores = utils.rescale(df, in_each="video")
         scores = utils.add_random_baseline(scores)
 
         num_nulls = len(scores.filter(c("score").is_null()))
@@ -385,13 +386,20 @@ def plot(
             with open(Path(task_dir) / f"{t}_data.json") as f:
                 label_counts = Counter(v["label"] for v in json.load(f))
             for l in task_labels[t]:
-                per_label_baselines.append(
+                per_label_baselines += [
                     {
                         "task": t,
                         "model": "Ω random",
                         "AP": label_counts[l] / sum(label_counts.values()),
-                    }
-                )
+                    },
+                    {
+                        "task": t,
+                        "model": "ξ random",
+                        "AP": utils.get_baseline_ap(
+                            sum(label_counts.values()), label_counts[l]
+                        ),
+                    },
+                ]
         per_label_baselines = pl.DataFrame(per_label_baselines)
 
         per_label_metrics = (
@@ -421,7 +429,11 @@ def plot(
             if (Path(task_dir) / f"{t}.yaml").exists()
         }
 
+        group_task = progress.add_task("Creating group plots...", total=len(groups))
         for name, tasks in groups.items():
+            progress.advance(group_task, 1)
+            # TODO: plot_alfred uses the commented-out line below; I'm not sure why "/" is replaced with "_" here
+            # filename = name.replace(": ", "_").replace(" ", "-")
             filename = name.replace(": ", "_").replace(" ", "-").replace("/", "_")
             plot = plots.map_plot(
                 per_label_metrics.filter(pl.col("task").is_in(tasks)),
@@ -429,6 +441,7 @@ def plot(
             )
             plot_dir = dir / "plots"
             plot_dir.mkdir(exist_ok=True, parents=True)
+            
             plot.write_image(plot_dir / f"{filename}_mAP.png", scale=2)
 
             plot = plots.overall_performance(
@@ -442,10 +455,16 @@ def plot(
             details_dir = plot_dir / "details"
             details_dir.mkdir(exist_ok=True, parents=True)
             plot = plots.task_performance(
-                per_label_metrics.filter(pl.col("task").is_in(tasks))
+                metric_per_task=per_label_metrics.filter(pl.col("task").is_in(tasks))
                 .group_by("task", "model")
-                .agg(mAP=c("AP").mean()),
-                predictions.filter(pl.col("task").is_in(tasks)),
+                .agg(mAP=c("AP").mean())
+                .filter(~pl.col("model").str.contains("random")),
+                predictions_per_task=predictions.filter(
+                    pl.col("task").is_in(tasks)
+                ).filter(~pl.col("model").str.contains("random")),
+                scores=scores.filter(pl.col("task").is_in(tasks)).filter(
+                    ~pl.col("model").str.contains("random")
+                ),
                 metric="mAP",
                 title=f"{name} (standardized)",
                 baseline_per_task=None,
