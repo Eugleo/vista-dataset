@@ -1,6 +1,7 @@
 from typing import Optional
 
 import numpy as np
+from scipy.stats import beta
 import plotly.express as px
 import polars as pl
 import sklearn.metrics as skm
@@ -185,12 +186,27 @@ def task_performance(
 def overall_performance(
     metrics: pl.DataFrame, metric: str, metric_label: str, title: str
 ):
-    avg_data = (
-        metrics.group_by("model")
-        .agg(pl.col(metric).mean(), error=pl.col(metric).std() / pl.len().sqrt())
-        .with_columns(task=pl.lit("average"))
-        .sort("model")
-    )
+    ERROR_MODE = "bayesian"
+
+    if ERROR_MODE == "std":
+        avg_data = (
+            metrics.group_by("model")
+            .agg(pl.col(metric).mean(),
+                error=pl.col(metric).std() / pl.len().sqrt())
+            .with_columns(task=pl.lit("average"))
+            .sort("model")
+        )
+    elif ERROR_MODE == "bayesian":
+        avg_data = (
+            metrics.group_by("model")
+            .agg(pl.col(metric).mean(),
+                error_low=pl.col(metric).apply(lambda x: bayesian_confidence_low(x, confidence=0.682), return_dtype=pl.Float64),
+                error_high_minus_mean=pl.col(metric).apply(lambda x: bayesian_confidence_high_minus_mean(x, confidence=0.682), return_dtype=pl.Float64))
+            .with_columns(task=pl.lit("average"))
+            .sort("model")
+        )
+    else:
+        raise ValueError(f"Unknown error mode: {ERROR_MODE}")
     fig = px.bar(
         avg_data.to_pandas(),
         x="model",
@@ -201,7 +217,8 @@ def overall_performance(
         color_continuous_scale="YlGn",
         title=title,
         labels={metric: metric_label},
-        error_y="error",
+        error_y="error" if ERROR_MODE == "std" else "error_high_minus_mean",
+        error_y_minus=None if ERROR_MODE == "std" else "error_low",
     )
     fig.update_layout(showlegend=False, coloraxis_showscale=False)
     return fig
@@ -217,3 +234,32 @@ def incorrect_video_labels(predictions: pl.DataFrame):
     df = incorrect_count.sort("count", descending=True)
 
     return df
+
+def bayesian_confidence_low(col, confidence):
+    # to find the confidence interval, we need to find upper and lower bounds with
+    # confidence equal to 1 - (1 - confidence) / 2 (i.e. half the probability of error each,
+    # so that combining them will yield the correct confidence).
+    # so, we need to solve for b in
+    # (n + 1) Beta(b, 1+k, 1-k+n) (n choose k) = (1 - confidence) / 2         (lower bound)
+    # (n + 1) Beta(b, 1+k, 1-k+n) (n choose k) = 1 - (1 - confidence) / 2     (upper bound)
+    # which is what we do below.
+    return bayesian_quantile(col, (1 - confidence) / 2)
+
+def bayesian_confidence_high_minus_mean(col, confidence):
+    return bayesian_quantile(col, 1 - (1 - confidence) / 2) - col.mean()
+
+def bayesian_quantile(col, quantile):
+    """Assuming a uniform prior on [0,1] for the accuracy, do a Bayesian update based on the measurements in col and return the desired quantile for the resulting distribution of accuracy"""
+    # for this to work correctly, col must be boolean, i.e. all values must be 0 or 1
+    # assert all(col.is_in([0, 1])), f"col must be boolean. col: {col}"
+    n = len(col)
+    k = sum(col)  # number correct
+    # the posterior distribution P(acc | data) is P(data | acc) P(acc) / P(data)
+    # P(data | acc) is just the binomial distribution acc^k (1-acc)^{n-k} (n choose k)
+    # P(acc) is constant since the prior was uniform.
+    # P(data) depends only on n since \int_0^1 acc^k (1-acc)^{n-k} (n choose k) dacc = 1/(n+1).
+    # (this makes sense since there are n+1 possible values of k: 0, 1, ..., n)
+    # so the posterior PDF is just P(data | acc) with a normalizing factor of (n + 1).
+    # we integrate symbolically to find the CDF:
+    # \int_0^b (n + 1) (acc^k (1-acc)^{n-k} (n choose k)) dacc = (n + 1) Beta(b, 1+k, 1-k+n) (n choose k)
+    return beta.ppf(quantile, 1 + k, 1 - k + n)
