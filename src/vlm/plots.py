@@ -217,10 +217,8 @@ def overall_performance(
         color_continuous_scale="YlGn",
         title=title,
         labels={metric: metric_label},
-        error_y="error_high_minus_mean",
-        error_y_minus="error_low",
-        # error_y="error" if ERROR_MODE == "std" else "error_high",
-        # error_y_minus=None if ERROR_MODE == "std" else "error_low",
+        error_y="error" if ERROR_MODE == "std" else "error_high_minus_mean",
+        error_y_minus=None if ERROR_MODE == "std" else "error_low",
     )
     fig.update_layout(showlegend=False, coloraxis_showscale=False)
     return fig

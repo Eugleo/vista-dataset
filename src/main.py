@@ -416,7 +416,7 @@ def plot(
         group_task = progress.add_task("Creating group plots...", total=len(groups))
         for name, tasks in groups.items():
             progress.advance(group_task, 1)
-            # TODO: differs in plot_alfred
+            # TODO: plot_alfred uses the commented-out line below; I'm not sure why "/" is replaced with "_" here
             # filename = name.replace(": ", "_").replace(" ", "-")
             filename = name.replace(": ", "_").replace(" ", "-").replace("/", "_")
             plot = plots.map_plot(
