@@ -18,7 +18,7 @@ def levels_line_plot(data: pl.DataFrame):
         y="score",
         color="model",
         facet_row="group",
-        title="mAP by level",
+        title="Mean macro F1 by level",
         error_y="error",
         height=1000,
         color_discrete_sequence=px.colors.qualitative.Bold,
@@ -81,20 +81,18 @@ def map_plot(per_label_map: pl.DataFrame, title: str):
 
 def task_performance(
     metric_per_task: pl.DataFrame,
-    predictions_per_task: pl.DataFrame,
-    scores: pl.DataFrame,
-    metric: str,
-    title: str,
-    baselines: Optional[dict],
-    labels: dict,
+    predictions: pl.DataFrame,
     tasks: list,
+    task_labels: dict,
+    title: str,
+    baseline_per_task: Optional[dict] = None,
 ):
     models = metric_per_task["model"].unique().sort().to_list()
     avg_data = (
         metric_per_task.group_by("model")
-        .agg(pl.col(metric).mean())
+        .agg(c("metric").mean())
         .with_columns(task=pl.lit("average"))
-        .select(["task", "model", metric])
+        .select(["task", "model", "metric"])
     )
     metric_per_task = pl.concat([metric_per_task, avg_data])
     tasks.append("average")
@@ -118,54 +116,33 @@ def task_performance(
             metric_per_task.filter(c("task") == task).to_pandas(),
             x="model",
             color="model",
-            y=metric,
+            y="metric",
             range_y=[0, 1],
             color_discrete_sequence=px.colors.qualitative.Bold,
         )
         subplot.update_layout(showlegend=False)
         fig.add_traces(subplot["data"], rows=1, cols=task_idx)
         if task != "average":
-            if baselines:
-                fig.add_hline(y=baselines[task], line_dash="dot", col=task_idx)  # type: ignore
+            if baseline_per_task:
+                fig.add_hline(y=baseline_per_task[task], line_dash="dot", col=task_idx)  # type: ignore
             for model_idx, model in enumerate(models, start=2):
-                # task_df = predictions_per_task.filter(
-                #     c("task") == task, c("model") == model
-                # )
-                task_labels = labels[task]
-                # matrix = skm.confusion_matrix(
-                #     task_df["true_label"].to_numpy(),
-                #     task_df["label"].to_numpy(),
-                #     labels=task_labels,
-                # )
-                # print(tasres.filter(c("task") == task, c("model") == model))
-                rankings = (
-                    scores.filter(c("task") == task, c("model") == model)
-                    .with_columns(
-                        pl.col("score")
-                        .rank("max", descending=True)
-                        .over("label")
-                        .alias("rank")
-                    )
-                    .pivot(
-                        values="rank",
-                        index="true_label",
-                        columns="label",
-                        aggregate_function="mean",
-                    )
-                    .sort("true_label")
-                    .select(pl.all().exclude("true_label"))
+                task_df = predictions.filter(c("task") == task, c("model") == model)
+                labels = task_labels[task]
+                matrix = skm.confusion_matrix(
+                    task_df["true_label"].to_numpy(),
+                    task_df["label"].to_numpy(),
+                    labels=labels,
                 )
 
                 heatmap = px.imshow(
-                    rankings.to_numpy(),
-                    x=task_labels,
-                    y=task_labels,
+                    matrix,
+                    x=labels,
+                    y=labels,
                     labels=dict(x="Candidate Label", y="Video True Label"),
                     text_auto=True,
                 )
                 heatmap.update_layout(showlegend=False)
-                # if task_idx > 1:
-                #     fig.update_yaxes(showticklabels=False, row=model_idx, col=task_idx)
+
                 if model_idx < len(models) + 1:
                     fig.update_xaxes(showticklabels=False, row=model_idx, col=task_idx)
                 fig.add_traces(heatmap["data"], rows=model_idx, cols=task_idx)
@@ -183,25 +160,29 @@ def task_performance(
 
 
 def overall_performance(
-    metrics: pl.DataFrame, metric: str, metric_label: str, title: str
+    metric_per_task: pl.DataFrame, y_label: str, title: str, baseline_per_task: dict
 ):
     avg_data = (
-        metrics.group_by("model")
-        .agg(pl.col(metric).mean(), error=pl.col(metric).std() / pl.len().sqrt())
-        .with_columns(task=pl.lit("average"))
+        metric_per_task.group_by("model")
+        .agg(c("metric").mean(), error=c("metric").std() / pl.len().sqrt())
         .sort("model")
     )
     fig = px.bar(
         avg_data.to_pandas(),
         x="model",
-        y=metric,
-        color=metric,
+        y="metric",
+        color="metric",
         range_y=[0, 1],
         range_color=[0, 1],
         color_continuous_scale="YlGn",
         title=title,
-        labels={metric: metric_label},
+        labels={"metric": y_label},
         error_y="error",
+    )
+    fig.add_hline(
+        y=pl.Series(baseline_per_task.values()).mean(),
+        line_dash="dot",
+        annotation_text="Majority Baseline",
     )
     fig.update_layout(showlegend=False, coloraxis_showscale=False)
     return fig

@@ -60,34 +60,52 @@ def subsample(x: t.Tensor, n_frames: int) -> t.Tensor:
     return x_subsampled
 
 
-def rescale(df: pl.DataFrame, in_each: Literal["label", "video"]) -> pl.DataFrame:
-    if in_each == "video":
-        df = df.with_columns(
-            score=pl.when(c("label") == c("true_label"))
-            # Breaks ties by subtracting a small number
-            .then(c("score") - 0.01)
-            .otherwise(c("score"))
-        ).with_columns(
-            (c("score").exp() / c("score").exp().sum())
-            .over("model", "task", "video")
-            .alias("score")
+def add_rescaling(scores: pl.DataFrame) -> pl.DataFrame:
+    lab = _rescale_in_label(scores)
+    vid_lab = _rescale_in_label(_rescale_in_video(scores))
+    return pl.concat(
+        [
+            scores.with_columns(rescaling=pl.lit("n")),
+            lab.with_columns(rescaling=pl.lit("l")),
+            vid_lab.with_columns(rescaling=pl.lit("v+l")),
+        ]
+    )
+
+
+def _rescale_in_video(scores: pl.DataFrame) -> pl.DataFrame:
+    return scores.with_columns(
+        (c("score").exp() / c("score").exp().sum())
+        .over("model", "task", "video")
+        .alias("score")
+    )
+
+
+def _rescale_in_label(scores: pl.DataFrame) -> pl.DataFrame:
+    scores_with_id = scores.with_row_count("row_id")
+
+    scores_stats = (
+        scores_with_id.join(
+            scores_with_id, on=["model", "task", "label"], suffix="_right"
         )
-        # scores_stats = df.groupby(["model", "task", "video"]).agg(
-        #     c("score").mean().alias("mean_score"), c("score").std().alias("std_score")
-        # )
-        # df = df.join(scores_stats, on=["model", "task", "video"]).with_columns(
-        #     score=(c("score") - c("mean_score")) / (c("std_score") + 1e-6)
-        # )
-    elif in_each == "label":
-        scores_stats = df.groupby(["model", "task", "label"]).agg(
-            c("score").mean().alias("mean_score"), c("score").std().alias("std_score")
+        .filter(c("row_id") != c("row_id_right"))
+        .groupby(["model", "task", "label", "row_id"], maintain_order=True)
+        .agg(
+            [
+                c("score_right").mean().alias("score_mean"),
+                c("score_right").std().alias("score_std"),
+            ]
         )
-        df = df.join(scores_stats, on=["model", "task", "label"]).with_columns(
-            score=pl.when(~c("model").str.contains("gpt"))
-            .then((c("score") - c("mean_score")) / (c("std_score") + 1e-6))
-            .otherwise(c("score"))
+    )
+
+    scores_rescaled = (
+        scores_with_id.join(scores_stats, on=["model", "task", "label", "row_id"])
+        .with_columns(
+            ((c("score") - c("score_mean")) / (c("score_std") + 1e-6)).alias("score")
         )
-    return df
+        .drop("row_id", "score_mean", "score_std")
+    )
+
+    return scores_rescaled
 
 
 def get_predictions(df: pl.DataFrame) -> pl.DataFrame:
@@ -124,10 +142,31 @@ def add_random_baseline(scores: pl.DataFrame):
     return pl.concat([scores, random_model_scores])
 
 
+def add_majority_baseline(predictions: pl.DataFrame):
+    majority_label = predictions.group_by(["task"]).agg(
+        label=c("true_label").mode().sort().first()
+    )
+    majority_baseline = (
+        predictions.select("task", "video", "true_label")
+        .unique()
+        .join(majority_label, on=["task"])
+        .with_columns(model=pl.lit("majority_baseline"))
+    ).select(*predictions.columns)
+    return pl.concat([predictions, majority_baseline])
+
+
 def accuracy(group: pl.Series):
     return skm.accuracy_score(
         y_true=group.struct.field("true_label").to_numpy(),
         y_pred=group.struct.field("label").to_numpy(),
+    )
+
+
+def f1(group: pl.Series):
+    return skm.f1_score(
+        y_true=group.struct.field("true_label").to_numpy(),
+        y_pred=group.struct.field("label").to_numpy(),
+        average="macro",
     )
 
 

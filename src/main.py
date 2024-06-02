@@ -167,6 +167,16 @@ def evaluate(config: Annotated[str, typer.Argument()]):
     experiment.run()
 
 
+def load_task_labels(task_dir, tasks):
+    task_labels = {}
+    for t in tasks:
+        try:
+            task_labels[t] = Task.from_file(t, Path(task_dir) / f"{t}.yaml").labels
+        except FileNotFoundError:
+            continue
+    return task_labels
+
+
 @app.command()
 def plot_alfred(
     experiment: Annotated[Optional[str], typer.Argument()] = None,
@@ -188,59 +198,70 @@ def plot_alfred(
             ~c("task").str.contains("permuted"), ~c("task").str.contains("substituted")
         )
 
-        # scores = utils.rescale(df, in_each="label")
-        scores = utils.rescale(df, in_each="video")
-        scores = utils.add_random_baseline(scores)
+        scores = utils.add_rescaling(df).with_columns(
+            group=pl.concat_str(
+                c("task").str.split("/").list.get(0),
+                c("task").str.split("/").list.get(1),
+                separator="/",
+            )
+        )
+        tasks_of_interest = (
+            scores.sort("task")
+            .group_by("group")
+            .agg(task_of_interest=c("task").take(pl.len() // 2 + 1))
+        )
+        selected_rescaling = (
+            scores.join(tasks_of_interest, on="group")
+            .filter(c("task").is_in("task_of_interest"))
+            .with_columns(score=c("score").mean().over("model", "group"))
+            .group_by("model", "group")
+            .agg(best_rescaling=c("rescaling").sort_by("score").last())
+        )
+        scores = (
+            scores.join(selected_rescaling, on=["model", "group"])
+            .join(tasks_of_interest, on="group")
+            .filter(
+                c("rescaling") == c("best_rescaling"),
+                ~c("task").is_in("task_of_interest"),
+            )
+            .with_columns(
+                model=pl.concat_str(c("model"), c("rescaling"), separator="_")
+            )
+        )
 
         num_nulls = len(scores.filter(c("score").is_null()))
         if num_nulls > 0:
             print(f"WARNING: {num_nulls} null scores found")
             scores = scores.filter(c("score").is_not_null())
 
-        task_labels = {}
-        per_label_baselines = []
-        for t in df.get_column("task").unique():
-            try:
-                task_labels[t] = Task.from_file(t, Path(task_dir) / f"{t}.yaml").labels
-            except FileNotFoundError:
-                continue
-            with open(Path(task_dir) / f"{t}_data.json") as f:
-                label_counts = Counter(v["label"] for v in json.load(f))
-            for l in task_labels[t]:
-                per_label_baselines += [
-                    {
-                        "task": t,
-                        "model": "Ω random",
-                        "AP": label_counts[l] / sum(label_counts.values()),
-                    },
-                    {
-                        "task": t,
-                        "model": "ξ random",
-                        "AP": utils.get_baseline_ap(
-                            sum(label_counts.values()), label_counts[l]
-                        ),
-                    },
-                ]
-        per_label_baselines = pl.DataFrame(per_label_baselines)
-
-        per_label_metrics = (
-            # This sort is very important
-            scores.sort("task", "model", "video", "label")
-            .group_by("task", "model", maintain_order=True)
-            .agg(
-                AP=pl.struct("task", "label", "score", "true_label").map(
-                    partial(plots.average_precision, task_labels)
-                )
-            )
-            .explode("AP")
-            .sort("task", "model")
-        )
-        per_label_metrics = pl.concat([per_label_metrics, per_label_baselines])
-        per_label_metrics.write_csv(dir / "per_label_metrics.csv")
+        task_labels = load_task_labels(task_dir, df.get_column("task").unique())
 
         predictions = utils.get_predictions(scores)
+        predictions = utils.add_majority_baseline(predictions)
+
+        metric_per_task_with_baseline = (
+            predictions.group_by("task", "model")
+            .agg(metric=utils.compute_metric(utils.f1))
+            .sort("task", "model")
+        )
+        metric_per_task_with_baseline.write_csv(dir / "per_label_metrics.csv")
+
+        baseline_per_task = {
+            task: metric
+            for task, metric in metric_per_task_with_baseline.filter(
+                c("model") == "majority_baseline"
+            )
+            .select("task", "metric")
+            .iter_rows()
+        }
+        metric_per_task = metric_per_task_with_baseline.filter(
+            c("model") != "majority_baseline"
+        )
+
         problems = plots.incorrect_video_labels(predictions)
         plot_dir = dir / "plots"
+
+        print(f"Creating plots in {plot_dir}...")
         plot_dir.mkdir(exist_ok=True, parents=True)
         problems.write_csv(plot_dir / "misclassification_num.csv")
 
@@ -274,50 +295,45 @@ def plot_alfred(
         for name, tasks in groups.items():
             progress.advance(group_task, 1)
             filename = name.replace(": ", "_").replace(" ", "-")
-            # plot = plots.map_plot(
-            #     per_label_metrics.filter(pl.col("task").is_in(tasks)),
-            #     f"{name} (standardized)",
-            # )
-            # plot.write_image(plot_dir / f"{filename}_mAP.png", scale=2)
 
-            plot_dir = dir / "plots"
-            plot_dir.mkdir(exist_ok=True, parents=True)
+            group_metrics = metric_per_task.filter(pl.col("task").is_in(tasks))
+            group_predictions = predictions.filter(pl.col("task").is_in(tasks))
+
+            if (
+                len(tasks) == 0
+                or len(metric_per_task.filter(pl.col("task").is_in(tasks))) == 0
+            ):
+                continue
+
             plot = plots.overall_performance(
-                per_label_metrics.filter(pl.col("task").is_in(tasks)),
-                metric="AP",
-                metric_label="Mean AP over all labels",
+                metric_per_task=metric_per_task.filter(pl.col("task").is_in(tasks)),
+                y_label="Average Macro F1",
                 title=f"{name} (standardized)",
+                baseline_per_task={
+                    t: v for t, v in baseline_per_task.items() if t in tasks
+                },
             )
-            plot.write_image(plot_dir / f"{filename}_mAP.png", scale=2)
+            plot.write_image(plot_dir / f"{filename}_f1.png", scale=2)
 
-            details_dir = plot_dir / "details"
-            details_dir.mkdir(exist_ok=True, parents=True)
-            plot = plots.task_performance(
-                metric_per_task=per_label_metrics.filter(pl.col("task").is_in(tasks))
-                .group_by("task", "model")
-                .agg(mAP=c("AP").mean())
-                .filter(~pl.col("model").str.contains("random")),
-                predictions_per_task=predictions.filter(
-                    pl.col("task").is_in(tasks)
-                ).filter(~pl.col("model").str.contains("random")),
-                scores=scores.filter(pl.col("task").is_in(tasks)).filter(
-                    ~pl.col("model").str.contains("random")
-                ),
-                metric="mAP",
-                title=f"{name} (standardized)",
-                baselines=None,
-                labels=task_labels,
-                tasks=tasks,
-            )
-            plot.write_image(details_dir / f"{filename}_matrices.png", scale=2)
-        print(per_label_metrics)
+            # details_dir = plot_dir / "details"
+            # details_dir.mkdir(exist_ok=True, parents=True)
+            # plot = plots.task_performance(
+            #     metric_per_task=group_metrics,
+            #     predictions=group_predictions,
+            #     title=f"{name} (standardized)",
+            #     baseline_per_task=baseline_per_task,
+            #     task_labels=task_labels,
+            #     tasks=tasks,
+            # )
+            # plot.write_image(details_dir / f"{filename}_matrices.png", scale=2)
+
         performance_by_level = pl.concat(
             [
-                per_label_metrics.filter(c("task").is_in(tasks))
+                metric_per_task_with_baseline.filter(c("task").is_in(tasks))
                 .group_by("model")
                 .agg(
-                    score=c("AP").mean(),
-                    error=c("AP").std() / (c("AP").len().sqrt() + 1e-6),
+                    score=c("metric").mean(),
+                    error=c("metric").std() / (c("metric").len().sqrt() + 1e-6),
                 )
                 .with_columns(level=pl.lit(n), group=pl.lit(name))
                 for n in range(2, 9)
@@ -418,7 +434,7 @@ def plot(
             plot = plots.overall_performance(
                 per_label_metrics.filter(pl.col("task").is_in(tasks)),
                 metric="AP",
-                metric_label="Mean AP over all labels",
+                y_label="Mean AP over all labels",
                 title=f"{name} (standardized)",
             )
             plot.write_image(plot_dir / f"{filename}_mAP.png", scale=2)
@@ -432,8 +448,8 @@ def plot(
                 predictions.filter(pl.col("task").is_in(tasks)),
                 metric="mAP",
                 title=f"{name} (standardized)",
-                baselines=None,
-                labels=task_labels,
+                baseline_per_task=None,
+                task_labels=task_labels,
                 tasks=tasks,
             )
             plot.write_image(details_dir / f"{filename}_matrices.png", scale=2)
