@@ -198,7 +198,7 @@ class ExperimentConfig(BaseModel):
                     raise ValueError(f"Duplicate label for video {item['path']}")
                 if item["label"] not in task.labels:
                     raise ValueError(
-                        f"Invalid label '{item['label']}' for task '{task.id}'"
+                        f"Invalid label '{item['label']}' for task '{task.id}'. Labels: {task.labels}"
                     )
                 labels[task.id] = item["label"]
         # TODO: Change this to a use Path
