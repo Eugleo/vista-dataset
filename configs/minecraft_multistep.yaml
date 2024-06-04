@@ -1,0 +1,26 @@
+tasks:
+  - level_2/permutation/craft_break
+  - level_2/permutation/craft_place
+  - level_2/permutation/place_break
+  - level_2/remix/craft_break_remix
+  - level_2/remix/place_break_remix
+  - level_3/permutation/break_craft_place
+  - level_3/permutation/craft_craft_break
+  - level_3/remix/break_craft_place_remix
+  - level_3/remix/craft_craft_break_remix
+  - level_3/remix/mine_remix
+models:
+  - kind: encoder
+    encoder: s3d
+    heads:
+      - kind: cosine
+    batch_size: 2
+  - kind: encoder
+    encoder: viclip
+    heads:
+      - kind: cosine
+    batch_size: 16
+task_dir: tasks/minecraft
+video_dir: "."
+cache_dir: .cache
+output_dir: experiments
