@@ -445,8 +445,7 @@ def plot_minecraft(
         if standardize:
             scores = utils.standardize(scores)
 
-        for i in range(3):
-            scores = utils.add_random_baseline(scores, f"random_{i}")
+        scores = utils.add_random_baseline(scores)
 
         num_nulls = len(scores.filter(c("score").is_null()))
         if num_nulls > 0:
@@ -505,8 +504,13 @@ def plot_minecraft(
             counts = errors.group_by("task", "model").agg(pl.col(column).value_counts(sort=True)).explode(column).unnest(column)
             for model in errors.select("model").unique().rows():
                 model = model[0]
-                plot = plots.errors_minecraft(counts.filter(pl.col("model") == model), column, f"{model} {column} in Minecraft")
-                plot.write_image(plot_dir / f"{model}_{column}_Minecraft.png", scale=2)
+                title = f"{model}_{column}_Minecraft_{'with' if standardize else 'no'}_standardization"
+                plot = plots.errors_minecraft(
+                    counts.filter(pl.col("model") == model),
+                    column,
+                    title.replace("_", " ")
+                )
+                plot.write_image(plot_dir / f"{title}.png", scale=2)
 
             counts.write_csv(plot_dir / f"{column}_counts.csv")
 
@@ -534,8 +538,13 @@ def plot_minecraft(
 
         recalls = recalls_per_video.group_by("task", "model")\
             .agg(recall=pl.col("recall").mean(), error=pl.col("recall").std() / pl.col("recall").len().sqrt())\
-            .sort("task", "model", descending=[False, True])
+            .sort("task", "model", descending=[False, False])
         print(recalls)
 
-        plot = plots.overall_performance_minecraft(recalls, "recall", "Recall", "Minecraft multilabel activity recognition")
+        plot = plots.overall_performance_minecraft(
+            recalls,
+            "recall",
+            "Recall",
+            f"Minecraft multilabel activity recognition ({'with' if standardize else 'no'} standardization)"
+        )
         plot.write_image(plot_dir / f"Minecraft_recall.png", scale=2)

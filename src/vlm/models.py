@@ -359,7 +359,7 @@ class GPTModel(Model):
             "body": {
                 "model": self._model,
                 "messages": history,
-                "max_tokens": 2500,
+                "max_tokens": 1200,
             },
         }
 
@@ -385,6 +385,7 @@ class GPTModel(Model):
         video_logging_dir.mkdir(parents=True, exist_ok=True)
 
         frames = utils.b64_to_frames(item["frames"])
+        frames = torchvision.transforms.Resize(size=(512, 512))(frames)
         video_as_grid = torchvision.utils.make_grid(frames, nrow=math.ceil(math.sqrt(frames.shape[0])), normalize=True)
         video_as_grid = torchvision.transforms.functional.to_pil_image(video_as_grid)
         video_as_grid.save(video_logging_dir / (Path(item["path"]).stem + ".png"))
