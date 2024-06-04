@@ -37,32 +37,33 @@ models:
 #   n_frames: 32
 tasks:
 # - extrapyramidal/object_tracking - not completed
-- extrapyramidal/opening_and_closing
-- extrapyramidal/recognize_small_object
-- foundation/clean/apple
-- foundation/clean/mug
-- foundation/containers/put_object/apple
-- foundation/containers/put_object/can
-- foundation/containers/put_object/hammer
-- foundation/containers/put_object/mug
+# - extrapyramidal/opening_and_closing
+# - extrapyramidal/recognize_small_object
+# - foundation/clean/apple
+# - foundation/clean/mug
+- foundation/containers/apple
+- foundation/containers/butter_knife
+- foundation/containers/can
+- foundation/containers/hammer
+- foundation/containers/mug
 # - foundation/cool - not completed
 # - foundation/heat - not completed
 # - foundation/objects/pick_from_counter_top - not completed
 # - foundation/objects/pick_from_dining_table - not completed
-- foundation/on_v_off/desk_lamp
-- foundation/on_v_off/faucet
-- foundation/on_v_off/floor_lamp
-- foundation/on_v_off/microwave
+# - foundation/on_v_off/desk_lamp
+# - foundation/on_v_off/faucet
+# - foundation/on_v_off/floor_lamp
+# - foundation/on_v_off/microwave
 # - foundation/pick_v_put/fork - not completed
 # - foundation/pick_v_put other - not completed
-- foundation/toggle/desk_lamp
-- foundation/toggle/faucet
-- foundation/toggle/floor_lamp
-- foundation/toggle/microwave
-- foundation/slice/apple
-- foundation/slice/potato
-- foundation/sliced_v_whole/apple
-- foundation/sliced_v_whole/potato
+# - foundation/toggle/desk_lamp
+# - foundation/toggle/faucet
+# - foundation/toggle/floor_lamp
+# - foundation/toggle/microwave
+# - foundation/slice/apple
+# - foundation/slice/potato
+# - foundation/sliced_v_whole/apple
+# - foundation/sliced_v_whole/potato
 # - level_2/permutation/... - not completed
 # - level_3/permutation/... - not completed
 # - level_4/permutation/... - not completed
