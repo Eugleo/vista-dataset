@@ -31,8 +31,10 @@ def serialize_dict(d) -> str:
 
 def subsample(x: t.Tensor, n_frames: int) -> t.Tensor:
     total_frames, *_ = x.shape
-    if total_frames <= n_frames:
+    if total_frames < n_frames:
         raise ValueError("Video is too short to subsample.")
+    elif total_frames == n_frames:
+        return x
 
     if (total_frames - n_frames) % (n_frames - 1) != 0:
         # Replicate the last frame to make sure it will be selected

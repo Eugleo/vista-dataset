@@ -5,6 +5,7 @@ import uuid
 from functools import partial
 from pathlib import Path
 from typing import Callable, Optional
+from tqdm.auto import tqdm
 
 import backoff
 import dotenv
@@ -15,7 +16,7 @@ import torch as t
 from rich.progress import Progress, track
 from torch.utils.data import DataLoader, IterableDataset
 import torchvision
-from torchvision.io import read_video
+from torchvision.io import read_video, VideoReader
 
 import vlm.utils as utils
 from vlm.encoders import VideoEncoder
@@ -24,11 +25,15 @@ from vlm.objects import Model, Task, Video
 
 class VideoDataset(IterableDataset):
     def __init__(
-        self, videos: list[Video], tasks: list[Task], transforms: list[Callable] = []
+        self, videos: list[Video], tasks: list[Task], transforms: list[Callable] = [],
+        memory_efficient: bool = False, n_frames: Optional[int] = None
     ) -> None:
         self._videos = videos
         self._tasks = [task.id for task in tasks]
         self._transforms = transforms
+        self._memory_efficient = memory_efficient
+        self._n_frames = n_frames
+        assert not memory_efficient or n_frames is not None, "Must specify n_frames when setting memory_efficient=True"
         logging.info(f"VideoDataset initialized with {len(self)} videos")
 
     def __len__(self):
@@ -40,7 +45,29 @@ class VideoDataset(IterableDataset):
 
     def __getitem__(self, idx: int) -> dict:
         video = self._videos[idx]
-        frames = read_video(video.path, pts_unit="sec", output_format="TCHW")[0]
+        if self._memory_efficient:
+            reader = VideoReader(video.path, "video")
+            reader.seek(0.0)
+            first_frame = next(reader)["data"]
+            total_frames = 1
+            last_frame = None
+            for frame in reader:
+                total_frames += 1
+                last_frame = frame["data"]
+
+            frames = []
+            reader.seek(0.0)
+            step = total_frames // (self._n_frames - 1) + 1
+            for idx, frame in enumerate(reader):
+                if idx % step == 0 or idx == (total_frames - 1):
+                    frames.append(frame["data"])
+            frames = t.stack(frames)
+            assert len(frames) == self._n_frames, f"{len(frames)=}, {self._n_frames=}"
+            assert t.allclose(first_frame, frames[0])
+            assert t.allclose(last_frame, frames[-1])
+        else:
+            frames = read_video(video.path, pts_unit="sec", output_format="TCHW")[0]
+
         for transform in self._transforms:
             try:
                 frames = transform(frames)
@@ -396,10 +423,10 @@ class GPTModel(Model):
         logging.info("Configuring dataset...")
         subsample = partial(utils.subsample, n_frames=self._n_frames)
         transforms = [subsample, utils.frames_to_b64]
-        dataset_iter = VideoDataset(videos, tasks, transforms)
+        dataset_iter = VideoDataset(videos, tasks, transforms, memory_efficient=True, n_frames=self._n_frames)
         # converting to a list forces all the videos to be converted up front, so that if any are invalid, an error will be thrown before any GPT-4 calls are made
         logging.info("Processing videos...")
-        dataset = list(dataset_iter)
+        dataset = list(tqdm(dataset_iter, desc="Preprocessing videos", total=len(videos)))
 
         for item in dataset:
             GPTModel._log_video(self._cache_dir, item)
