@@ -13,7 +13,7 @@ from sklearn.preprocessing import LabelBinarizer
 def levels_line_plot(data: pl.DataFrame):
     """Data should have columns: model, group, level, score"""
 
-    return px.line(
+    fig = px.line(
         data.sort("group", "model", "level").to_pandas(),
         x="level",
         y="score",
@@ -21,9 +21,25 @@ def levels_line_plot(data: pl.DataFrame):
         facet_row="group",
         title="Mean macro F1 by level",
         error_y="error",
-        height=1000,
+        # color_discrete_map={
+        #     "clip": "#22D3EE",
+        #     "gpt-4o": "#059669",
+        #     "viclip": "#A78BFA",
+        #     "clip-32": "#22D3EE",
+        #     "clip-4": "#2DD4BF",
+        # },
         color_discrete_sequence=px.colors.qualitative.Bold,
     )
+    fig.update_traces(line={"width": 5})
+    fig.update_layout(
+        # showlegend=False,
+        width=1000,
+        height=1200,
+        yaxis=dict(tickmode="linear", tick0=0, dtick=0.25),
+        # plot_bgcolor="#F5F5F5",
+    )
+    fig.update_yaxes(range=[0, 1])
+    return fig
 
 
 def average_precision(task_labels: dict, group):
@@ -163,7 +179,7 @@ def task_performance(
 def overall_performance(
     metric_per_task: pl.DataFrame, y_label: str, title: str, baseline_per_task: dict
 ):
-    ERROR_MODE = "bayesian"
+    ERROR_MODE = "std"
 
     if ERROR_MODE == "std":
         avg_data = (
@@ -198,10 +214,19 @@ def overall_performance(
         avg_data.to_pandas(),
         x="model",
         y="metric",
-        color="metric",
+        color="model",
         range_y=[0, 1],
         range_color=[0, 1],
-        color_continuous_scale="YlGn",
+        color_discrete_map={
+            "clip": "#22D3EE",
+            "gpt-4o": "#059669",
+            "viclip": "#A78BFA",
+            "clip-32": "#22D3EE",
+            "clip-4": "#2DD4BF",
+            "default (16f, 1-shot)": "#059669",
+            "16f, 0-shot": "#84CC16",
+            "5f, 1-shot": "#22C55E",
+        },
         title=title,
         labels={"metric": y_label},
         error_y="error" if ERROR_MODE == "std" else "error_high_minus_mean",
@@ -210,9 +235,14 @@ def overall_performance(
     fig.add_hline(
         y=pl.Series(baseline_per_task.values()).mean(),
         line_dash="dot",
-        annotation_text="Majority Baseline",
+        line_color="black",
     )
-    fig.update_layout(showlegend=False, coloraxis_showscale=False)
+    fig.update_layout(
+        showlegend=False,
+        coloraxis_showscale=False,
+        width=220,
+        height=330,
+    )
     return fig
 
 
