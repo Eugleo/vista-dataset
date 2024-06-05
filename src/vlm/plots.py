@@ -72,6 +72,10 @@ def average_precision(task_labels: dict, group):
 
 
 def map_plot(per_label_map: pl.DataFrame, title: str):
+    # TODO: make bayesian error
+
+    print(f"MAP PLOT: {per_label_map}")
+
     per_task_map = (
         per_label_map.group_by("task", "model")
         .agg(mAP=c("AP").mean(), error=c("AP").std() / c("AP").len().sqrt())
@@ -104,6 +108,8 @@ def task_performance(
     title: str,
     baseline_per_task: Optional[dict] = None,
 ):
+    print(f"metric per task: {metric_per_task}")
+    
     models = metric_per_task["model"].unique().sort().to_list()
     avg_data = (
         metric_per_task.group_by("model")

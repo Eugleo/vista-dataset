@@ -192,9 +192,12 @@ def plot_alfred(
         TextColumn("[progress.description]{task.description}"),
     ) as progress:
         progress.add_task("Creating plots...")
-        df = pl.concat(
-            [pl.read_json(file) for file in (dir / "results").glob("*.json")]
-        ).filter(
+        json_data = [pl.read_json(file) for file in (dir / "results").glob("*.json")]
+        if not json_data:
+            print(f"No results found in {dir}")
+            return
+
+        df = pl.concat(json_data).filter(
             ~c("task").str.contains("permuted"), ~c("task").str.contains("substituted")
         )
 
@@ -205,39 +208,55 @@ def plot_alfred(
                 separator="/",
             )
         )
-        tasks_of_interest = (
-            scores.sort("task")
-            .group_by("group")
-            .agg(task_of_interest=c("task").take(pl.len() // 2 + 1))
-        )
-        selected_rescaling = (
-            scores.join(tasks_of_interest, on="group")
-            .filter(c("task").is_in("task_of_interest"))
-            .with_columns(score=c("score").mean().over("model", "group"))
-            .group_by("model", "group")
-            .agg(best_rescaling=c("rescaling").sort_by("score").last())
-        )
-        scores = (
-            scores.join(selected_rescaling, on=["model", "group"])
-            .join(tasks_of_interest, on="group")
-            .filter(
-                c("rescaling") == c("best_rescaling"),
-                ~c("task").is_in("task_of_interest"),
+
+        print(f"scores: {scores}")
+        # print all the column names
+        # print(f"column names: {scores.columns}")
+        # all columns: 'task', 'model', 'video', 'label', 'label_idx', 'score', 'true_label', 'true_label_idx', 'rescaling', 'group'
+        print(f"columns: {scores.select('task', 'label', 'true_label', 'score', 'rescaling', 'group')}")
+
+        CHOOSE_BEST_RESCALE = False
+        if CHOOSE_BEST_RESCALE:
+            tasks_of_interest = (
+                scores.sort("task")
+                .group_by("group")
+                # find the best standard based on the first half, so that we can use it to rescale the second half
+                # without "overfitting" on standard selection (i.e. using the same data to select the standard and evaluate it)
+                .agg(task_of_interest=c("task").take(pl.len() // 2 + 1))
             )
-            .with_columns(
-                model=pl.concat_str(c("model"), c("rescaling"), separator="_")
+
+            selected_rescaling = (
+                scores.join(tasks_of_interest, on="group")
+                .filter(c("task").is_in("task_of_interest"))
+                .with_columns(score=c("score").mean().over("model", "group"))
+                .group_by("model", "group")
+                .agg(best_rescaling=c("rescaling").sort_by("score").last())
             )
-        )
+
+            scores = (
+                scores.join(selected_rescaling, on=["model", "group"])
+                .join(tasks_of_interest, on="group")
+                .filter(
+                    c("rescaling") == c("best_rescaling"),
+                    ~c("task").is_in("task_of_interest"),
+                )
+                .with_columns(
+                    model=pl.concat_str(c("model"), c("rescaling"), separator="_")
+                )
+            )
 
         num_nulls = len(scores.filter(c("score").is_null()))
         if num_nulls > 0:
-            print(f"WARNING: {num_nulls} null scores found")
+            print(f"WARNING: {num_nulls}/{len(scores)} null scores found")
             scores = scores.filter(c("score").is_not_null())
 
         task_labels = load_task_labels(task_dir, df.get_column("task").unique())
 
         predictions = utils.get_predictions(scores)
         predictions = utils.add_majority_baseline(predictions)
+
+        print(f"predictions: {predictions}")
+        print(f"predictions.columns: {predictions.columns}")
 
         metric_per_task_with_baseline = (
             predictions.group_by("task", "model")
@@ -292,6 +311,7 @@ def plot_alfred(
         } | level_groups
 
         group_task = progress.add_task("Creating group plots...", total=len(groups))
+        
         for name, tasks in groups.items():
             progress.advance(group_task, 1)
             filename = name.replace(": ", "_").replace(" ", "-")
@@ -315,18 +335,22 @@ def plot_alfred(
             )
             plot.write_image(plot_dir / f"{filename}_f1.png", scale=2)
 
-            # details_dir = plot_dir / "details"
-            # details_dir.mkdir(exist_ok=True, parents=True)
-            # plot = plots.task_performance(
-            #     metric_per_task=group_metrics,
-            #     predictions=group_predictions,
-            #     title=f"{name} (standardized)",
-            #     baseline_per_task=baseline_per_task,
-            #     task_labels=task_labels,
-            #     tasks=tasks,
-            # )
-            # plot.write_image(details_dir / f"{filename}_matrices.png", scale=2)
+            DETAILS = True
 
+            if DETAILS:
+                details_dir = plot_dir / "details"
+                details_dir.mkdir(exist_ok=True, parents=True)
+                plot = plots.task_performance(
+                    metric_per_task=group_metrics,
+                    predictions=group_predictions,
+                    title=f"{name} (standardized)",
+                    baseline_per_task=baseline_per_task,
+                    task_labels=task_labels,
+                    tasks=tasks,
+                )
+                plot.write_image(details_dir / f"{filename}_matrices.png", scale=2)
+
+   
         performance_by_level = pl.concat(
             [
                 metric_per_task_with_baseline.filter(c("task").is_in(tasks))
@@ -368,7 +392,16 @@ def plot(
         )
 
         # scores = utils.rescale(df, in_each="label")
-        scores = utils.rescale(df, in_each="video")
+        # scores = utils.rescale(df, in_each="video")
+        
+        scores = utils.add_rescaling(df).with_columns(
+            group=pl.concat_str(
+                c("task").str.split("/").list.get(0),
+                c("task").str.split("/").list.get(1),
+                separator="/",
+            )
+        )
+        
         scores = utils.add_random_baseline(scores)
 
         num_nulls = len(scores.filter(c("score").is_null()))
@@ -444,6 +477,8 @@ def plot(
             
             plot.write_image(plot_dir / f"{filename}_mAP.png", scale=2)
 
+            # TODO: get this working again
+            """
             plot = plots.overall_performance(
                 per_label_metrics.filter(pl.col("task").is_in(tasks)),
                 metric="AP",
@@ -451,21 +486,25 @@ def plot(
                 title=f"{name} (standardized)",
             )
             plot.write_image(plot_dir / f"{filename}_mAP.png", scale=2)
+            """
 
             details_dir = plot_dir / "details"
             details_dir.mkdir(exist_ok=True, parents=True)
             plot = plots.task_performance(
-                metric_per_task=per_label_metrics.filter(pl.col("task").is_in(tasks))
+                metric_per_task=per_label_metrics
+                .filter(pl.col("task").is_in(tasks))
                 .group_by("task", "model")
-                .agg(mAP=c("AP").mean())
+                # .agg(mAP=c("AP").mean())
+                # .agg(mAP=pl.col("AP").mean().alias("metric"))  # plotting expects the name 'metric' now
+                .agg(metric=c("AP").mean())
                 .filter(~pl.col("model").str.contains("random")),
-                predictions_per_task=predictions.filter(
+                predictions=predictions.filter(
                     pl.col("task").is_in(tasks)
                 ).filter(~pl.col("model").str.contains("random")),
-                scores=scores.filter(pl.col("task").is_in(tasks)).filter(
-                    ~pl.col("model").str.contains("random")
-                ),
-                metric="mAP",
+                # scores=scores.filter(pl.col("task").is_in(tasks)).filter(
+                #     ~pl.col("model").str.contains("random")
+                # ),
+                # metric="mAP",
                 title=f"{name} (standardized)",
                 baseline_per_task=None,
                 task_labels=task_labels,

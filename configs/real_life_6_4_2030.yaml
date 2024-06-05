@@ -1,9 +1,9 @@
 models:
-- async_batch: false
-  is_one_shot: true
-  kind: gpt
-  model: gpt-4o
-  n_frames: 16
+# - async_batch: false
+#   is_one_shot: true
+#   kind: gpt
+#   model: gpt-4o
+#   n_frames: 16
 # - async_batch: false
 #   is_one_shot: false
 #   kind: gpt
@@ -14,37 +14,38 @@ models:
 #   kind: gpt
 #   model: gpt-4o
 #   n_frames: 5
-# - encoder: s3d
-#   heads:
-#   - kind: cosine
-#   kind: encoder
-# - encoder: viclip
-#   heads:
-#   - kind: cosine
-#   kind: encoder
+- encoder: s3d
+  heads:
+  - kind: cosine
+  kind: encoder
+- encoder: viclip
+  heads:
+  - kind: cosine
+  kind: encoder
 # - encoder: clip
 #   heads:
 #   - kind: cosine
 #   hf_model: ViT-bigG-14/laion2b_s39b_b160k
 #   kind: encoder
 #   n_frames: 4
-# - batch_size: 1
-#   encoder: clip
-#   heads:
-#   - kind: cosine
-#   hf_model: ViT-bigG-14/laion2b_s39b_b160k
-#   kind: encoder
-#   n_frames: 32
+- batch_size: 1
+  encoder: clip
+  heads:
+  - kind: cosine
+  hf_model: ViT-bigG-14/laion2b_s39b_b160k
+  kind: encoder
+  n_frames: 32
 tasks:
 # - extrapyramidal/object_tracking - not completed
-- extrapyramidal/opening_and_closing
-- extrapyramidal/recognize_small_object
-- foundation/clean/apple
-- foundation/clean/mug
-- foundation/containers/put_object/apple
-- foundation/containers/put_object/can
-- foundation/containers/put_object/hammer
-- foundation/containers/put_object/mug
+# - extrapyramidal/opening_and_closing
+- extrapyramidal/object/recognize_small_object
+# - foundation/clean/apple
+# - foundation/clean/mug
+# - foundation/containers/apple
+# - foundation/containers/butter_knife
+# - foundation/containers/can
+# - foundation/containers/hammer
+# - foundation/containers/mug
 - foundation/cool/apple
 - foundation/cool/mug
 - foundation/heat/apple
@@ -63,8 +64,8 @@ tasks:
 - foundation/toggle/microwave
 - foundation/slice/apple
 - foundation/slice/potato
-- foundation/sliced_v_whole/apple
-- foundation/sliced_v_whole/potato
+# - foundation/sliced_v_whole/apple
+# - foundation/sliced_v_whole/potato
 # - level_2/permutation/... - not completed
 # - level_3/permutation/... - not completed
 # - level_4/permutation/... - not completed
