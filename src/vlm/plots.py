@@ -1,4 +1,6 @@
 from typing import Optional
+from warnings import warn
+import itertools
 
 import numpy as np
 import plotly.express as px
@@ -134,6 +136,8 @@ def task_performance(
         vertical_spacing=0.03,
     )
 
+
+    matrix_columns_per_task = []
     for task_idx, task in enumerate(tasks, start=1):
         subplot = px.bar(
             metric_per_task.filter(c("task") == task).to_pandas(),
@@ -145,9 +149,12 @@ def task_performance(
         )
         subplot.update_layout(showlegend=False)
         fig.add_traces(subplot["data"], rows=1, cols=task_idx)
+        
         if task != "average":
             if baseline_per_task:
                 fig.add_hline(y=baseline_per_task[task], line_dash="dot", col=task_idx)  # type: ignore
+
+            matrix_column = []
             for model_idx, model in enumerate(models, start=2):
                 task_df = predictions.filter(c("task") == task, c("model") == model)
                 labels = task_labels[task]
@@ -156,6 +163,8 @@ def task_performance(
                     task_df["label"].to_numpy(),
                     labels=labels,
                 )
+
+                matrix_column.append(matrix)
 
                 heatmap = px.imshow(
                     matrix,
@@ -169,6 +178,40 @@ def task_performance(
                 if model_idx < len(models) + 1:
                     fig.update_xaxes(showticklabels=False, row=model_idx, col=task_idx)
                 fig.add_traces(heatmap["data"], rows=model_idx, cols=task_idx)
+            
+            matrix_columns_per_task.append((task, matrix_column))
+    
+    # check to see if we can sum any of the confusion matrices
+    other_task_labels = sorted([(task_labels[t], t) for t in tasks if t != "average"])
+    task_groups = [(tl, [t for t in tg]) for tl, tg in itertools.groupby(other_task_labels, key=lambda x: x[0])]
+
+    # get non-singleton task groups
+    ns_task_groups = [(tl, tg) for tl, tg in task_groups if len(tg) > 1]
+
+    if len(ns_task_groups) > 1:
+        warn(f"Currently only supports a single summed group; skipping {ns_task_groups[1:]}")
+
+    if ns_task_groups:
+        task_labels, task_group = ns_task_groups[0]
+  
+        tasks = [t[1] for t in task_group]
+
+        # for each model, make a heatmap which is the sum of the confusion matrices for all the tasks in the group
+        for model_idx, model in enumerate(models, start=2):
+            matrix = np.zeros((len(task_labels), len(task_labels)))
+            for t in tasks:
+                matrix += matrix_columns_per_task[tasks.index(t)][1][model_idx - 2]
+
+            heatmap = px.imshow(
+                matrix,
+                x=task_labels,
+                y=task_labels,
+                labels=dict(x="Candidate Label", y="Video True Label"),
+                text_auto=True,
+            )
+            heatmap.update_layout(showlegend=False)
+            # add it to the first column
+            fig.add_traces(heatmap["data"], rows=model_idx, cols=1)
 
     fig.update_layout(
         coloraxis_showscale=False,
@@ -294,3 +337,39 @@ def bayesian_quantile(col, quantile):
     # we integrate symbolically to find the CDF:
     # \int_0^b (n + 1) (acc^k (1-acc)^{n-k} (n choose k)) dacc = (n + 1) Beta(b, 1+k, 1-k+n) (n choose k)
     return beta.ppf(quantile, 1 + k, 1 - k + n)
+
+
+def get_real_life_special_groups():
+    scrambled_objs = [
+        "avocado",
+        "chopsticks",
+        "potato",
+        "tomato",
+    ]
+
+    def _maker(df, get_tasks):
+        scramble_tasks = get_tasks("extrapyramidal/object_tracking")
+
+        # now divide up the tasks based on number of objects; the last part of the path (split by '/') are in the format scramble_<n>_objects
+        lvls = {}
+        for i in range(2, 9):
+            lvls[f"Object tracking: Scramble {i}"] = [s for s in scramble_tasks if f"scramble_{i}" in s.split("/")[-1]]
+
+        objs = {}
+        for obj in scrambled_objs:
+            objs[f"Object tracking: Object {obj}"] = [s for s in scramble_tasks if obj in s.split("/")[-1]]
+          
+        general = {
+            "Object tracking overall": scramble_tasks,
+            "Object tracking: Object identity": get_tasks("extrapyramidal/object_tracking/object_identity"),
+            "Object tracking: Relative position": get_tasks("extrapyramidal/object_tracking/relative_position"),
+        }
+
+        other = {
+            "Action: Opening v. Closing": get_tasks("extrapyramidal/opening_v_closing"),
+            "Object Recognition (Real)": get_tasks("extrapyramidal/recognize_small_object"),
+        }
+
+        return {**lvls, **objs, **general, **other}
+    
+    return _maker

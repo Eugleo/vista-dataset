@@ -219,3 +219,6 @@ def frames_to_b64(frames: t.Tensor):
         b64_frames.append(base64.b64encode(buffer).decode("utf-8"))  # type: ignore
 
     return b64_frames
+
+def get_tasks(df, prefix):
+    return [t for t in df.get_column("task").unique() if t.startswith(prefix)]

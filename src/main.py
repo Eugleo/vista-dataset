@@ -1,3 +1,4 @@
+import itertools
 import json
 import logging
 import subprocess
@@ -34,11 +35,7 @@ def view_logs(
     subprocess.run(
         ["streamlit", "run", "src/log_viewer.py", "--", str(exp_dir / "logs")]
     )
-
-
-def get_tasks(df, prefix):
-    return [t for t in df.get_column("task").unique() if t.startswith(prefix)]
-
+    
 
 @app.command()
 def cancel_batch(
@@ -184,6 +181,7 @@ def plot_alfred(
         str, typer.Option()
     ] = "/data/datasets/vlm_benchmark/experiments",
     task_dir: Annotated[str, typer.Option()] = "/data/datasets/vlm_benchmark/tasks",
+    additional_tasks: Annotated[Optional[str], typer.Option()] = None,
 ):
     dir = utils.get_experiment_dir(experiment_dir, experiment)
 
@@ -285,7 +283,7 @@ def plot_alfred(
         problems.write_csv(plot_dir / "misclassification_num.csv")
 
         def get_tasks(prefix):
-            return [t for t in df.get_column("task").unique() if t.startswith(prefix)]
+            return utils.get_tasks(df, prefix)
 
         level_groups = (
             {
@@ -295,6 +293,12 @@ def plot_alfred(
             | {f"Level {n}: remix": get_tasks(f"level_{n}/remix") for n in range(2, 9)}
             | {f"Level {n}: overall": get_tasks(f"level_{n}") for n in range(2, 9)}
         )
+
+        if additional_tasks:
+            additional_groups_maker = plots.get_real_life_special_groups()
+            additional_groups = additional_groups_maker(df, get_tasks)
+        else:
+            additional_groups = {}
 
         groups = {
             "The whole Foundation Level": get_tasks("foundation"),
@@ -308,10 +312,16 @@ def plot_alfred(
             "Action: Putting down v. Picking up": get_tasks("foundation/pick_v_put"),
             "Action: Slicing": get_tasks("foundation/slice"),
             "Action: Toggling On v. Off": get_tasks("foundation/toggle"),
-            "Object tracking": get_tasks("extrapyramidal/object_tracking"),
-            "Action: Opening v. Closing": get_tasks("extrapyramidal/opening_v_closing"),
-            "Object Recognition (Real)": get_tasks("extrapyramidal/recognize_small_object")
         } | level_groups
+
+        if additional_tasks == "suppress_alfred":
+            groups = additional_groups
+        elif additional_tasks == "test":
+            groups = {
+                "Object tracking": list(itertools.chain(*[task_paths for task_name, task_paths in additional_groups.items() if 'cramble' in task_name]))
+            }
+        else:
+            groups = groups | additional_groups
 
         group_task = progress.add_task("Creating group plots...", total=len(groups))
         
