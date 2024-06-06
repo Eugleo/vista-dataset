@@ -308,6 +308,7 @@ def plot_alfred(
             "Action: Putting down v. Picking up": get_tasks("foundation/pick_v_put"),
             "Action: Slicing": get_tasks("foundation/slice"),
             "Action: Toggling On v. Off": get_tasks("foundation/toggle"),
+            "Extrapyramidal": get_tasks("extrapyramidal"),
         } | level_groups
 
         group_task = progress.add_task("Creating group plots...", total=len(groups))
