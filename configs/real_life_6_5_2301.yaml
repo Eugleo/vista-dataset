@@ -1,0 +1,104 @@
+models:
+- async_batch: false
+  is_one_shot: true
+  kind: gpt
+  model: gpt-4o
+  n_frames: 16
+# - async_batch: false
+#   is_one_shot: false
+#   kind: gpt
+#   model: gpt-4o
+#   n_frames: 16
+# - async_batch: false
+#   is_one_shot: false
+#   kind: gpt
+#   model: gpt-4o
+#   n_frames: 5
+# - encoder: s3d
+#   heads:
+#   - kind: cosine
+#   kind: encoder
+# - encoder: viclip
+#   heads:
+#   - kind: cosine
+#   kind: encoder
+# - encoder: clip
+#   heads:
+#   - kind: cosine
+#   hf_model: ViT-bigG-14/laion2b_s39b_b160k
+#   kind: encoder
+#   n_frames: 4
+# - batch_size: 1
+#   encoder: clip
+#   heads:
+#   - kind: cosine
+#   hf_model: ViT-bigG-14/laion2b_s39b_b160k
+#   kind: encoder
+#   n_frames: 32
+tasks:
+# - extrapyramidal/object_tracking - not completed
+- extrapyramidal/opening_v_closing/door
+# - extrapyramidal/recognize_small_object
+# - foundation/pick_v_put/apple_countertop
+# - foundation/pick_v_put/apple_freezer
+# - foundation/pick_v_put/apple_microwave
+# - foundation/pick_v_put/apple_sink
+# - foundation/pick_v_put/butter_knife_countertop
+# - foundation/pick_v_put/butter_knife_freezer
+# - foundation/pick_v_put/butter_knife_microwave
+# - foundation/pick_v_put/butter_knife_sink
+# - foundation/pick_v_put/can_countertop
+# - foundation/pick_v_put/can_freezer
+# - foundation/pick_v_put/can_microwave
+# - foundation/pick_v_put/can_sink
+# - foundation/pick_v_put/hammer_countertop
+# - foundation/pick_v_put/hammer_freezer
+# - foundation/pick_v_put/hammer_microwave
+# - foundation/pick_v_put/hammer_sink
+# - foundation/pick_v_put/mug_countertop
+# - foundation/pick_v_put/mug_freezer
+# - foundation/pick_v_put/mug_microwave
+# - foundation/pick_v_put/mug_sink
+# - foundation/pick_v_put/fork_countertop
+# - foundation/clean/apple
+# - foundation/clean/mug
+# - foundation/objects/countertop
+# - foundation/objects/table
+# - foundation/containers/put_object/apple
+# - foundation/containers/put_object/can
+# - foundation/containers/put_object/hammer
+# - foundation/containers/put_object/mug
+# - foundation/heat/apple
+# - foundation/heat/mug
+# - foundation/cool/apple
+# - foundation/cool/mug
+# - foundation/toggle/desk_lamp
+# - foundation/toggle/faucet
+# - foundation/toggle/floor_lamp
+# - foundation/toggle/microwave
+# - foundation/slice/apple
+# - foundation/slice/potato
+# - foundation/sliced_v_whole/apple
+# - foundation/sliced_v_whole/potato
+# - foundation/on_v_off/desk_lamp
+# - foundation/on_v_off/faucet
+# - foundation/on_v_off/floor_lamp
+# - foundation/on_v_off/microwave
+# - level_2/permutation/... - not completed
+# - level_3/permutation/... - not completed
+# - level_4/permutation/... - not completed
+# - level_5/permutation/... - not completed
+# - level_6/permutation/... - not completed
+# - level_7/permutation/... - not completed
+# - level_8/permutation/... - not completed
+# - level_2/remix/... - not completed
+# - level_3/remix/... - not completed
+# - level_4/remix/... - not completed
+# - level_5/remix/... - not completed
+# - level_6/remix/... - not completed
+# - level_7/remix/... - not completed
+# - level_8/remix/... - not completed
+task_dir: /data/datasets/vlm_benchmark/tasks/real_life
+video_dir: /data/datasets/vlm_benchmark/videos/real_life
+cache_dir: /data/datasets/vlm_benchmark/.cache
+output_dir: /data/datasets/vlm_benchmark/experiments/evan
