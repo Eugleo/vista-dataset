@@ -308,7 +308,9 @@ def plot_alfred(
             "Action: Putting down v. Picking up": get_tasks("foundation/pick_v_put"),
             "Action: Slicing": get_tasks("foundation/slice"),
             "Action: Toggling On v. Off": get_tasks("foundation/toggle"),
-            "Extrapyramidal": get_tasks("extrapyramidal"),
+            "Object tracking": get_tasks("extrapyramidal/object_tracking"),
+            "Action: Opening v. Closing": get_tasks("extrapyramidal/opening_v_closing"),
+            "Object Recognition (Real)": get_tasks("extrapyramidal/recognize_small_object")
         } | level_groups
 
         group_task = progress.add_task("Creating group plots...", total=len(groups))

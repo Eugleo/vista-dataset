@@ -36,7 +36,8 @@ models:
 #   kind: encoder
 #   n_frames: 32
 tasks:
-# - extrapyramidal/object_tracking - not completed
+- extrapyramidal/object_tracking/object_identity
+- extrapyramidal/object_tracking/relative_position
 - extrapyramidal/object_tracking/scramble/scramble_2_avocado
 - extrapyramidal/object_tracking/scramble/scramble_3_avocado
 - extrapyramidal/object_tracking/scramble/scramble_4_avocado
