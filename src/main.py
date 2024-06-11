@@ -212,6 +212,7 @@ def plot_alfred(
         )
         selected_rescaling = (
             scores.join(tasks_of_interest, on="group")
+            .filter(c("score").is_not_nan())
             .filter(c("task").is_in("task_of_interest"))
             .with_columns(score=c("score").mean().over("model", "group"))
             .group_by("model", "group")
@@ -224,17 +225,53 @@ def plot_alfred(
                 c("rescaling") == c("best_rescaling"),
                 ~c("task").is_in("task_of_interest"),
             )
-            .with_columns(
-                model=pl.concat_str(c("model"), c("rescaling"), separator="_")
-            )
+            # .with_columns(
+            #     model=pl.concat_str(c("model"), c("rescaling"), separator="_")
+            # )
         )
+
+        # scores = scores.filter((c("model").str.starts_with("gpt"))).with_columns(
+        #     model=pl.when(c("model") == "gpt-4o_16_1")
+        #     .then(pl.lit("default (16f, 1-shot)"))
+        #     .when(c("model") == "gpt-4o_16_0")
+        #     .then(pl.lit("16f, 0-shot"))
+        #     .when(c("model") == "gpt-4o_5_1")
+        #     .then(pl.lit("5f, 1-shot"))
+        #     .otherwise("model")
+        # )
+
+        # scores = scores.filter((c("model").str.starts_with("clip"))).with_columns(
+        #     model=pl.when(c("model") == "clip-32_cosine")
+        #     .then(pl.lit("clip-32"))
+        #     .when(c("model") == "clip-4_cosine")
+        #     .then(pl.lit("clip-4"))
+        #     .otherwise("model")
+        # )
+
+        print(scores["model"].unique())
+
+        # scores = scores.filter(
+        #     ~(
+        #         c("model").is_in(
+        #             ["clip-4_cosine", "s3d_cosine", "gpt-4o_5_1", "gpt-4o_16_0"]
+        #         )
+        #     )
+        # ).with_columns(
+        #     model=pl.when(c("model") == "clip-32_cosine")
+        #     .then(pl.lit("clip"))
+        #     .when(c("model") == "viclip_cosine")
+        #     .then(pl.lit("viclip"))
+        #     .when(c("model") == "gpt-4o_16_1")
+        #     .then(pl.lit("gpt-4o"))
+        #     .otherwise("model")
+        # )
 
         num_nulls = len(scores.filter(c("score").is_null()))
         if num_nulls > 0:
             print(f"WARNING: {num_nulls} null scores found")
             scores = scores.filter(c("score").is_not_null())
 
-        task_labels = load_task_labels(task_dir, df.get_column("task").unique())
+        # task_labels = load_task_labels(task_dir, df.get_column("task").unique())
 
         predictions = utils.get_predictions(scores)
         predictions = utils.add_majority_baseline(predictions)
@@ -330,12 +367,13 @@ def plot_alfred(
         performance_by_level = pl.concat(
             [
                 metric_per_task_with_baseline.filter(c("task").is_in(tasks))
+                .filter(~c("model").str.contains("baseline"))
                 .group_by("model")
                 .agg(
                     score=c("metric").mean(),
                     error=c("metric").std() / (c("metric").len().sqrt() + 1e-6),
                 )
-                .with_columns(level=pl.lit(n), group=pl.lit(name))
+                .with_columns(level=pl.lit(f"Level {n}"), group=pl.lit(name))
                 for n in range(2, 9)
                 for name, tasks in [
                     ("Permutation", get_tasks(f"level_{n}/permutation")),
@@ -346,6 +384,160 @@ def plot_alfred(
         )
         fig = plots.levels_line_plot(performance_by_level)
         fig.write_image(plot_dir / "_levels_line_plot.png", scale=2)
+
+
+@app.command()
+def plot_alfred_clip(
+    experiment: Annotated[Optional[str], typer.Argument()] = None,
+    experiment_dir: Annotated[
+        str, typer.Option()
+    ] = "/data/datasets/vlm_benchmark/experiments",
+    task_dir: Annotated[str, typer.Option()] = "/data/datasets/vlm_benchmark/tasks",
+):
+    dir = utils.get_experiment_dir(experiment_dir, experiment)
+
+    with Progress(
+        SpinnerColumn(),
+        TextColumn("[progress.description]{task.description}"),
+    ) as progress:
+        progress.add_task("Creating plots...")
+        df = pl.concat(
+            [pl.read_json(file) for file in (dir / "results").glob("*.json")]
+        ).filter(
+            ~c("task").str.contains("permuted"), ~c("task").str.contains("substituted")
+        )
+
+        scores = utils.add_rescaling(df).with_columns(
+            group=pl.concat_str(
+                c("task").str.split("/").list.get(0),
+                c("task").str.split("/").list.get(1),
+                separator="/",
+            )
+        )
+        tasks_of_interest = (
+            scores.sort("task")
+            .group_by("group")
+            .agg(task_of_interest=c("task").take(pl.len() // 2 + 1))
+        )
+        selected_rescaling = (
+            scores.join(tasks_of_interest, on="group")
+            .filter(c("score").is_not_nan())
+            .filter(c("task").is_in("task_of_interest"))
+            .with_columns(score=c("score").mean().over("model", "group"))
+            .group_by("model", "group")
+            .agg(best_rescaling=c("rescaling").sort_by("score").last())
+        )
+        scores = (
+            scores.join(selected_rescaling, on=["model", "group"])
+            .join(tasks_of_interest, on="group")
+            .filter(
+                c("rescaling") == c("best_rescaling"),
+                ~c("task").is_in("task_of_interest"),
+            )
+            .with_columns(model=c("model").str.strip_suffix("_cosine"))
+            .with_columns(
+                model=pl.when(c("model") == "clip-32")
+                .then(pl.lit("clip"))
+                .otherwise("model")
+            )
+        )
+
+        num_nulls = len(scores.filter(c("score").is_null()))
+        if num_nulls > 0:
+            print(f"WARNING: {num_nulls} null scores found")
+            scores = scores.filter(c("score").is_not_null())
+
+        predictions = utils.get_predictions(scores)
+        predictions = utils.add_majority_baseline(predictions)
+
+        metric_per_task_with_baseline = (
+            predictions.group_by("task", "model")
+            .agg(metric=utils.compute_metric(utils.f1))
+            .sort("task", "model")
+        )
+        metric_per_task_with_baseline.write_csv(dir / "per_label_metrics.csv")
+
+        baseline_per_task = {
+            task: metric
+            for task, metric in metric_per_task_with_baseline.filter(
+                c("model") == "majority_baseline"
+            )
+            .select("task", "metric")
+            .iter_rows()
+        }
+        metric_per_task = metric_per_task_with_baseline.filter(
+            c("model") != "majority_baseline",
+            c("model") != "s3d",
+        )
+
+        problems = plots.incorrect_video_labels(predictions)
+        plot_dir = dir / "plots"
+
+        print(f"Creating plots in {plot_dir}...")
+        plot_dir.mkdir(exist_ok=True, parents=True)
+        problems.write_csv(plot_dir / "misclassification_num.csv")
+
+        def get_tasks(prefix):
+            return [t for t in df.get_column("task").unique() if t.startswith(prefix)]
+
+        import plotly.io as pio
+
+        pio.kaleido.scope.mathjax = None
+
+        groups = {
+            # "The whole Foundation Level": get_tasks("foundation"),
+            # "Object recognition": get_tasks("foundation/objects")
+            # + get_tasks("foundation/containers"),
+            # "Action understanding": get_tasks("foundation/pick_v_put")
+            # + get_tasks("foundation/slice")
+            # + get_tasks("foundation/toggle")
+            # + get_tasks("foundation/clean")
+            # + get_tasks("foundation/heat")
+            # + get_tasks("foundation/cool"),
+            # "Object state recognition": get_tasks("foundation/on_v_off")
+            # + get_tasks("foundation/sliced_v_whole"),
+            "Overview": get_tasks("foundation"),
+        }
+
+        group_task = progress.add_task("Creating group plots...", total=len(groups))
+        for name, tasks in groups.items():
+            progress.advance(group_task, 1)
+            filename = name.replace(": ", "_").replace(" ", "-")
+
+            if (
+                len(tasks) == 0
+                or len(metric_per_task.filter(pl.col("task").is_in(tasks))) == 0
+            ):
+                continue
+
+            plot = plots.overall_performance_clip(
+                metric_per_task=metric_per_task.filter(pl.col("task").is_in(tasks)),
+                y_label="Average Macro F1",
+                title=f"{name} (standardized)",
+                baseline_per_task={
+                    t: v for t, v in baseline_per_task.items() if t in tasks
+                },
+            )
+            plot.write_image(plot_dir / f"{filename}_f1.pdf", scale=2)
+
+        for problem in ["remix", "permutation"]:
+            performance_by_level = pl.concat(
+                [
+                    metric_per_task_with_baseline.filter(
+                        c("task").is_in(get_tasks(f"level_{n}/{problem}"))
+                    )
+                    .filter(~c("model").str.contains("baseline"))
+                    .group_by("model")
+                    .agg(
+                        score=c("metric").mean(),
+                        error=c("metric").std() / (c("metric").len().sqrt() + 1e-6),
+                    )
+                    .with_columns(level=pl.lit(f"Level {n}"), group=pl.lit(name))
+                    for n in range(2, 9)
+                ]
+            )
+            fig = plots.levels_line_plot(performance_by_level)
+            fig.write_image(plot_dir / f"_{problem}.pdf", scale=2)
 
 
 @app.command()
@@ -441,7 +633,7 @@ def plot(
             )
             plot_dir = dir / "plots"
             plot_dir.mkdir(exist_ok=True, parents=True)
-            
+
             plot.write_image(plot_dir / f"{filename}_mAP.png", scale=2)
 
             plot = plots.overall_performance(

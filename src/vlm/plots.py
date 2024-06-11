@@ -13,31 +13,44 @@ from sklearn.preprocessing import LabelBinarizer
 def levels_line_plot(data: pl.DataFrame):
     """Data should have columns: model, group, level, score"""
 
+    data = data.with_columns(
+        n_frames=pl.when(c("model") == "viclip")
+        .then(pl.lit("8"))
+        .when(c("model") == "gpt-4o")
+        .then(pl.lit("16"))
+        .when(c("model").str.starts_with("clip"))
+        .then(c("model").str.split("-").list.get(1))
+        .cast(pl.Int32),
+    ).sort("n_frames", "model", "level")
+
     fig = px.line(
-        data.sort("group", "model", "level").to_pandas(),
+        data,
         x="level",
         y="score",
         color="model",
-        facet_row="group",
-        title="Mean macro F1 by level",
         error_y="error",
-        # color_discrete_map={
-        #     "clip": "#22D3EE",
-        #     "gpt-4o": "#059669",
-        #     "viclip": "#A78BFA",
-        #     "clip-32": "#22D3EE",
-        #     "clip-4": "#2DD4BF",
-        # },
-        color_discrete_sequence=px.colors.qualitative.Bold,
+        color_discrete_map={
+            f"clip-{n}": px.colors.sequential.Teal[i + 2]
+            for i, n in enumerate([2, 4, 8, 16, 32])
+        }
+        | {
+            "clip": "#06B6D4",
+            "gpt-4o": "#16A34A",
+            "viclip": "#A78BFA",
+        },
+        symbol="model",
+        labels={"model": "Model"},
     )
-    fig.update_traces(line={"width": 5})
+    fig.update_traces(line={"width": 3}, marker=dict(size=12))
     fig.update_layout(
         # showlegend=False,
-        width=1000,
-        height=1200,
-        yaxis=dict(tickmode="linear", tick0=0, dtick=0.25),
+        width=500,
+        height=300,
+        xaxis_title=None,
+        yaxis=dict(tickmode="linear", tick0=0, dtick=0.25, title="Mean Macro F1"),
         # plot_bgcolor="#F5F5F5",
     )
+    fig.update_xaxes(tickangle=45)
     fig.update_yaxes(range=[0, 1])
     return fig
 
@@ -221,12 +234,8 @@ def overall_performance(
             "clip": "#22D3EE",
             "gpt-4o": "#059669",
             "viclip": "#A78BFA",
-            "clip-32": "#22D3EE",
-            "clip-4": "#2DD4BF",
-            "default (16f, 1-shot)": "#059669",
-            "16f, 0-shot": "#84CC16",
-            "5f, 1-shot": "#22C55E",
         },
+        color_discrete_sequence=px.colors.qualitative.Bold,
         title=title,
         labels={"metric": y_label},
         error_y="error" if ERROR_MODE == "std" else "error_high_minus_mean",
@@ -242,6 +251,129 @@ def overall_performance(
         coloraxis_showscale=False,
         width=220,
         height=330,
+    )
+    return fig
+
+
+def overall_performance_clip(
+    metric_per_task: pl.DataFrame, y_label: str, title: str, baseline_per_task: dict
+):
+    ERROR_MODE = "std"
+
+    metric_per_task = metric_per_task.with_columns(
+        group=pl.when(c("task").str.starts_with("foundation/objects"))
+        .then(pl.lit("Objects"))
+        .when(c("task").str.starts_with("foundation/containers"))
+        .then(pl.lit("Containers"))
+        .when(c("task").str.starts_with("foundation/pick_v_put"))
+        .then(pl.lit("Picking"))
+        .when(c("task").str.starts_with("foundation/slice/"))
+        .then(pl.lit("Slicing"))
+        .when(c("task").str.starts_with("foundation/toggle"))
+        .then(pl.lit("Toggling"))
+        .when(c("task").str.starts_with("foundation/clean"))
+        .then(pl.lit("Cleaning"))
+        .when(c("task").str.starts_with("foundation/heat"))
+        .then(pl.lit("Heating"))
+        .when(c("task").str.starts_with("foundation/cool"))
+        .then(pl.lit("Cooling"))
+        .when(c("task").str.starts_with("foundation/on_v_off"))
+        .then(pl.lit("On/Off?"))
+        .when(c("task").str.starts_with("foundation/sliced_v_whole"))
+        .then(pl.lit("Sliced?"))
+        .otherwise(pl.lit("Other"))
+    )
+
+    # metric_per_task = metric_per_task.with_columns(
+    #     group=pl.when(c("task").str.starts_with("foundation/objects"))
+    #     .then(pl.lit("Object"))
+    #     .when(c("task").str.starts_with("foundation/containers"))
+    #     .then(pl.lit("Object"))
+    #     .when(c("task").str.starts_with("foundation/pick_v_put"))
+    #     .then(pl.lit("Action"))
+    #     .when(c("task").str.starts_with("foundation/slice/"))
+    #     .then(pl.lit("Action"))
+    #     .when(c("task").str.starts_with("foundation/toggle"))
+    #     .then(pl.lit("Action"))
+    #     .when(c("task").str.starts_with("foundation/clean"))
+    #     .then(pl.lit("Action"))
+    #     .when(c("task").str.starts_with("foundation/heat"))
+    #     .then(pl.lit("Action"))
+    #     .when(c("task").str.starts_with("foundation/cool"))
+    #     .then(pl.lit("Action"))
+    #     .when(c("task").str.starts_with("foundation/on_v_off"))
+    #     .then(pl.lit("Object state"))
+    #     .when(c("task").str.starts_with("foundation/sliced_v_whole"))
+    #     .then(pl.lit("Object state"))
+    #     .otherwise(pl.lit("Object state"))
+    # )
+
+    if ERROR_MODE == "std":
+        avg_data = metric_per_task.group_by("model", "group").agg(
+            c("metric").mean(),
+            error=pl.col("metric").std() / pl.len().sqrt(),
+        )
+    elif ERROR_MODE == "bayesian":
+        avg_data = (
+            metric_per_task.group_by("model")
+            .agg(
+                pl.col("metric").mean(),
+                error_low=pl.col("metric").apply(
+                    lambda x: bayesian_confidence_low(x, confidence=0.682),
+                    return_dtype=pl.Float64,
+                ),
+                error_high_minus_mean=pl.col("metric").apply(
+                    lambda x: bayesian_confidence_high_minus_mean(x, confidence=0.682),
+                    return_dtype=pl.Float64,
+                ),
+            )
+            .with_columns(task=pl.lit("average"))
+            .sort("model")
+        )
+    else:
+        raise ValueError(f"Unknown error mode: {ERROR_MODE}")
+
+    avg_data = avg_data.with_columns(
+        n_frames=pl.when(c("model") == "viclip")
+        .then(pl.lit("8"))
+        .when(c("model") == "gpt-4o")
+        .then(pl.lit("16"))
+        .when(c("model").str.starts_with("clip"))
+        .then(c("model").str.split("-").list.get(1))
+        .cast(pl.Int32),
+    ).sort("n_frames", "model", "group")
+
+    fig = px.bar(
+        avg_data,
+        x="model",
+        y="metric",
+        color="model",
+        range_y=[0, 1],
+        range_color=[0, 1],
+        color_discrete_map={
+            f"clip-{n}": px.colors.sequential.Teal[i + 2]
+            for i, n in enumerate([2, 4, 8, 16, 32])
+        }
+        | {"clip": "#06B6D4", "gpt-4o": "#16A34A", "viclip": "#A78BFA"},
+        error_y="error" if ERROR_MODE == "std" else "error_high_minus_mean",
+        error_y_minus=None if ERROR_MODE == "std" else "error_low",
+        facet_col="group",
+    )
+    fig.for_each_annotation(lambda a: a.update(text=a.text.split("=")[-1]))
+    fig.update_xaxes(title_text=None)
+
+    # fig.add_hline(
+    #     y=pl.Series(baseline_per_task.values()).mean(),
+    #     line_dash="dot",
+    #     line_color="black",
+    # )
+    fig.update_layout(
+        showlegend=False,
+        coloraxis_showscale=False,
+        # width=250 + 60 * metric_per_task["group"].n_unique(),
+        width=200 + 60 * metric_per_task["group"].n_unique(),
+        height=300,
+        yaxis=dict(title=y_label),
     )
     return fig
 
