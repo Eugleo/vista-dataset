@@ -125,29 +125,6 @@ class EncoderModel(Model):
 
 
 class GPTModel(Model):
-    scoring_prompt_v2 = """
-
-# SECOND TASK
-
-Consider your sequence of frame descriptions. Which if the following descriptions best fits your sequence of descriptions the most? (format: `- (label) description`)
-
-{classes}
-
-# THIRD TASK
-
-Based on your findings in the previous sections, score the descriptions from 0 to 5, where 0 is "likely does not describe the video" and 5 is "most likely describes the video". Make sure to score each description individually.
-
-Write your answer in three sections, with their titles being verbatim: Frame Descriptions, Frame-based Description Analysis, Final Scores
-
-The final scores in the last section should be in the following format, verbatim:
-
-```
-- (label) your score
-```
-
-Be sure not to alter the label in any way, since we will use it to match your scores to the potential descriptions we've given you.
-"""
-
     def __init__(
         self,
         n_frames: int,
