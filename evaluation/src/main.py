@@ -485,18 +485,18 @@ def plot_alfred_clip(
         pio.kaleido.scope.mathjax = None
 
         groups = {
-            # "The whole Foundation Level": get_tasks("foundation"),
-            # "Object recognition": get_tasks("foundation/objects")
-            # + get_tasks("foundation/containers"),
-            # "Action understanding": get_tasks("foundation/pick_v_put")
-            # + get_tasks("foundation/slice")
-            # + get_tasks("foundation/toggle")
-            # + get_tasks("foundation/clean")
-            # + get_tasks("foundation/heat")
-            # + get_tasks("foundation/cool"),
-            # "Object state recognition": get_tasks("foundation/on_v_off")
-            # + get_tasks("foundation/sliced_v_whole"),
-            "Overview": get_tasks("foundation"),
+            "The whole Foundation Level": get_tasks("foundation"),
+            "Object recognition": get_tasks("foundation/objects")
+            + get_tasks("foundation/containers"),
+            "Action understanding": get_tasks("foundation/pick_v_put")
+            + get_tasks("foundation/slice")
+            + get_tasks("foundation/toggle")
+            + get_tasks("foundation/clean")
+            + get_tasks("foundation/heat")
+            + get_tasks("foundation/cool"),
+            "Object state recognition": get_tasks("foundation/on_v_off")
+            + get_tasks("foundation/sliced_v_whole"),
+            # "Overview": get_tasks("foundation"),
         }
 
         group_task = progress.add_task("Creating group plots...", total=len(groups))
