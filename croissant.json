@@ -60,7 +60,7 @@
     {
       "@type": "cr:FileObject",
       "@id": "video_archive",
-      "description": "A targz containing all the videos",
+      "description": "A zip file containing all the videos",
       "contentUrl": "TODO after uploading",
       "encodingFormat": "application/zip",
       "sha256": "TODO after uploading"
