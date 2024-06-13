@@ -8,7 +8,23 @@
 
 config_file=$1
 
+check_valid_paths=true
+if [ ! -z "$2" ]
+then
+    if [ "$2" == "--no-validate" ]
+    then
+        check_valid_paths=false
+    else
+        echo "Ignoring second argument: $2"
+    fi
+fi
+
 cd /data/evan_gunter/vlm-benchmark
 source venv/bin/activate
+
+if [ "$check_valid_paths" = true ]
+then
+    python /data/datasets/vlm_benchmark/tasks/real_life/validate_paths.py
+fi
 
 vlm evaluate $config_file

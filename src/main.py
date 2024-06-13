@@ -310,7 +310,7 @@ def plot_alfred(
             "Action: Heating": get_tasks("foundation/heat"),
             "Action: Cooling": get_tasks("foundation/cool"),
             "Action: Putting down v. Picking up": get_tasks("foundation/pick_v_put"),
-            "Action: Slicing": get_tasks("foundation/slice"),
+            "Action: Slicing": get_tasks("foundation/slice/"),
             "Action: Toggling On v. Off": get_tasks("foundation/toggle"),
         } | level_groups
 

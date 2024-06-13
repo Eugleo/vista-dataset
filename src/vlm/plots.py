@@ -189,7 +189,8 @@ def task_performance(
     ns_task_groups = [(tl, tg) for tl, tg in task_groups if len(tg) > 1]
 
     if len(ns_task_groups) > 1:
-        warn(f"Currently only supports a single summed group; skipping {ns_task_groups[1:]}")
+        warn(f"Currently only supports a single summed group; skipping")
+        ns_task_groups = []
 
     if ns_task_groups:
         task_labels, task_group = ns_task_groups[0]
