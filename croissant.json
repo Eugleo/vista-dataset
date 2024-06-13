@@ -61,9 +61,9 @@
       "@type": "cr:FileObject",
       "@id": "video_archive",
       "description": "A zip file containing all the videos",
-      "contentUrl": "TODO after uploading",
+      "contentUrl": "https://storage.googleapis.com/vipr/vlm_benchmark_videos.zip",
       "encodingFormat": "application/zip",
-      "sha256": "TODO after uploading"
+      "sha256": "0945a8d60926892d9be67d7a3dc0a07dbd43cdecc1ad5832fa8712c2b70fa580"
     },
     {
       "@type": "cr:FileSet",
