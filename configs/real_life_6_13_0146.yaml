@@ -1,0 +1,15 @@
+models:
+- async_batch: false
+  is_one_shot: true
+  kind: gpt
+  model: gpt-4o
+  n_frames: 16
+tasks:
+- level_4/remix/remix_level_4_group_1
+- level_8/remix/remix_level_8_group_3
+- extrapyramidal/object_tracking/object_identity
+- extrapyramidal/object_tracking/relative_position
+task_dir: /data/datasets/vlm_benchmark/tasks/real_life
+video_dir: /data/datasets/vlm_benchmark/real_life
+cache_dir: /data/datasets/vlm_benchmark/.cache
+output_dir: /data/datasets/vlm_benchmark/experiments/evan
