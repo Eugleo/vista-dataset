@@ -35,13 +35,17 @@ def combine_items(items: list[FinalItem]) -> FinalItem:
 
 
 def entry_to_item(path: Path, task: Task, entry: DataEntry) -> FinalItem:
-    label: list[Label] = {
-        "task": task.id,
-        "label": entry["label"],
-        "description": task.label_prompts[entry["label"]],
-    }
+    labels: list[Label] = [
+        {
+            "task": task.id,
+            "label": label_i,
+            "description": task.label_prompts[label_i],
+        } for label_i in entry["label"].split(",")
+        # Minecraft samples have labels separated by comma
+        # Other datasets should not be affected by this split(",")
+    ]
 
-    if "alfred" in path.parts:
+    if "alfred" or "minecraft" in path.parts:
         _, environment, level_str, group, *_ = path.parts
         n_steps = 1 if level_str == "foundation" else int(level_str[-1])
     else:
@@ -49,7 +53,7 @@ def entry_to_item(path: Path, task: Task, entry: DataEntry) -> FinalItem:
 
     return {
         "video": entry["path"],
-        "labels": [label],
+        "labels": labels,
         "environment": environment,
         "n_steps": n_steps,
         "group": group,
