@@ -11,15 +11,21 @@ tasks:
   - level_3/remix/mine_remix
 models:
   - kind: encoder
-    encoder: s3d
-    heads:
-      - kind: cosine
-    batch_size: 2
-  - kind: encoder
     encoder: viclip
     heads:
       - kind: cosine
     batch_size: 16
+  - kind: encoder
+    encoder: clip
+    heads:
+      - kind: cosine
+    hf_model: ViT-bigG-14/laion2b_s39b_b160k
+    n_frames: 8
+  - kind: gpt
+    model: gpt-4o
+    n_frames: 10
+    task_mode: multiclass
+    async_batch: False
 task_dir: tasks/minecraft
 video_dir: "."
 cache_dir: .cache
