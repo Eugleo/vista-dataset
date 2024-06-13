@@ -3,7 +3,7 @@ import hashlib
 import json
 import logging
 from pathlib import Path
-from typing import List
+from typing import List, Literal
 
 import cv2
 import einops
@@ -13,6 +13,17 @@ import polars as pl
 import sklearn.metrics as skm
 import torch as t
 from polars import col as c
+from scipy.stats import hypergeom
+
+
+def get_baseline_ap(num_documents: int, num_relevant: int) -> float:
+    ap = 0
+    for i in range(1, num_relevant + 1):
+        for n in range(i, num_documents - num_relevant + i + 1):
+            ap += hypergeom.pmf(i, num_documents, num_relevant, n) * (i / n) ** 2
+    ap = ap / num_relevant
+    assert isinstance(ap, float)
+    return ap
 
 
 def get_experiment_dir(experiment_dir, experiment_id):
@@ -50,7 +61,6 @@ def subsample(x: t.Tensor, n_frames: int) -> t.Tensor:
     assert (x[0] == x_subsampled[0]).all() and (x[-1] == x_subsampled[-1]).all()
     return x_subsampled
 
-
 def standardize(df: pl.DataFrame) -> pl.DataFrame:
     scores_stats = df.groupby(["model", "task", "label"]).agg(
         c("score").mean().alias("mean_score"), c("score").std().alias("std_score")
@@ -61,6 +71,54 @@ def standardize(df: pl.DataFrame) -> pl.DataFrame:
         .otherwise(c("score"))
     )
     return df
+
+
+def add_rescaling(scores: pl.DataFrame) -> pl.DataFrame:
+    lab = _rescale_in_label(scores)
+    vid_lab = _rescale_in_label(_rescale_in_video(scores))
+    return pl.concat(
+        [
+            scores.with_columns(rescaling=pl.lit("n")),
+            lab.with_columns(rescaling=pl.lit("l")),
+            vid_lab.with_columns(rescaling=pl.lit("v+l")),
+        ]
+    )
+
+
+def _rescale_in_video(scores: pl.DataFrame) -> pl.DataFrame:
+    return scores.with_columns(
+        (c("score").exp() / c("score").exp().sum())
+        .over("model", "task", "video")
+        .alias("score")
+    )
+
+
+def _rescale_in_label(scores: pl.DataFrame) -> pl.DataFrame:
+    scores_with_id = scores.with_row_count("row_id")
+
+    scores_stats = (
+        scores_with_id.join(
+            scores_with_id, on=["model", "task", "label"], suffix="_right"
+        )
+        .filter(c("row_id") != c("row_id_right"))
+        .groupby(["model", "task", "label", "row_id"], maintain_order=True)
+        .agg(
+            [
+                c("score_right").mean().alias("score_mean"),
+                c("score_right").std().alias("score_std"),
+            ]
+        )
+    )
+
+    scores_rescaled = (
+        scores_with_id.join(scores_stats, on=["model", "task", "label", "row_id"])
+        .with_columns(
+            ((c("score") - c("score_mean")) / (c("score_std") + 1e-6)).alias("score")
+        )
+        .drop("row_id", "score_mean", "score_std")
+    )
+
+    return scores_rescaled
 
 
 def get_predictions(df: pl.DataFrame) -> pl.DataFrame:
@@ -96,10 +154,32 @@ def add_random_baseline(scores: pl.DataFrame, name="ω random"):
     )
     return pl.concat([scores, random_model_scores])
 
+
+def add_majority_baseline(predictions: pl.DataFrame):
+    majority_label = predictions.group_by(["task"]).agg(
+        label=c("true_label").mode().sort().first()
+    )
+    majority_baseline = (
+        predictions.select("task", "video", "true_label")
+        .unique()
+        .join(majority_label, on=["task"])
+        .with_columns(model=pl.lit("majority_baseline"))
+    ).select(*predictions.columns)
+    return pl.concat([predictions, majority_baseline])
+
+
 def accuracy(group: pl.Series):
     return skm.accuracy_score(
         y_true=group.struct.field("true_label").to_numpy(),
         y_pred=group.struct.field("label").to_numpy(),
+    )
+
+
+def f1(group: pl.Series):
+    return skm.f1_score(
+        y_true=group.struct.field("true_label").to_numpy(),
+        y_pred=group.struct.field("label").to_numpy(),
+        average="macro",
     )
 
 

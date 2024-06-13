@@ -109,7 +109,6 @@ class EncoderModel(Model):
                 {
                     "task": task.id,
                     "model": self._encoder.id + "_" + head.id,
-                    "metadata": {"head": head.id, "encoder": self._encoder.metadata},
                     "video": video_path,
                     "label": label,
                     "label_idx": i,
@@ -133,13 +132,12 @@ class EncoderModel(Model):
 
     def predict(
         self, videos: list[Video], tasks: list[Task], _log_dir: Path
-    ) -> pl.DataFrame:
+    ) -> tuple[pl.DataFrame, dict]:
         device = t.device("cuda" if t.cuda.is_available() else "cpu")
         self._encoder.to(device)
 
-        subsample = partial(utils.subsample, n_frames=self._encoder.expected_n_frames)
-        transforms = [subsample, self._encoder.transform]
-        dataset = VideoDataset(videos, tasks, transforms)
+        transforms = [self._encoder.transform]
+        dataset = VideoDataset(videos, tasks, transforms, memory_efficient=True, n_frames=self._encoder.expected_n_frames)
         dataloader = DataLoader(dataset, batch_size=self._batch_size)
 
         results = []
@@ -149,8 +147,10 @@ class EncoderModel(Model):
             results.append(self._predict_batch(batch, tasks))
         result = pl.concat(results)
 
-        return result
+        # TODO This doesn't work if we have multiple heads
+        metadata = {"encoder": self._encoder.metadata}
 
+        return result, metadata
 
 
 MULTICLASS_PROMPT = """Then, given the original frames and your description, score the following potential video descriptions from 0 to 1 based on how well they describe the video you've seen. Feel free to use values between 0 and 1, too. There should be exactly one 'correct' description with score 1. The descriptions are given in the following format:
@@ -421,8 +421,7 @@ class GPTModel(Model):
         self, videos: list[Video], tasks: list[Task], log_dir: Path
     ) -> Optional[pl.DataFrame]:
         logging.info("Configuring dataset...")
-        subsample = partial(utils.subsample, n_frames=self._n_frames)
-        transforms = [subsample, utils.frames_to_b64]
+        transforms = [utils.frames_to_b64]
         dataset_iter = VideoDataset(videos, tasks, transforms, memory_efficient=True, n_frames=self._n_frames)
         # converting to a list forces all the videos to be converted up front, so that if any are invalid, an error will be thrown before any GPT-4 calls are made
         logging.info("Processing videos...")
@@ -503,4 +502,11 @@ class GPTModel(Model):
                             )
                 result = pl.concat(results)
 
-                return result
+                metadata = {
+                    "n_frames": self._n_frames,
+                    "task_mode": self._task_mode,
+                    "model": self._model,
+                    "async_batch": self._async_batch,
+                }
+
+                return result, metadata

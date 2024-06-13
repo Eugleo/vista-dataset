@@ -98,18 +98,20 @@ def download_batch(
                     print(f"WARNING: Request failed: {response}")
                     continue
                 path, task_id = response["custom_id"].split(",")
+                if path.startswith("./"):
+                    path = path[2:]
                 answer = response["response"]["body"]["choices"][0]["message"][
                     "content"
                 ]
 
-                if task_id not in task_true_labels:
-                    task = Task.from_file(task_id, Path(task_dir) / f"{task_id}.yaml")
-                    with open(Path(task_dir) / f"{task_id}_data.json") as f:
-                        true_labels = {
-                            str(Path(video_dir) / obj["path"]): obj["label"]
-                            for obj in json.load(f)
-                        }
-                        task_true_labels[task_id] = true_labels
+                # if task_id not in task_true_labels:
+                task = Task.from_file(task_id, Path(task_dir) / f"{task_id}.yaml")
+                with open(Path(task_dir) / f"{task_id}_data.json") as f:
+                    true_labels = {
+                        str(Path(video_dir) / obj["path"]): obj["label"]
+                        for obj in json.load(f)
+                    }
+                    task_true_labels[task_id] = true_labels
                 true_labels = task_true_labels[task_id]
 
                 label_scores = GPTModel.parse_and_cache_scores(
@@ -143,7 +145,7 @@ def download_batch(
 
         (dir / "logs" / model).mkdir(exist_ok=True, parents=True)
         with jsonlines.open(dir / "logs" / model / "responses.jsonl", "w") as f:
-            f.write_all(log)
+            f.write_all(logs)
 
         results = pl.DataFrame(results)
         result_dir = dir / "results"
@@ -167,6 +169,16 @@ def evaluate(config: Annotated[str, typer.Argument()]):
     experiment.run()
 
 
+def load_task_labels(task_dir, tasks):
+    task_labels = {}
+    for t in tasks:
+        try:
+            task_labels[t] = Task.from_file(t, Path(task_dir) / f"{t}.yaml").labels
+        except FileNotFoundError:
+            continue
+    return task_labels
+
+
 @app.command()
 def plot_alfred(
     experiment: Annotated[Optional[str], typer.Argument()] = None,
@@ -182,57 +194,84 @@ def plot_alfred(
         TextColumn("[progress.description]{task.description}"),
     ) as progress:
         progress.add_task("Creating plots...")
-        df = pl.concat(
-            [pl.read_json(file) for file in (dir / "results").glob("*.json")]
-        ).filter(
-            ~c("task").str.contains("permuted"), ~c("task").str.contains("substituted")
-        )
+        
+        df = pl.DataFrame()
+        for file in (dir / "results").glob("*.json"):
+            chunk = pl.read_json(file)
+            chunk = chunk.with_columns(pl.col("true_label_idx").cast(pl.Int64))
+            df = pl.concat([df, chunk])
 
-        scores = utils.standardize(df)
-        scores = utils.add_random_baseline(scores)
+        # df = pl.concat(
+        #     [pl.read_json(file) for file in (dir / "results").glob("*.json")]
+        # ).filter(
+        #     ~c("task").str.contains("permuted"), ~c("task").str.contains("substituted")
+        # )
+
+        scores = utils.add_rescaling(df).with_columns(
+            group=pl.concat_str(
+                c("task").str.split("/").list.get(0),
+                c("task").str.split("/").list.get(1),
+                separator="/",
+            )
+        )
+        # tasks_of_interest = (
+        #     scores.sort("task")
+        #     .group_by("group")
+        #     .agg(task_of_interest=c("task").take(pl.len() // 2 + 1))
+        # )
+        # tasks_of_interest = scores
+        # selected_rescaling = (
+        #     scores.join(tasks_of_interest, on="group")
+        #     .filter(c("task").is_in("task_of_interest"))
+        #     .with_columns(score=c("score").mean().over("model", "group"))
+        #     .group_by("model", "group")
+        #     .agg(best_rescaling=c("rescaling").sort_by("score").last())
+        # )
+        # scores = (
+        #     scores.join(selected_rescaling, on=["model", "group"])
+        #     .join(tasks_of_interest, on="group")
+        #     .filter(
+        #         c("rescaling") == c("best_rescaling"),
+        #         ~c("task").is_in("task_of_interest"),
+        #     )
+        #     .with_columns(
+        #         model=pl.concat_str(c("model"), c("rescaling"), separator="_")
+        #     )
+        # )
 
         num_nulls = len(scores.filter(c("score").is_null()))
         if num_nulls > 0:
             print(f"WARNING: {num_nulls} null scores found")
             scores = scores.filter(c("score").is_not_null())
 
-        task_labels = {}
-        per_label_baselines = []
-        for t in df.get_column("task").unique():
-            try:
-                task_labels[t] = Task.from_file(t, Path(task_dir) / f"{t}.yaml").labels
-            except FileNotFoundError:
-                continue
-            with open(Path(task_dir) / f"{t}_data.json") as f:
-                label_counts = Counter(v["label"] for v in json.load(f))
-            for l in task_labels[t]:
-                per_label_baselines.append(
-                    {
-                        "task": t,
-                        "model": "Ω random",
-                        "AP": label_counts[l] / sum(label_counts.values()),
-                    }
-                )
-        per_label_baselines = pl.DataFrame(per_label_baselines)
-
-        per_label_metrics = (
-            # This sort is very important
-            scores.sort("task", "model", "video", "label")
-            .group_by("task", "model", maintain_order=True)
-            .agg(
-                AP=pl.struct("task", "label", "score", "true_label").map(
-                    partial(plots.average_precision, task_labels)
-                )
-            )
-            .explode("AP")
-            .sort("task", "model")
-        )
-        per_label_metrics = pl.concat([per_label_metrics, per_label_baselines])
-        per_label_metrics.write_csv(dir / "per_label_metrics.csv")
+        task_labels = load_task_labels(task_dir, df.get_column("task").unique())
 
         predictions = utils.get_predictions(scores)
+        predictions = utils.add_majority_baseline(predictions)
+
+        metric_per_task_with_baseline = (
+            predictions.group_by("task", "model")
+            .agg(metric=utils.compute_metric(utils.f1))
+            .sort("task", "model")
+        )
+        metric_per_task_with_baseline.write_csv(dir / "per_label_metrics.csv")
+
+        baseline_per_task = {
+            task: metric
+            for task, metric in metric_per_task_with_baseline.filter(
+                c("model") == "majority_baseline"
+            )
+            .select("task", "metric")
+            .iter_rows()
+        }
+        metric_per_task = metric_per_task_with_baseline.filter(
+            c("model") != "majority_baseline"
+        )
+
         problems = plots.incorrect_video_labels(predictions)
         plot_dir = dir / "plots"
+
+        print(f"Creating plots in {plot_dir}...")
         plot_dir.mkdir(exist_ok=True, parents=True)
         problems.write_csv(plot_dir / "misclassification_num.csv")
 
@@ -248,60 +287,63 @@ def plot_alfred(
             | {f"Level {n}: overall": get_tasks(f"level_{n}") for n in range(2, 9)}
         )
 
-        # groups = {
-        #     "The whole Foundation Level": get_tasks("foundation"),
-        #     "Object Recognition": get_tasks("foundation/objects"),
-        #     "Container Recognition": get_tasks("foundation/containers"),
-        #     "State: On v. Off": get_tasks("foundation/on_v_off"),
-        #     "State: Sliced v. Whole": get_tasks("foundation/sliced_v_whole"),
-        #     "Action: Cleaning": get_tasks("foundation/clean"),
-        #     "Action: Heating": get_tasks("foundation/heat"),
-        #     "Action: Cooling": get_tasks("foundation/cool"),
-        #     "Action: Putting down v. Picking up": get_tasks("foundation/pick_v_put"),
-        #     "Action: Slicing": get_tasks("foundation/slice"),
-        #     "Action: Toggling On v. Off": get_tasks("foundation/toggle"),
-        # } | level_groups
+        groups = {
+            "The whole Foundation Level": get_tasks("foundation"),
+            "Object Recognition": get_tasks("foundation/objects"),
+            "Container Recognition": get_tasks("foundation/containers"),
+            "State: On v. Off": get_tasks("foundation/on_v_off"),
+            "State: Sliced v. Whole": get_tasks("foundation/sliced_v_whole"),
+            "Action: Cleaning": get_tasks("foundation/clean"),
+            "Action: Heating": get_tasks("foundation/heat"),
+            "Action: Cooling": get_tasks("foundation/cool"),
+            "Action: Putting down v. Picking up": get_tasks("foundation/pick_v_put"),
+            "Action: Slicing": get_tasks("foundation/slice"),
+            "Action: Toggling On v. Off": get_tasks("foundation/toggle"),
+        } | level_groups
 
-        # for name, tasks in groups.items():
-        #     filename = name.replace(": ", "_").replace(" ", "-")
-        #     plot = plots.map_plot(
-        #         per_label_metrics.filter(pl.col("task").is_in(tasks)),
-        #         f"{name} (standardized)",
-        #     )
-        #     plot_dir = dir / "plots"
-        #     plot_dir.mkdir(exist_ok=True, parents=True)
-        #     plot.write_image(plot_dir / f"{filename}_mAP.png", scale=2)
+        group_task = progress.add_task("Creating group plots...", total=len(groups))
+        for name, tasks in groups.items():
+            progress.advance(group_task, 1)
+            filename = name.replace(": ", "_").replace(" ", "-")
 
-        #     plot = plots.overall_performance(
-        #         per_label_metrics.filter(pl.col("task").is_in(tasks)),
-        #         metric="AP",
-        #         metric_label="Mean AP over all labels",
-        #         title=f"{name} (standardized)",
-        #     )
-        #     plot.write_image(plot_dir / f"{filename}_mAP.png", scale=2)
+            group_metrics = metric_per_task.filter(pl.col("task").is_in(tasks))
+            group_predictions = predictions.filter(pl.col("task").is_in(tasks))
 
-        #     details_dir = plot_dir / "details"
-        #     details_dir.mkdir(exist_ok=True, parents=True)
-        #     plot = plots.task_performance(
-        #         per_label_metrics.filter(pl.col("task").is_in(tasks))
-        #         .group_by("task", "model")
-        #         .agg(mAP=c("AP").mean()),
-        #         predictions.filter(pl.col("task").is_in(tasks)),
-        #         metric="mAP",
-        #         title=f"{name} (standardized)",
-        #         baselines=None,
-        #         labels=task_labels,
-        #         tasks=tasks,
-        #     )
-        #     plot.write_image(details_dir / f"{filename}_matrices.png", scale=2)
+            if (
+                len(tasks) == 0
+                or len(metric_per_task.filter(pl.col("task").is_in(tasks))) == 0
+            ):
+                continue
+
+            plot = plots.overall_performance(
+                metric_per_task=metric_per_task.filter(pl.col("task").is_in(tasks)),
+                y_label="Average Macro F1",
+                title=f"{name} (standardized)",
+                baseline_per_task={
+                    t: v for t, v in baseline_per_task.items() if t in tasks
+                },
+            )
+            plot.write_image(plot_dir / f"{filename}_f1.pdf", scale=2)
+
+            # details_dir = plot_dir / "details"
+            # details_dir.mkdir(exist_ok=True, parents=True)
+            # plot = plots.task_performance(
+            #     metric_per_task=group_metrics,
+            #     predictions=group_predictions,
+            #     title=f"{name} (standardized)",
+            #     baseline_per_task=baseline_per_task,
+            #     task_labels=task_labels,
+            #     tasks=tasks,
+            # )
+            # plot.write_image(details_dir / f"{filename}_matrices.png", scale=2)
 
         performance_by_level = pl.concat(
             [
-                per_label_metrics.filter(c("task").is_in(tasks))
+                metric_per_task_with_baseline.filter(c("task").is_in(tasks))
                 .group_by("model")
                 .agg(
-                    score=c("AP").mean(),
-                    error=c("AP").std() / (c("AP").len().sqrt() + 1e-6),
+                    score=c("metric").mean(),
+                    error=c("metric").std() / (c("metric").len().sqrt() + 1e-6),
                 )
                 .with_columns(level=pl.lit(n), group=pl.lit(name))
                 for n in range(2, 9)
@@ -313,7 +355,7 @@ def plot_alfred(
             ]
         )
         fig = plots.levels_line_plot(performance_by_level)
-        fig.write_image(plot_dir / "_levels_line_plot.png", scale=2)
+        fig.write_image(plot_dir / "_levels_line_plot.pdf", scale=2)
 
 
 @app.command()
@@ -331,12 +373,20 @@ def plot(
         TextColumn("[progress.description]{task.description}"),
     ) as progress:
         progress.add_task("Creating plots...")
-        df = pl.concat(
-            [pl.read_json(file) for file in (dir / "results").glob("*.json")]
-        )
 
-        scores = utils.standardize(df)
-        scores = utils.add_random_baseline(scores)
+        df = pl.DataFrame()
+        for file in (dir / "results").glob("*.json"):
+            chunk = pl.read_json(file)
+            chunk = chunk.with_columns(pl.col("true_label_idx").cast(pl.Int64))
+            df = pl.concat([df, chunk])
+
+        # df = pl.concat(
+        #     [pl.read_json(file) for file in (dir / "results").glob("*.json")]
+        # )
+
+        # scores = utils.rescale(df, in_each="label")
+        # scores = utils.rescale(df, in_each="video")
+        scores = utils.add_random_baseline(df)
 
         num_nulls = len(scores.filter(c("score").is_null()))
         if num_nulls > 0:
@@ -353,14 +403,24 @@ def plot(
             with open(Path(task_dir) / f"{t}_data.json") as f:
                 label_counts = Counter(v["label"] for v in json.load(f))
             for l in task_labels[t]:
-                per_label_baselines.append(
+                per_label_baselines += [
                     {
                         "task": t,
                         "model": "Ω random",
                         "AP": label_counts[l] / sum(label_counts.values()),
-                    }
-                )
+                    },
+                    {
+                        "task": t,
+                        "model": "ξ random",
+                        "AP": utils.get_baseline_ap(
+                            sum(label_counts.values()), label_counts[l]
+                        ),
+                    },
+                ]
         per_label_baselines = pl.DataFrame(per_label_baselines)
+
+        print("Per label baselines:\n", per_label_baselines)
+        print("Scores:\n", scores)
 
         per_label_metrics = (
             # This sort is very important
@@ -389,7 +449,11 @@ def plot(
             if (Path(task_dir) / f"{t}.yaml").exists()
         }
 
+        group_task = progress.add_task("Creating group plots...", total=len(groups))
         for name, tasks in groups.items():
+            progress.advance(group_task, 1)
+            # TODO: plot_alfred uses the commented-out line below; I'm not sure why "/" is replaced with "_" here
+            # filename = name.replace(": ", "_").replace(" ", "-")
             filename = name.replace(": ", "_").replace(" ", "-").replace("/", "_")
             plot = plots.map_plot(
                 per_label_metrics.filter(pl.col("task").is_in(tasks)),
@@ -397,12 +461,13 @@ def plot(
             )
             plot_dir = dir / "plots"
             plot_dir.mkdir(exist_ok=True, parents=True)
+            
             plot.write_image(plot_dir / f"{filename}_mAP.png", scale=2)
 
             plot = plots.overall_performance(
                 per_label_metrics.filter(pl.col("task").is_in(tasks)),
-                metric="AP",
-                metric_label="Mean AP over all labels",
+                metric_per_task="AP",
+                y_label="Mean AP over all labels",
                 title=f"{name} (standardized)",
             )
             plot.write_image(plot_dir / f"{filename}_mAP.png", scale=2)
@@ -410,14 +475,20 @@ def plot(
             details_dir = plot_dir / "details"
             details_dir.mkdir(exist_ok=True, parents=True)
             plot = plots.task_performance(
-                per_label_metrics.filter(pl.col("task").is_in(tasks))
+                metric_per_task=per_label_metrics.filter(pl.col("task").is_in(tasks))
                 .group_by("task", "model")
-                .agg(mAP=c("AP").mean()),
-                predictions.filter(pl.col("task").is_in(tasks)),
+                .agg(mAP=c("AP").mean())
+                .filter(~pl.col("model").str.contains("random")),
+                predictions_per_task=predictions.filter(
+                    pl.col("task").is_in(tasks)
+                ).filter(~pl.col("model").str.contains("random")),
+                scores=scores.filter(pl.col("task").is_in(tasks)).filter(
+                    ~pl.col("model").str.contains("random")
+                ),
                 metric="mAP",
                 title=f"{name} (standardized)",
-                baselines=None,
-                labels=task_labels,
+                baseline_per_task=None,
+                task_labels=task_labels,
                 tasks=tasks,
             )
             plot.write_image(details_dir / f"{filename}_matrices.png", scale=2)
@@ -506,9 +577,9 @@ def plot_minecraft(
                 model = model[0]
                 title = f"{model}_{column}_Minecraft_{'with' if standardize else 'no'}_standardization"
                 plot = plots.errors_minecraft(
-                    counts.filter(pl.col("model") == model),
+                    counts.filter(pl.col("model") == model).filter(pl.col(column) != ""),
                     column,
-                    title.replace("_", " ")
+                    f"Minecraft, {model}, {column} count".replace("_", " ")
                 )
                 plot.write_image(plot_dir / f"{title}.png", scale=2)
 
@@ -523,28 +594,41 @@ def plot_minecraft(
             top_labels = label_column.take(score_column.arg_sort(descending=True)).head(k).to_list()
             top_labels = set(top_labels)
             true_labels = set(true_labels)
-            computed_recall = len(top_labels & true_labels) / k
+            computed_recall = len(top_labels & true_labels)
             return computed_recall
+        
+        def compute_sample_weight(args):
+            true_label_column, score_column, label_column = args
+            # all elements in true_label_column are the same, so we just take the first one
+            true_labels = true_label_column[0].split(",")
+            return len(true_labels)
 
-        recalls_per_video = scores\
+        metric_per_video = scores\
             .groupby("task", "model", "video")\
             .agg(
                 pl.apply(
                     exprs=["true_label", "score", "label"],
                     function=compute_recall
-                ).alias("recall")
+                ).alias("hits"),
+                pl.apply(
+                    exprs=["true_label", "score", "label"],
+                    function=compute_sample_weight
+                ).alias("sample_weight")
             )
-        print(recalls_per_video)
+        print(metric_per_video)
 
-        recalls = recalls_per_video.group_by("task", "model")\
-            .agg(recall=pl.col("recall").mean(), error=pl.col("recall").std() / pl.col("recall").len().sqrt())\
-            .sort("task", "model", descending=[False, False])
-        print(recalls)
+        metric = metric_per_video.group_by("task", "model")\
+            .agg(
+                accuracy=pl.col("hits").sum() / pl.col("sample_weight").sum(), 
+                error=pl.col("hits").std() / pl.col("sample_weight").sum().sqrt()
+            ).sort("task", "model", descending=[False, False])
+        print(metric)
 
         plot = plots.overall_performance_minecraft(
-            recalls,
-            "recall",
-            "Recall",
-            f"Minecraft multilabel activity recognition ({'with' if standardize else 'no'} standardization)"
+            metric,
+            "accuracy",
+            "Accuracy",
+            #f"Minecraft fundamental action recognition ({'with' if standardize else 'no'} standardization)"
+            f"Minecraft, recognition of fundamental actions"
         )
-        plot.write_image(plot_dir / f"Minecraft_recall.png", scale=2)
+        plot.write_image(plot_dir / f"Minecraft_accuracy.pdf", scale=2)

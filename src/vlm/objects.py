@@ -78,10 +78,10 @@ class Experiment:
         for get_model in self.models:
             model = get_model()
             print(f"Running model {model.id}")
-            result = model.predict(self.videos, self.tasks, log_dir)
-            if result is None:
+            result_and_metadata = model.predict(self.videos, self.tasks, log_dir)
+            if result_and_metadata is None:
                 continue
-            result = result.drop("metadata")
+            result, metadata = result_and_metadata
             result.write_json(output_dir / f"{model.id}_{uuid.uuid4()}.json")
             results.append(result)
         result = pl.concat(results)
