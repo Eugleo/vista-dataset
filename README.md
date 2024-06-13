@@ -9,3 +9,5 @@ For more information, see the documentation:
 - `documentation.pdf` contains description of the dataset, the data collection protocols, and details about evaluation
 - `datasheet.pdf` contains documentation in the datasheet for datasets format
 - `croissant.json` contains the croissant spec for the dataset
+
+The videos are not directly sampled from ALFRED but rather created by editing (oftentimes multiple) ALFRED videos. The whole data creation protocol is detailed in the documentation.pdf document.
