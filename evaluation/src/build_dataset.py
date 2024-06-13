@@ -45,9 +45,14 @@ def entry_to_item(path: Path, task: Task, entry: DataEntry) -> FinalItem:
         # Other datasets should not be affected by this split(",")
     ]
 
-    if "alfred" or "minecraft" in path.parts:
+    if "alfred" in path.parts or "minecraft" in path.parts:
         _, environment, level_str, group, *_ = path.parts
         n_steps = 1 if level_str == "foundation" else int(level_str[-1])
+    elif "real_life" in path.parts:
+        _, _, _, _, _, environment, level_str, group, *_ = path.parts
+        if "habitat" in entry["path"]:
+            environment = "habitat"
+        n_steps = 1 if (level_str == "foundation" or level_str == "extrapyramidal") else int(level_str[-1])
     else:
         raise ValueError("Fill in your logic in entry_to_item")
 
