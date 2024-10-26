@@ -114,7 +114,7 @@ class EncoderModel(Model):
         results = []
         # for batch in track(dataloader):
         # force the dataloader to load all the videos up front, so that if any are invalid, an error will be thrown before any predictions are made
-        for batch in track(list(dataloader)):
+        for batch in track(dataloader):
             results.append(self._predict_batch(batch, tasks))
         result = pl.concat(results)
 
@@ -429,7 +429,7 @@ class GPTModel(Model):
         dataset_iter = VideoDataset(videos, tasks, transforms)
         # converting to a list forces all the videos to be converted up front, so that if any are invalid, an error will be thrown before any GPT-4 calls are made
         logging.info("Processing videos...")
-        dataset = list(dataset_iter)
+        dataset = dataset_iter
         logging.info("Predicting...")
 
         log_dir = (

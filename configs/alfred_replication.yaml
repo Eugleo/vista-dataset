@@ -1,4 +1,4 @@
-cache_dir: .cache
+cache_dir: /data/datasets/vlm_benchmark/.cache
 models:
 - async_batch: false
   is_one_shot: true
@@ -402,4 +402,4 @@ tasks:
 - level_8/remix/9dd21aff-3620-4475-86da-bd0b6adacb13
 - level_8/remix/01fdfebd-360d-476c-a4ca-768f48df2e6f
 - level_8/remix/fd492c69-dd94-4d93-bed4-00c9e401da87
-video_dir: videos/alfred
+video_dir: /data/datasets/vlm_benchmark/videos/alfred
