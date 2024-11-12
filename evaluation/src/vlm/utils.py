@@ -61,12 +61,12 @@ def subsample(x: t.Tensor, n_frames: int) -> t.Tensor:
 
 
 def add_rescaling(scores: pl.DataFrame) -> pl.DataFrame:
-    lab = _rescale_in_label(scores)
+    # lab = _rescale_in_label(scores)
     vid_lab = _rescale_in_label(_rescale_in_video(scores))
     return pl.concat(
         [
-            scores.with_columns(rescaling=pl.lit("n")),
-            lab.with_columns(rescaling=pl.lit("l")),
+            # scores.with_columns(rescaling=pl.lit("n")),
+            # lab.with_columns(rescaling=pl.lit("l")),
             vid_lab.with_columns(rescaling=pl.lit("v+l")),
         ]
     )
@@ -81,38 +81,29 @@ def _rescale_in_video(scores: pl.DataFrame) -> pl.DataFrame:
 
 
 def _rescale_in_label(scores: pl.DataFrame) -> pl.DataFrame:
-    scores_with_id = scores.with_row_count("row_id")
-
-    scores_stats = (
-        scores_with_id.join(
-            scores_with_id, on=["model", "task", "label"], suffix="_right"
-        )
-        .filter(c("row_id") != c("row_id_right"))
-        .groupby(["model", "task", "label", "row_id"], maintain_order=True)
-        .agg(
-            [
-                c("score_right").mean().alias("score_mean"),
-                c("score_right").std().alias("score_std"),
-            ]
-        )
+    # Calculate mean and std directly within groups, avoiding the expensive self-join
+    stats = scores.group_by(["model", "task", "label"]).agg(
+        [
+            c("score").mean().alias("score_mean"),
+            c("score").std().alias("score_std"),
+        ]
     )
 
-    scores_rescaled = (
-        scores_with_id.join(scores_stats, on=["model", "task", "label", "row_id"])
+    # Single join with the stats and compute z-score
+    return (
+        scores.join(stats, on=["model", "task", "label"])
         .with_columns(
             ((c("score") - c("score_mean")) / (c("score_std") + 1e-6)).alias("score")
         )
-        .drop("row_id", "score_mean", "score_std")
+        .drop("score_mean", "score_std")
     )
-
-    return scores_rescaled
 
 
 def get_predictions(df: pl.DataFrame) -> pl.DataFrame:
     return df.group_by(["video", "task", "model"]).agg(
         # Extract the label with the highest probability
-        pl.col("label").sort_by("score").last(),
-        pl.col("true_label").first(),
+        c("label").sort_by("score").last(),
+        c("true_label").first(),
     )
 
 
@@ -144,7 +135,7 @@ def add_random_baseline(scores: pl.DataFrame):
 
 def add_majority_baseline(predictions: pl.DataFrame):
     majority_label = predictions.group_by(["task"]).agg(
-        label=c("true_label").mode().sort().first()
+        label=c("true_label").mode().first()
     )
     majority_baseline = (
         predictions.select("task", "video", "true_label")

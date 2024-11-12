@@ -8,13 +8,17 @@ from typing import Annotated, Optional
 
 import dotenv
 import jsonlines
-import log_viewer
 import openai
+import plotly.express as px
 import polars as pl
 import typer
+from lets_plot import ggsize, labs, scale_color_manual, scale_fill_manual, ylim
 from polars import col as c
+from polars import first
 from rich.pretty import pprint
 from rich.progress import Progress, SpinnerColumn, TextColumn
+
+import log_viewer
 from vlm import plots, utils
 from vlm.config import ExperimentConfig
 from vlm.models import GPTModel
@@ -177,13 +181,109 @@ def load_task_labels(task_dir, tasks):
     return task_labels
 
 
+def _grouped_levels_plot(df, get_tasks):
+    performance_by_level = pl.concat(
+        [
+            df.filter(c("task").is_in(get_tasks(f"level_{n}/{group}")))
+            .with_columns(
+                model=pl.when(c("model") == "viclip_cosine")
+                .then(pl.lit("ViCLIP"))
+                .when(c("model") == "clip-32_cosine")
+                .then(pl.lit("CLIP"))
+                .when(c("model") == "gpt-4o")
+                .then(pl.lit("GPT-4o"))
+                .when(c("model") == "majority_baseline")
+                .then(pl.lit("Baseline"))
+                .otherwise(c("model")),
+                group=pl.lit("General") if group == "remix" else pl.lit("Permutation"),
+            )
+            .filter(c("model").is_in(["ViCLIP", "CLIP", "GPT-4o", "Baseline"]))
+            .group_by("model", "group")
+            .agg(
+                score=c("metric").mean(),
+                error=c("metric").std() / (c("metric").len().sqrt() + 1e-6),
+            )
+            .with_columns(level=pl.lit(f"Level {n}"))
+            for n in range(2, 9)
+            for group in ["remix", "permutation"]
+        ]
+    )
+    fig = plots.grouped_levels_line_plot(performance_by_level)
+
+    return fig
+
+
+def _levels_plot(df, get_tasks, min_level=1):
+    performance_by_level = pl.concat(
+        [
+            df.filter(
+                c("task").is_in(
+                    get_tasks(f"level_{n}")
+                    if n > 1
+                    else (get_tasks("foundation") + get_tasks("extrapyramidal"))
+                )
+            )
+            .with_columns(
+                model=pl.when(c("model") == "viclip_cosine")
+                .then(pl.lit("ViCLIP"))
+                .when(c("model") == "clip-32_cosine")
+                .then(pl.lit("CLIP"))
+                .when(c("model") == "gpt-4o")
+                .then(pl.lit("GPT-4o"))
+                .when(c("model") == "majority_baseline")
+                .then(pl.lit("Baseline"))
+                .otherwise(c("model")),
+            )
+            .filter(c("model").is_in(["ViCLIP", "CLIP", "GPT-4o", "Baseline"]))
+            .group_by("model")
+            .agg(
+                score=c("metric").mean(),
+                error=c("metric").std() / (c("metric").len().sqrt() + 1e-6),
+            )
+            .with_columns(level=pl.lit(f"Level {n}"))
+            for n in range(min_level, 9)
+        ]
+    )
+    fig = plots.levels_line_plot(performance_by_level)
+
+    return fig
+
+
+def _problem_set_bar_plot(df, groups, ncol=4, color="model"):
+    performance_by_group = pl.concat(
+        [
+            df.filter(c("task").is_in(tasks))
+            .with_columns(
+                model=pl.when(c("model") == "viclip_cosine")
+                .then(pl.lit("ViCLIP"))
+                .when(c("model") == "clip-32_cosine")
+                .then(pl.lit("CLIP"))
+                .when(c("model") == "gpt-4o")
+                .then(pl.lit("GPT-4o"))
+                .when(c("model") == "majority_baseline")
+                .then(pl.lit("Baseline"))
+                .otherwise(c("model")),
+            )
+            .filter(c("model").is_in(["ViCLIP", "CLIP", "GPT-4o"]))
+            .group_by("model", "environment")
+            .agg(
+                score=c("metric").mean(),
+                error=c("metric").std() / (c("metric").len().sqrt() + 1e-6),
+            )
+            .with_columns(group=pl.lit(name))
+            for name, tasks in groups.items()
+        ]
+    )
+    fig = plots.task_groups_bar_plot(performance_by_group, ncol=ncol, color=color)
+
+    return fig
+
+
 @app.command()
 def plot_alfred(
-    experiment: Annotated[Optional[str], typer.Argument()] = None,
-    experiment_dir: Annotated[
-        str, typer.Option()
-    ] = "/data/datasets/vlm_benchmark/experiments",
-    task_dir: Annotated[str, typer.Option()] = "/data/datasets/vlm_benchmark/tasks",
+    experiment: Annotated[Optional[str], typer.Argument()] = "Exp_reprint",
+    experiment_dir: Annotated[str, typer.Option()] = "experiments",
+    # task_dir: Annotated[str, typer.Option()] = "/data/datasets/vlm_benchmark/tasks",
 ):
     dir = utils.get_experiment_dir(experiment_dir, experiment)
 
@@ -193,197 +293,306 @@ def plot_alfred(
     ) as progress:
         progress.add_task("Creating plots...")
         df = pl.concat(
-            [pl.read_json(file) for file in (dir / "results").glob("*.json")]
-        ).filter(
-            ~c("task").str.contains("permuted"), ~c("task").str.contains("substituted")
+            [
+                pl.read_json(file).cast({"true_label_idx": pl.Int64})
+                for file in (dir / "results").glob("*.json")
+            ]
+        ).unique()
+        df = df.filter(
+            ~c("task").str.contains("permuted"),
+            ~c("task").str.contains("substituted"),
         )
 
-        scores = utils.add_rescaling(df).with_columns(
-            group=pl.concat_str(
-                c("task").str.split("/").list.get(0),
-                c("task").str.split("/").list.get(1),
-                separator="/",
-            )
-        )
-        tasks_of_interest = (
-            scores.sort("task")
-            .group_by("group")
-            .agg(task_of_interest=c("task").take(pl.len() // 2 + 1))
-        )
-        selected_rescaling = (
-            scores.join(tasks_of_interest, on="group")
-            .filter(c("score").is_not_nan())
-            .filter(c("task").is_in("task_of_interest"))
-            .with_columns(score=c("score").mean().over("model", "group"))
-            .group_by("model", "group")
-            .agg(best_rescaling=c("rescaling").sort_by("score").last())
-        )
         scores = (
-            scores.join(selected_rescaling, on=["model", "group"])
-            .join(tasks_of_interest, on="group")
-            .filter(
-                c("rescaling") == c("best_rescaling"),
-                ~c("task").is_in("task_of_interest"),
+            utils.add_rescaling(df)
+            .filter(c("rescaling") == "v+l")
+            .with_columns(
+                group=pl.concat_str(
+                    c("task").str.split("/").list.get(0),
+                    c("task").str.split("/").list.get(1),
+                    separator="/",
+                )
             )
-            # .with_columns(
-            #     model=pl.concat_str(c("model"), c("rescaling"), separator="_")
-            # )
         )
-
-        # scores = scores.filter((c("model").str.starts_with("gpt"))).with_columns(
-        #     model=pl.when(c("model") == "gpt-4o_16_1")
-        #     .then(pl.lit("default (16f, 1-shot)"))
-        #     .when(c("model") == "gpt-4o_16_0")
-        #     .then(pl.lit("16f, 0-shot"))
-        #     .when(c("model") == "gpt-4o_5_1")
-        #     .then(pl.lit("5f, 1-shot"))
-        #     .otherwise("model")
-        # )
-
-        # scores = scores.filter((c("model").str.starts_with("clip"))).with_columns(
-        #     model=pl.when(c("model") == "clip-32_cosine")
-        #     .then(pl.lit("clip-32"))
-        #     .when(c("model") == "clip-4_cosine")
-        #     .then(pl.lit("clip-4"))
-        #     .otherwise("model")
-        # )
-
-        print(scores["model"].unique())
-
-        # scores = scores.filter(
-        #     ~(
-        #         c("model").is_in(
-        #             ["clip-4_cosine", "s3d_cosine", "gpt-4o_5_1", "gpt-4o_16_0"]
-        #         )
-        #     )
-        # ).with_columns(
-        #     model=pl.when(c("model") == "clip-32_cosine")
-        #     .then(pl.lit("clip"))
-        #     .when(c("model") == "viclip_cosine")
-        #     .then(pl.lit("viclip"))
-        #     .when(c("model") == "gpt-4o_16_1")
-        #     .then(pl.lit("gpt-4o"))
-        #     .otherwise("model")
-        # )
 
         num_nulls = len(scores.filter(c("score").is_null()))
         if num_nulls > 0:
             print(f"WARNING: {num_nulls} null scores found")
             scores = scores.filter(c("score").is_not_null())
 
-        # task_labels = load_task_labels(task_dir, df.get_column("task").unique())
-
         predictions = utils.get_predictions(scores)
         predictions = utils.add_majority_baseline(predictions)
 
         metric_per_task_with_baseline = (
-            predictions.group_by("task", "model")
+            predictions.with_columns(
+                environment=pl.when(c("video").str.contains("alfred"))
+                .then(pl.lit("Virtual home"))
+                .when(c("video").str.contains("minecraft"))
+                .then(pl.lit("Minecraft"))
+                .when(c("video").str.contains("real_life"))
+                .then(pl.lit("Real world"))
+                .otherwise(pl.lit("Unknown"))
+            )
+            .group_by("task", "model", "environment")
             .agg(metric=utils.compute_metric(utils.f1))
-            .sort("task", "model")
+            .sort("task", "model", "environment")
         )
         metric_per_task_with_baseline.write_csv(dir / "per_label_metrics.csv")
-
-        baseline_per_task = {
-            task: metric
-            for task, metric in metric_per_task_with_baseline.filter(
-                c("model") == "majority_baseline"
-            )
-            .select("task", "metric")
-            .iter_rows()
-        }
-        metric_per_task = metric_per_task_with_baseline.filter(
-            c("model") != "majority_baseline"
-        )
-
-        problems = plots.incorrect_video_labels(predictions)
-        plot_dir = dir / "plots"
-
-        print(f"Creating plots in {plot_dir}...")
-        plot_dir.mkdir(exist_ok=True, parents=True)
-        problems.write_csv(plot_dir / "misclassification_num.csv")
 
         def get_tasks(prefix):
             return [t for t in df.get_column("task").unique() if t.startswith(prefix)]
 
-        level_groups = (
+        plot_dir = dir / "plots"
+        plot_dir.mkdir(exist_ok=True, parents=True)
+
+        fig = _problem_set_bar_plot(
+            metric_per_task_with_baseline,
             {
-                f"Level {n}: permutation": get_tasks(f"level_{n}/permutation")
-                for n in range(2, 9)
-            }
-            | {f"Level {n}: remix": get_tasks(f"level_{n}/remix") for n in range(2, 9)}
-            | {f"Level {n}: overall": get_tasks(f"level_{n}") for n in range(2, 9)}
-        )
+                "Objects": get_tasks("foundation/objects")
+                + get_tasks("foundation/containers"),
+                "Object properties": get_tasks("foundation/on_v_off")
+                + get_tasks("foundation/sliced_v_whole"),
+                "Actions": get_tasks("foundation/clean")
+                + get_tasks("foundation/heat")
+                + get_tasks("foundation/cool")
+                + get_tasks("foundation/pick_v_put")
+                + get_tasks("foundation/slice")
+                + get_tasks("foundation/toggle"),
+            },
+            ncol=3,
+            color="environment",
+        ) + labs(title="Performance in level 1 by group and env")
+        fig.to_pdf(str(plot_dir / "level_1_overall.pdf"))
 
-        groups = {
-            "The whole Foundation Level": get_tasks("foundation"),
-            "Object Recognition": get_tasks("foundation/objects"),
-            "Container Recognition": get_tasks("foundation/containers"),
-            "State: On v. Off": get_tasks("foundation/on_v_off"),
-            "State: Sliced v. Whole": get_tasks("foundation/sliced_v_whole"),
-            "Action: Cleaning": get_tasks("foundation/clean"),
-            "Action: Heating": get_tasks("foundation/heat"),
-            "Action: Cooling": get_tasks("foundation/cool"),
-            "Action: Putting down v. Picking up": get_tasks("foundation/pick_v_put"),
-            "Action: Slicing": get_tasks("foundation/slice"),
-            "Action: Toggling On v. Off": get_tasks("foundation/toggle"),
-        } | level_groups
-
-        group_task = progress.add_task("Creating group plots...", total=len(groups))
-        for name, tasks in groups.items():
-            progress.advance(group_task, 1)
-            filename = name.replace(": ", "_").replace(" ", "-")
-
-            group_metrics = metric_per_task.filter(pl.col("task").is_in(tasks))
-            group_predictions = predictions.filter(pl.col("task").is_in(tasks))
-
-            if (
-                len(tasks) == 0
-                or len(metric_per_task.filter(pl.col("task").is_in(tasks))) == 0
-            ):
-                continue
-
-            plot = plots.overall_performance(
-                metric_per_task=metric_per_task.filter(pl.col("task").is_in(tasks)),
-                y_label="Average Macro F1",
-                title=f"{name} (standardized)",
-                baseline_per_task={
-                    t: v for t, v in baseline_per_task.items() if t in tasks
+        fig = (
+            _problem_set_bar_plot(
+                metric_per_task_with_baseline.filter(
+                    c("environment") == "Virtual home"
+                ),
+                {
+                    "Objects": get_tasks("foundation/objects"),
+                    "Containers": get_tasks("foundation/containers"),
+                    "On/off": get_tasks("foundation/on_v_off"),
+                    "Sliced/whole": get_tasks("foundation/sliced_v_whole"),
+                    "Cleaning": get_tasks("foundation/clean"),
+                    "Heating": get_tasks("foundation/heat"),
+                    "Cooling": get_tasks("foundation/cool"),
+                    "Pick/put": get_tasks("foundation/pick_v_put"),
+                    "Slicing": get_tasks("foundation/slice"),
+                    "Toggling": get_tasks("foundation/toggle"),
                 },
+                ncol=10,
             )
-            plot.write_image(plot_dir / f"{filename}_f1.png", scale=2)
+            + labs(title="Performance in level 1 by task group (virtual home)")
+            + ggsize(width=1000, height=300)
+        )
+        fig.to_pdf(str(plot_dir / "level_1_virtual_home_expanded.pdf"))
 
-            # details_dir = plot_dir / "details"
-            # details_dir.mkdir(exist_ok=True, parents=True)
-            # plot = plots.task_performance(
-            #     metric_per_task=group_metrics,
-            #     predictions=group_predictions,
-            #     title=f"{name} (standardized)",
-            #     baseline_per_task=baseline_per_task,
-            #     task_labels=task_labels,
-            #     tasks=tasks,
-            # )
-            # plot.write_image(details_dir / f"{filename}_matrices.png", scale=2)
+        fig = (
+            _problem_set_bar_plot(
+                metric_per_task_with_baseline.filter(c("environment") == "Real world"),
+                {
+                    "Mimic": get_tasks("foundation"),
+                    "Object interaction": get_tasks(
+                        "extrapyramidal/object_interaction"
+                    ),
+                    "Object tracking": get_tasks(
+                        "extrapyramidal/object_tracking/scramble"
+                    ),
+                    "Doors (kinetics)": get_tasks("extrapyramidal/opening_v_closing"),
+                },
+                ncol=6,
+            )
+            + labs(
+                title="Performance in level 1 by task group (real world)",
+            )
+            + ggsize(width=700, height=300)
+        )
+        fig.to_pdf(str(plot_dir / "level_1_real_world.pdf"))
+
+        fig = _grouped_levels_plot(metric_per_task_with_baseline, get_tasks) + labs(
+            title="Performance by level and problem group (all environments)",
+        )
+        fig.to_pdf(str(plot_dir / "levels_overall.pdf"))
+
+        fig = _levels_plot(
+            metric_per_task_with_baseline, get_tasks, min_level=1
+        ) + labs(
+            title="Performance by level (all environments)",
+        )
+        fig.to_pdf(str(plot_dir / "levels_overall_ungrouped.pdf"))
+
+        fig = (
+            _levels_plot(
+                metric_per_task_with_baseline.filter(c("environment") == "Minecraft"),
+                get_tasks,
+            )
+            + labs(title="Performance by level (Minecraft)")
+            + ylim(0, 1.2)
+        )
+        fig.to_pdf(str(plot_dir / "levels_minecraft_ungrouped.pdf"))
+
+        for env in ["Real world", "Virtual home"]:
+            fig = (
+                _grouped_levels_plot(
+                    metric_per_task_with_baseline.filter(c("environment") == env),
+                    get_tasks,
+                )
+                + labs(
+                    title=f"Performance by level and problem group ({env.lower()})",
+                )
+                + ylim(-0.1, 1.1)
+            )
+            fig.to_pdf(str(plot_dir / f"levels_{env.lower().replace(' ', '_')}.pdf"))
+
+        ## CLIPs below
 
         performance_by_level = pl.concat(
             [
-                metric_per_task_with_baseline.filter(c("task").is_in(tasks))
-                .filter(~c("model").str.contains("baseline"))
-                .group_by("model")
+                metric_per_task_with_baseline.filter(
+                    c("task").is_in(get_tasks(f"level_{n}/{group}"))
+                )
+                .with_columns(
+                    model=pl.when(c("model") == "clip-8_cosine")
+                    .then(pl.lit("CLIP (8)"))
+                    .when(c("model") == "clip-32_cosine")
+                    .then(pl.lit("CLIP (32)"))
+                    .when(c("model") == "clip-16_cosine")
+                    .then(pl.lit("CLIP (16)"))
+                    .when(c("model") == "clip-4_cosine")
+                    .then(pl.lit("CLIP (4)"))
+                    .when(c("model") == "clip-2_cosine")
+                    .then(pl.lit("CLIP (2)"))
+                    .when(c("model") == "viclip_cosine")
+                    .then(pl.lit("ViCLIP (8)"))
+                    .otherwise(c("model")),
+                    group=pl.lit("General")
+                    if group == "remix"
+                    else pl.lit("Permutation"),
+                )
+                .filter(
+                    c("model").is_in(
+                        [
+                            "CLIP (2)",
+                            "CLIP (4)",
+                            "CLIP (8)",
+                            "CLIP (16)",
+                            "CLIP (32)",
+                            "ViCLIP (8)",
+                        ]
+                    )
+                )
+                .group_by("model", "group")
                 .agg(
                     score=c("metric").mean(),
                     error=c("metric").std() / (c("metric").len().sqrt() + 1e-6),
                 )
-                .with_columns(level=pl.lit(f"Level {n}"), group=pl.lit(name))
+                .with_columns(level=pl.lit(f"Level {n}"))
                 for n in range(2, 9)
-                for name, tasks in [
-                    ("Permutation", get_tasks(f"level_{n}/permutation")),
-                    ("Remix", get_tasks(f"level_{n}/remix")),
-                    ("Overall", get_tasks(f"level_{n}")),
-                ]
+                for group in ["remix", "permutation"]
             ]
         )
-        fig = plots.levels_line_plot(performance_by_level)
-        fig.write_image(plot_dir / "_levels_line_plot.png", scale=2)
+        fig = plots.clip_levels_line_plot(performance_by_level) + labs(
+            title="Performance by level, problem group, and frame rate (virtual home)",
+        )
+        fig.to_pdf(str(plot_dir / "levels_virtual_home_expanded_clips.pdf"))
+
+        groups = {
+            "Objects": get_tasks("foundation/objects"),
+            "Containers": get_tasks("foundation/containers"),
+            "On/off": get_tasks("foundation/on_v_off"),
+            "Sliced/whole": get_tasks("foundation/sliced_v_whole"),
+            "Cleaning": get_tasks("foundation/clean"),
+            "Heating": get_tasks("foundation/heat"),
+            "Cooling": get_tasks("foundation/cool"),
+            "Pick/put": get_tasks("foundation/pick_v_put"),
+            "Slicing": get_tasks("foundation/slice"),
+            "Toggling": get_tasks("foundation/toggle"),
+        }
+
+        performance_by_group = pl.concat(
+            [
+                metric_per_task_with_baseline.filter(
+                    c("task").is_in(tasks), c("environment") == "Virtual home"
+                )
+                .with_columns(
+                    model=pl.when(c("model") == "clip-8_cosine")
+                    .then(pl.lit("CLIP (8)"))
+                    .when(c("model") == "clip-32_cosine")
+                    .then(pl.lit("CLIP (32)"))
+                    .when(c("model") == "clip-16_cosine")
+                    .then(pl.lit("CLIP (16)"))
+                    .when(c("model") == "clip-4_cosine")
+                    .then(pl.lit("CLIP (4)"))
+                    .when(c("model") == "clip-2_cosine")
+                    .then(pl.lit("CLIP (2)"))
+                    .when(c("model") == "viclip_cosine")
+                    .then(pl.lit("ViCLIP (8)"))
+                    .otherwise(c("model")),
+                )
+                .filter(
+                    c("model").is_in(
+                        [
+                            "CLIP (2)",
+                            "CLIP (4)",
+                            "CLIP (8)",
+                            "CLIP (16)",
+                            "CLIP (32)",
+                            "ViCLIP (8)",
+                        ]
+                    )
+                )
+                .cast(
+                    {
+                        "model": pl.Enum(
+                            [
+                                "CLIP (2)",
+                                "CLIP (4)",
+                                "CLIP (8)",
+                                "CLIP (16)",
+                                "CLIP (32)",
+                                "ViCLIP (8)",
+                            ]
+                        )
+                    }
+                )
+                .group_by("model", "environment")
+                .agg(
+                    score=c("metric").mean(),
+                    error=c("metric").std() / (c("metric").len().sqrt() + 1e-6),
+                )
+                .with_columns(group=pl.lit(name))
+                for name, tasks in groups.items()
+            ]
+        )
+        fig = (
+            plots.task_groups_bar_plot(performance_by_group, ncol=5, color="model")
+            + labs(
+                title="Performance in level 1 by problem group, and frame rate (virtual home)"
+            )
+            + ggsize(width=1000, height=600)
+            + scale_color_manual(
+                {
+                    "CLIP (2)": px.colors.sequential.Teal[2],
+                    "CLIP (4)": px.colors.sequential.Teal[3],
+                    "CLIP (8)": px.colors.sequential.Teal[4],
+                    "CLIP (16)": px.colors.sequential.Teal[5],
+                    "CLIP (32)": px.colors.sequential.Teal[6],
+                    "ViCLIP (8)": "#994EA4",
+                }
+            )
+            + scale_fill_manual(
+                {
+                    "CLIP (2)": px.colors.sequential.Teal[2],
+                    "CLIP (4)": px.colors.sequential.Teal[3],
+                    "CLIP (8)": px.colors.sequential.Teal[4],
+                    "CLIP (16)": px.colors.sequential.Teal[5],
+                    "CLIP (32)": px.colors.sequential.Teal[6],
+                    "ViCLIP (8)": "#994EA4",
+                }
+            )
+        )
+        fig.to_pdf(str(plot_dir / "level_1_virtual_home_expanded_clips.pdf"))
 
 
 @app.command()
@@ -403,7 +612,12 @@ def plot_alfred_clip(
         progress.add_task("Creating plots...")
         df = pl.concat(
             [pl.read_json(file) for file in (dir / "results").glob("*.json")]
-        ).filter(
+        )
+        df.write_csv(dir / "unified_results.csv")
+
+        return
+
+        df = df.filter(
             ~c("task").str.contains("permuted"), ~c("task").str.contains("substituted")
         )
 
@@ -540,127 +754,5 @@ def plot_alfred_clip(
             fig.write_image(plot_dir / f"_{problem}.pdf", scale=2)
 
 
-@app.command()
-def plot(
-    experiment: Annotated[Optional[str], typer.Argument()] = None,
-    experiment_dir: Annotated[
-        str, typer.Option()
-    ] = "/data/datasets/vlm_benchmark/experiments",
-    task_dir: Annotated[str, typer.Option()] = "/data/datasets/vlm_benchmark/tasks",
-):
-    dir = utils.get_experiment_dir(experiment_dir, experiment)
-
-    with Progress(
-        SpinnerColumn(),
-        TextColumn("[progress.description]{task.description}"),
-    ) as progress:
-        progress.add_task("Creating plots...")
-        df = pl.concat(
-            [pl.read_json(file) for file in (dir / "results").glob("*.json")]
-        )
-
-        # scores = utils.rescale(df, in_each="label")
-        scores = utils.rescale(df, in_each="video")
-        scores = utils.add_random_baseline(scores)
-
-        num_nulls = len(scores.filter(c("score").is_null()))
-        if num_nulls > 0:
-            print(f"WARNING: {num_nulls} null scores found")
-            scores = scores.filter(c("score").is_not_null())
-
-        task_labels = {}
-        per_label_baselines = []
-        for t in df.get_column("task").unique():
-            try:
-                task_labels[t] = Task.from_file(t, Path(task_dir) / f"{t}.yaml").labels
-            except FileNotFoundError:
-                continue
-            with open(Path(task_dir) / f"{t}_data.json") as f:
-                label_counts = Counter(v["label"] for v in json.load(f))
-            for l in task_labels[t]:
-                per_label_baselines += [
-                    {
-                        "task": t,
-                        "model": "Ω random",
-                        "AP": label_counts[l] / sum(label_counts.values()),
-                    },
-                    {
-                        "task": t,
-                        "model": "ξ random",
-                        "AP": utils.get_baseline_ap(
-                            sum(label_counts.values()), label_counts[l]
-                        ),
-                    },
-                ]
-        per_label_baselines = pl.DataFrame(per_label_baselines)
-
-        per_label_metrics = (
-            # This sort is very important
-            scores.sort("task", "model", "video", "label")
-            .group_by("task", "model")
-            .agg(
-                AP=pl.struct("task", "label", "score", "true_label").map(
-                    partial(plots.average_precision, task_labels)
-                )
-            )
-            .explode("AP")
-            .sort("task", "model")
-        )
-        per_label_metrics = pl.concat([per_label_metrics, per_label_baselines])
-        per_label_metrics.write_csv(dir / "per_label_metrics.csv")
-
-        predictions = utils.get_predictions(scores)
-        problems = plots.incorrect_video_labels(predictions)
-        plot_dir = dir / "plots"
-        plot_dir.mkdir(exist_ok=True, parents=True)
-        problems.write_csv(plot_dir / "misclassification_num.csv")
-
-        groups = {
-            f"Task: {t}": [t]
-            for t in df.get_column("task").unique()
-            if (Path(task_dir) / f"{t}.yaml").exists()
-        }
-
-        group_task = progress.add_task("Creating group plots...", total=len(groups))
-        for name, tasks in groups.items():
-            progress.advance(group_task, 1)
-            # TODO: plot_alfred uses the commented-out line below; I'm not sure why "/" is replaced with "_" here
-            # filename = name.replace(": ", "_").replace(" ", "-")
-            filename = name.replace(": ", "_").replace(" ", "-").replace("/", "_")
-            plot = plots.map_plot(
-                per_label_metrics.filter(pl.col("task").is_in(tasks)),
-                f"{name} (standardized)",
-            )
-            plot_dir = dir / "plots"
-            plot_dir.mkdir(exist_ok=True, parents=True)
-
-            plot.write_image(plot_dir / f"{filename}_mAP.png", scale=2)
-
-            plot = plots.overall_performance(
-                per_label_metrics.filter(pl.col("task").is_in(tasks)),
-                metric="AP",
-                y_label="Mean AP over all labels",
-                title=f"{name} (standardized)",
-            )
-            plot.write_image(plot_dir / f"{filename}_mAP.png", scale=2)
-
-            details_dir = plot_dir / "details"
-            details_dir.mkdir(exist_ok=True, parents=True)
-            plot = plots.task_performance(
-                metric_per_task=per_label_metrics.filter(pl.col("task").is_in(tasks))
-                .group_by("task", "model")
-                .agg(mAP=c("AP").mean())
-                .filter(~pl.col("model").str.contains("random")),
-                predictions_per_task=predictions.filter(
-                    pl.col("task").is_in(tasks)
-                ).filter(~pl.col("model").str.contains("random")),
-                scores=scores.filter(pl.col("task").is_in(tasks)).filter(
-                    ~pl.col("model").str.contains("random")
-                ),
-                metric="mAP",
-                title=f"{name} (standardized)",
-                baseline_per_task=None,
-                task_labels=task_labels,
-                tasks=tasks,
-            )
-            plot.write_image(details_dir / f"{filename}_matrices.png", scale=2)
+if __name__ == "__main__":
+    typer.run(plot_alfred)

@@ -4,55 +4,219 @@ import numpy as np
 import plotly.express as px
 import polars as pl
 import sklearn.metrics as skm
-from plotly.subplots import make_subplots
+from lets_plot import *
+from lets_plot.plot.core import PlotSpec
 from polars import col as c
 from scipy.stats import beta
 from sklearn.preprocessing import LabelBinarizer
 
 
-def levels_line_plot(data: pl.DataFrame):
-    """Data should have columns: model, group, level, score"""
+def levels_line_plot(data: pl.DataFrame) -> PlotSpec:
+    """Data should have columns: model, level, score"""
 
+    data = (
+        data.with_columns(
+            ci_high=c("score") + 1.96 * c("error"),
+            ci_low=c("score") - 1.96 * c("error"),
+        )
+        .sort("model", "level")
+        .with_columns(level=c("level").str.replace("Level ", ""))
+    )
+
+    chart = (
+        ggplot(
+            data,
+            aes(x="level", y="score", color="model", linetype="model"),
+        )
+        + geom_line(size=1.5)
+        + geom_ribbon(
+            aes(ymin="ci_low", ymax="ci_high", fill="model"),
+            alpha=0.2,
+            linetype=0,
+            show_legend=False,
+        )
+        + labs(
+            x="Level",
+            y="Mean Macro F1",
+            title="Performance by level",
+            color="Model",
+            linetype="Model",
+        )
+        + ylim(0, 1.1)
+        + theme(
+            axis_text=element_text(size=15),
+            axis_title=element_text(size=18),
+            text=element_text(size=18),
+            plot_title=element_text(size=20),
+            legend_title=element_text(size=18, margin=(0, 50, 0, 0)),
+            legend_position="bottom",
+        )
+        + ggsize(width=500, height=300)
+    )
+
+    assert isinstance(chart, PlotSpec)
+
+    return chart
+
+
+def grouped_levels_line_plot(data: pl.DataFrame) -> PlotSpec:
+    data = (
+        data.with_columns(
+            ci_high=c("score") + 1.96 * c("error"),
+            ci_low=c("score") - 1.96 * c("error"),
+        )
+        .sort("model", "level")
+        .with_columns(level=c("level").str.replace("Level ", ""))
+    )
+
+    chart = (
+        ggplot(
+            data,
+            aes(x="level", y="score", color="model", linetype="model"),
+        )
+        + geom_line(size=1.5)
+        + geom_ribbon(
+            aes(ymin="ci_low", ymax="ci_high", fill="model"),
+            alpha=0.2,
+            linetype=0,
+            show_legend=False,
+        )
+        + labs(
+            x="Level",
+            y="Mean Macro F1",
+            title="Performance by level",
+            color="Model",
+            linetype="Model",
+        )
+        + facet_wrap("group", ncol=2)
+        + ylim(0, 1.1)
+        + theme(
+            axis_text=element_text(size=15),
+            axis_title=element_text(size=18),
+            text=element_text(size=18),
+            plot_title=element_text(size=20),
+            legend_title=element_text(size=18, margin=(0, 50, 0, 0)),
+        )
+        + ggsize(width=1000, height=250)
+    )
+
+    assert isinstance(chart, PlotSpec)
+
+    return chart
+
+
+def clip_levels_line_plot(data: pl.DataFrame) -> PlotSpec:
+    data = (
+        data.with_columns(
+            ci_high=c("score") + 1.96 * c("error"),
+            ci_low=c("score") - 1.96 * c("error"),
+        )
+        .sort("model", "level")
+        .with_columns(level=c("level").str.replace("Level ", ""))
+    )
+
+    chart = (
+        ggplot(
+            data,
+            aes(x="level", y="score", color="model", shape="model"),
+        )
+        + geom_line(size=1.5)
+        + geom_point(size=4)
+        + geom_errorbar(
+            aes(ymin="ci_low", ymax="ci_high"),
+            width=0,
+            size=1,
+        )
+        + labs(
+            x="Level",
+            y="Mean Macro F1",
+            title="Performance by level",
+            color="Model",
+            shape="Model",
+        )
+        + ylim(0, 1.1)
+        + theme(
+            axis_text=element_text(size=15),
+            axis_title=element_text(size=18),
+            text=element_text(size=18),
+            plot_title=element_text(size=20),
+            legend_title=element_text(size=18, margin=(0, 50, 0, 0)),
+        )
+        + ggsize(width=1000, height=250)
+        + facet_wrap("group", ncol=2)
+        + scale_color_manual(
+            {
+                "CLIP (2)": px.colors.sequential.Teal[2],
+                "CLIP (4)": px.colors.sequential.Teal[3],
+                "CLIP (8)": px.colors.sequential.Teal[4],
+                "CLIP (16)": px.colors.sequential.Teal[5],
+                "CLIP (32)": px.colors.sequential.Teal[6],
+                "ViCLIP (8)": "#994EA4",
+            }
+        )
+    )
+
+    assert isinstance(chart, PlotSpec)
+
+    return chart
+
+
+def task_groups_bar_plot(
+    data: pl.DataFrame, ncol: int = 3, color: str = "environment"
+) -> PlotSpec:
     data = data.with_columns(
-        n_frames=pl.when(c("model") == "viclip")
-        .then(pl.lit("8"))
-        .when(c("model") == "gpt-4o")
-        .then(pl.lit("16"))
-        .when(c("model").str.starts_with("clip"))
-        .then(c("model").str.split("-").list.get(1))
-        .cast(pl.Int32),
-    ).sort("n_frames", "model", "level")
+        ci_high=c("score") + 1.96 * c("error"),
+        ci_low=c("score") - 1.96 * c("error"),
+    ).sort("model", "group")
 
-    fig = px.line(
-        data,
-        x="level",
-        y="score",
-        color="model",
-        error_y="error",
-        color_discrete_map={
-            f"clip-{n}": px.colors.sequential.Teal[i + 2]
-            for i, n in enumerate([2, 4, 8, 16, 32])
-        }
-        | {
-            "clip": "#06B6D4",
-            "gpt-4o": "#16A34A",
-            "viclip": "#A78BFA",
-        },
-        symbol="model",
-        labels={"model": "Model"},
+    chart = (
+        ggplot(
+            data,
+            aes(
+                x="model",
+                y="score",
+                fill=color,
+                color=color,
+                group=color,
+                # linetype="environment",
+            ),
+        )
+        + geom_bar(
+            stat="identity",
+            position=position_dodge(width=0.8),
+            width=0.8,
+            alpha=0.5,
+            show_legend=False,
+        )
+        + geom_errorbar(
+            aes(ymin="ci_low", ymax="ci_high"),
+            width=0.8,
+            size=1.5,
+            position=position_dodge(width=0.8),
+        )
+        + facet_wrap("group", ncol=ncol)
+        + labs(
+            group="Task Group",
+            y="Mean Macro F1",
+            title="Performance in level 1 by group and env",
+            linetype=color.capitalize(),
+            color=color.capitalize(),
+        )
+        + theme(
+            axis_title_x=element_blank(),
+            axis_text=element_text(size=15),
+            axis_title=element_text(size=18),
+            text=element_text(size=18),
+            plot_title=element_text(size=20),
+            legend_title=element_text(size=18, margin=(0, 50, 0, 0)),
+            legend_position="bottom",
+        )
+        + ggsize(width=500, height=300)
     )
-    fig.update_traces(line={"width": 3}, marker=dict(size=12))
-    fig.update_layout(
-        # showlegend=False,
-        width=500,
-        height=300,
-        xaxis_title=None,
-        yaxis=dict(tickmode="linear", tick0=0, dtick=0.25, title="Mean Macro F1"),
-        # plot_bgcolor="#F5F5F5",
-    )
-    fig.update_xaxes(tickangle=45)
-    fig.update_yaxes(range=[0, 1])
-    return fig
+
+    assert isinstance(chart, PlotSpec)
+
+    return chart
 
 
 def average_precision(task_labels: dict, group):
@@ -203,23 +367,23 @@ def overall_performance(
             .with_columns(task=pl.lit("average"))
             .sort("model")
         )
-    elif ERROR_MODE == "bayesian":
-        avg_data = (
-            metric_per_task.group_by("model")
-            .agg(
-                pl.col("metric").mean(),
-                error_low=pl.col("metric").apply(
-                    lambda x: bayesian_confidence_low(x, confidence=0.682),
-                    return_dtype=pl.Float64,
-                ),
-                error_high_minus_mean=pl.col("metric").apply(
-                    lambda x: bayesian_confidence_high_minus_mean(x, confidence=0.682),
-                    return_dtype=pl.Float64,
-                ),
-            )
-            .with_columns(task=pl.lit("average"))
-            .sort("model")
-        )
+    # elif ERROR_MODE == "bayesian":
+    #     avg_data = (
+    #         metric_per_task.group_by("model")
+    #         .agg(
+    #             pl.col("metric").mean(),
+    #             error_low=pl.col("metric").apply(
+    #                 lambda x: bayesian_confidence_low(x, confidence=0.682),
+    #                 return_dtype=pl.Float64,
+    #             ),
+    #             error_high_minus_mean=pl.col("metric").apply(
+    #                 lambda x: bayesian_confidence_high_minus_mean(x, confidence=0.682),
+    #                 return_dtype=pl.Float64,
+    #             ),
+    #         )
+    #         .with_columns(task=pl.lit("average"))
+    #         .sort("model")
+    #     )
     else:
         raise ValueError(f"Unknown error mode: {ERROR_MODE}")
 
@@ -381,7 +545,7 @@ def overall_performance_clip(
 def incorrect_video_labels(predictions: pl.DataFrame):
     incorrect_count = (
         predictions.filter(c("label") != c("true_label"))
-        .groupby("video", "task")
+        .group_by("video", "task")
         .agg(c("model").n_unique().alias("count"))
     )
 
