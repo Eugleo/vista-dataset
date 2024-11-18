@@ -24,6 +24,7 @@ dependencies = [
     "plotly>=5.24.1",
     "cairosvg>=2.7.1",
     "polars>=1.12.0",
+    "datasets>=3.1.0",
 ]
 name = "vlm-benchmark"
 version = "0.0.1"
@@ -40,9 +41,14 @@ reportUnknownVariableType = false
 reportUnknownArgumentType = false
 reportUnknownMemberType = false
 
+[tool.pdm.dev-dependencies]
+dev = ["ipykernel>=6.29.5"]
 [build-system]
 requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
+
+[dependency-groups]
+dev = ["huggingface-hub>=0.26.2"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
