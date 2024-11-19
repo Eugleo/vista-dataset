@@ -1,0 +1,46 @@
+example_gpt: '
+
+Example:
+
+
+  (note that this example is for five frames for illustration purposes, but you should
+  work with as many frames as you are given)
+
+
+  Input: [5 frames]
+
+
+  Frame-by-frame description:
+
+  1. We are near the countertop. We see a faucet in front of us.
+
+  2. The faucet doesn''t seem to be turned on. There is no water coming from it.
+
+  3. Nothing has changed; the faucet is still off.
+
+  4. Again, similar frame, the faucet is still off, as we would expect.
+
+  5. For the entire length of the video, the faucet has been off.
+
+  '
+label_prompts:
+  state_on: The faucet is turned on
+  state_off: The faucet is turned off
+metadata:
+  concepts:
+    high_level_actions:
+    - ToggleObject
+    - GotoLocation
+    low_level_actions:
+    - LookDown
+    - LookUp
+    - ToggleObjectOn
+    - RotateLeft
+    - RotateRight
+    - MoveAhead
+prompt_gpt: "The frames will depict us standing in front of or walking towards a faucet. Your
+  eventual goal will be to say whether the faucet has been on or off in the video.
+  The on/off state of the object won't change during the video. You shouldn't lock-in
+  to one answer too early. Instead, for each frame, concisely describe the
+  scene, the state of the faucet, and what actions have likely been performed
+  since the last frame."

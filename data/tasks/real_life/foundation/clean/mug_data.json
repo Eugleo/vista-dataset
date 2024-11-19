@@ -1,0 +1,67 @@
+[
+    {
+        "path": "foundation/clean/mug/positive/mug_wash_lh_c-c.mp4",
+        "label": "positive"
+    },
+    {
+        "path": "foundation/clean/mug/positive/mug_wash_lh_c-t.mp4",
+        "label": "positive"
+    },
+    {
+        "path": "foundation/clean/mug/positive/mug_wash_lh_t-c.mp4",
+        "label": "positive"
+    },
+    {
+        "path": "foundation/clean/mug/positive/mug_wash_lh_t-t.mp4",
+        "label": "positive"
+    },
+    {
+        "path": "foundation/clean/mug/positive/mug_wash_rh_c-c.mp4",
+        "label": "positive"
+    },
+    {
+        "path": "foundation/clean/mug/positive/mug_wash_rh_c-t.mp4",
+        "label": "positive"
+    },
+    {
+        "path": "foundation/clean/mug/positive/mug_wash_rh_t-c.mp4",
+        "label": "positive"
+    },
+    {
+        "path": "foundation/clean/mug/positive/mug_wash_rh_t-t.mp4",
+        "label": "positive"
+    },
+    {
+        "path": "foundation/clean/mug/negative/mug_no_wash_lh_c-c.mp4",
+        "label": "negative"
+    },
+    {
+        "path": "foundation/clean/mug/negative/mug_no_wash_lh_c-t.mp4",
+        "label": "negative"
+    },
+    {
+        "path": "foundation/clean/mug/negative/mug_no_wash_lh_t-c.mp4",
+        "label": "negative"
+    },
+    {
+        "path": "foundation/clean/mug/negative/mug_no_wash_lh_t-t.mp4",
+        "label": "negative"
+    },
+
+    {
+        "path": "foundation/clean/mug/negative/mug_no_wash_rh_c-c.mp4",
+        "label": "negative"
+    },
+    {
+        "path": "foundation/clean/mug/negative/mug_no_wash_rh_c-t.mp4",
+        "label": "negative"
+    },
+    {
+        "path": "foundation/clean/mug/negative/mug_no_wash_rh_t-c.mp4",
+        "label": "negative"
+    },
+    {
+        "path": "foundation/clean/mug/negative/mug_no_wash_rh_t-t.mp4",
+        "label": "negative"
+    }
+]

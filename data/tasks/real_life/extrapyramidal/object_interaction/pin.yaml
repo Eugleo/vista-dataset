@@ -1,0 +1,38 @@
+example_gpt: '
+
+Example:
+
+
+  (note that this example is for five frames for illustration purposes, but you should
+  work with as many frames as you are given)
+
+
+  Input: [5 frames]
+
+
+  Frame-by-frame description:
+
+  1. In this frame, we see a close-up of two pieces of black fabric next to each other over a wooden surface.
+
+  2. A long metal object has appeared over the right piece of fabric. It is very blurry and only partly visible, but is presumably a pin.
+
+  3. Very little is visible in this frame--the two pieces of fabric look crumpled and part of what might be a finger is visible at the top of the frame.
+
+  4. A thumbnail is taking up most of the right of the frame, with the fabric on the left. The pin is not visible.
+
+  5. A long metal object is now over the left piece of fabric. Since the pin came from the right, it is likely that the pin has been threaded
+  through the fabric. The pin is not visible entering the fabric on the right side, so most likely only the left side was pinned. However,
+  it may be that the right side was pinned but the point where the pin entered the fabric was not visible in the frame.
+'
+label_prompts:
+  pin: We pinned two pieces of fabric together
+  no_pin: We didn't pin two pieces of fabric together
+
+prompt_gpt: Your task is to describe what you see in each frame, separately, in a
+  list. The frames will depict us either pinning together two pieces of fabric,
+  or failing to pin together the fabric by instead pinning only one side or neither side.
+  Your eventual goal will be to determine whether we successfully pinned both pieces
+  of fabric together such that the fabric is pinned at the end of the video,
+  but you shouldn't lock-in to one answer too early. Instead, try to describe
+  the interactions of the pin, fabric, and fingers as accurately as possible separately
+  for each frame, refining your answer as you see more frames.

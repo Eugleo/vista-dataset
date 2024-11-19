@@ -1,0 +1,14 @@
+[
+    {
+        "path": "permutations/perm_l8_8_put_h_s_pick_ap_s_heat_ap_put_ap_c_pick_can_c_tog_dl_cool_can_tog_dl.mp4",
+        "label": "label_0"
+    },
+    {
+        "path": "permutations/perm_l8_8_tog_dl_put_h_s_pick_ap_s_heat_ap_tog_dl_put_ap_c_pick_can_c_cool_can.mp4",
+        "label": "label_1"
+    },
+    {
+        "path": "permutations/perm_l8_8_tog_dl_put_h_s_tog_dl_pick_ap_s_heat_ap_put_ap_c_pick_can_c_cool_can.mp4",
+        "label": "label_2"
+    }
+]

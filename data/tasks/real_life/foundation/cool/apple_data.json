@@ -1,0 +1,130 @@
+[
+    {
+        "path": "foundation/cool/apple/freeze/apple_freeze_lh_c-c.mp4",
+        "label": "freeze"
+    },
+    {
+        "path": "foundation/cool/apple/put_no_close/apple_freezer_no_close_lh_c-c.mp4",
+        "label": "put_no_close"
+    },
+    {
+        "path": "foundation/cool/apple/open_no_put/apple_no_freeze_lh_c-c.mp4",
+        "label": "open_no_put"
+    },
+    {
+        "path": "foundation/cool/apple/approach/apple_freezer_approach_lh_c-c.mp4",
+        "label": "approach"
+    },
+    {
+        "path": "foundation/cool/apple/freeze/apple_freeze_lh_c-t.mp4",
+        "label": "freeze"
+    },
+    {
+        "path": "foundation/cool/apple/put_no_close/apple_freezer_no_close_lh_c-t.mp4",
+        "label": "put_no_close"
+    },
+    {
+        "path": "foundation/cool/apple/open_no_put/apple_no_freeze_lh_c-t.mp4",
+        "label": "open_no_put"
+    },
+    {
+        "path": "foundation/cool/apple/approach/apple_freezer_approach_lh_c-t.mp4",
+        "label": "approach"
+    },
+    {
+        "path": "foundation/cool/apple/freeze/apple_freeze_lh_t-c.mp4",
+        "label": "freeze"
+    },
+    {
+        "path": "foundation/cool/apple/put_no_close/apple_freezer_no_close_lh_t-c.mp4",
+        "label": "put_no_close"
+    },
+    {
+        "path": "foundation/cool/apple/open_no_put/apple_no_freeze_lh_t-c.mp4",
+        "label": "open_no_put"
+    },
+    {
+        "path": "foundation/cool/apple/approach/apple_freezer_approach_lh_t-c.mp4",
+        "label": "approach"
+    },
+    {
+        "path": "foundation/cool/apple/freeze/apple_freeze_lh_t-t.mp4",
+        "label": "freeze"
+    },
+    {
+        "path": "foundation/cool/apple/put_no_close/apple_freezer_no_close_lh_t-t.mp4",
+        "label": "put_no_close"
+    },
+    {
+        "path": "foundation/cool/apple/open_no_put/apple_no_freeze_lh_t-t.mp4",
+        "label": "open_no_put"
+    },
+    {
+        "path": "foundation/cool/apple/approach/apple_freezer_approach_lh_t-t.mp4",
+        "label": "approach"
+    },
+    {
+        "path": "foundation/cool/apple/freeze/apple_freeze_rh_c-c.mp4",
+        "label": "freeze"
+    },
+    {
+        "path": "foundation/cool/apple/put_no_close/apple_freezer_no_close_rh_c-c.mp4",
+        "label": "put_no_close"
+    },
+    {
+        "path": "foundation/cool/apple/open_no_put/apple_no_freeze_rh_c-c.mp4",
+        "label": "open_no_put"
+    },
+    {
+        "path": "foundation/cool/apple/approach/apple_freezer_approach_rh_c-c.mp4",
+        "label": "approach"
+    },
+    {
+        "path": "foundation/cool/apple/freeze/apple_freeze_rh_c-t.mp4",
+        "label": "freeze"
+    },
+    {
+        "path": "foundation/cool/apple/put_no_close/apple_freezer_no_close_rh_c-t.mp4",
+        "label": "put_no_close"
+    },
+    {
+        "path": "foundation/cool/apple/open_no_put/apple_no_freeze_rh_c-t.mp4",
+        "label": "open_no_put"
+    },
+    {
+        "path": "foundation/cool/apple/approach/apple_freezer_approach_rh_c-t.mp4",
+        "label": "approach"
+    },
+    {
+        "path": "foundation/cool/apple/freeze/apple_freeze_rh_t-c.mp4",
+        "label": "freeze"
+    },
+    {
+        "path": "foundation/cool/apple/put_no_close/apple_freezer_no_close_rh_t-c.mp4",
+        "label": "put_no_close"
+    },
+    {
+        "path": "foundation/cool/apple/open_no_put/apple_no_freeze_rh_t-c.mp4",
+        "label": "open_no_put"
+    },
+    {
+        "path": "foundation/cool/apple/approach/apple_freezer_approach_rh_t-c.mp4",
+        "label": "approach"
+    },
+    {
+        "path": "foundation/cool/apple/freeze/apple_freeze_rh_t-t.mp4",
+        "label": "freeze"
+    },
+    {
+        "path": "foundation/cool/apple/put_no_close/apple_freezer_no_close_rh_t-t.mp4",
+        "label": "put_no_close"
+    },
+    {
+        "path": "foundation/cool/apple/open_no_put/apple_no_freeze_rh_t-t.mp4",
+        "label": "open_no_put"
+    },
+    {
+        "path": "foundation/cool/apple/approach/apple_freezer_approach_rh_t-t.mp4",
+        "label": "approach"
+    }
+]

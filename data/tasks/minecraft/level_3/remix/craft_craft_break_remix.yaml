@@ -1,0 +1,23 @@
+prompt_gpt: |
+  \# TASK
+  You will be given several frames from a Minecraft footage. The frames are given in chronological order.
+  First, describe each frame. Focus on what activities the player is performing in each frame and what the player interacts with. Be brief and to the point.
+  \# EXAMPLE OF FRAME DESCRIPTIONS
+  Input: [ten frames]
+
+  Assistant:
+  1. We see a flat grassy area with small houses and trees nearby. Player holds an oak fence block in their hands.
+  2. Same scene from a sligthly different angle.
+  3. Player breaks a tuft of grass using an oak fence block.
+  4. Player proceeds removing grass.
+  5. Player places a fence block next to a house.
+  6. Player places more fence blocks, building a straight fence line.
+  7. Player turns around and finds a pig.
+  8. Player places one more fence block in the line.
+  9. Player breaks another tuft of grass.
+  10. Player proceeds removing grass.
+label_prompts:
+  craft_craft_break: A video in Minecraft where player first crafts something using crafting interface, then again crafts something using crafting interface, and then breaks some blocks
+  craft_craft_mine: A video in Minecraft where player first crafts something using crafting interface, then again crafts something using crafting interface, and then mines some stone blocks with a pickaxe
+  craft_break_break: A video in Minecraft where player first crafts something using crafting interface, then breaks some blocks, and then again breaks some blocks
+  find_combat_pickup: A video in Minecraft where player first finds an animal, then attacks it, and then picks up the loot dropped from the animal

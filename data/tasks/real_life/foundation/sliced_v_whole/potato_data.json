@@ -1,0 +1,66 @@
+[
+    {
+        "path": "foundation/pick_object/potatoslice_lh_c_1.mp4",
+        "label": "slice"
+    },
+    {
+        "path": "foundation/pick_object/potatoslice_lh_c_2.mp4",
+        "label": "slice"
+    },
+    {
+        "path": "foundation/pick_object/potatoslice_rh_c_1.mp4",
+        "label": "slice"
+    },
+    {
+        "path": "foundation/pick_object/potatoslice_rh_c_2.mp4",
+        "label": "slice"
+    },
+    {
+        "path": "foundation/pick_object/potatoslice_lh_t_1.mp4",
+        "label": "slice"
+    },
+    {
+        "path": "foundation/pick_object/potatoslice_lh_t_2.mp4",
+        "label": "slice"
+    },
+    {
+        "path": "foundation/pick_object/potatoslice_rh_t_1.mp4",
+        "label": "slice"
+    },
+    {
+        "path": "foundation/pick_object/potatoslice_rh_t_2.mp4",
+        "label": "slice"
+    },
+    {
+        "path": "foundation/pick_object/potato_lh_c1.mp4",
+        "label": "whole"
+    },
+    {
+        "path": "foundation/pick_object/potato_lh_c2.mp4",
+        "label": "whole"
+    },
+    {
+        "path": "foundation/pick_object/potato_rh_c_1.mp4",
+        "label": "whole"
+    },
+    {
+        "path": "foundation/pick_object/potato_rh_c_2.mp4",
+        "label": "whole"
+    },
+    {
+        "path": "foundation/pick_object/potato_lh_t_1.mp4",
+        "label": "whole"
+    },
+    {
+        "path": "foundation/pick_object/potato_lh_t_2.mp4",
+        "label": "whole"
+    },
+    {
+        "path": "foundation/pick_object/potato_rh_t_1.mp4",
+        "label": "whole"
+    },
+    {
+        "path": "foundation/pick_object/potato_rh_t_2.mp4",
+        "label": "whole"
+    }
+]

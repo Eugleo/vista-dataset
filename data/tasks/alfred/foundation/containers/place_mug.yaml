@@ -1,0 +1,69 @@
+example_gpt: 'A few tips and hints to help you get started:
+
+  - ''Holding an object'' is depicted as the object being at the very bottom of the
+  screen and close to the camera, without any visible hands. Similarly, no hands are
+  shown for cleaning, heating, or any other action.
+
+  - The objects almost never lie on the floor. If the object is at the bottom of the
+  screen, close to the camera and looks like it is lying on the floor, we are most
+  likely just holding it.
+
+  - You are bound not to recognize some objects correctly, which might hurt your peformance
+  in downstream tasks. Instead of running with your first guess, try to list a few
+  alternatives for an object if you''re unsure what it is.
+
+
+  Example with the tips applied:
+
+
+  (note that this example is for five frames for illustration purposes, but you should
+  work with as many frames as you are given)
+
+
+  Input: [5 frames]
+
+
+  Frame-by-frame description:
+
+  1. We are in the middle of the room. We do not see any mug yet.
+
+  2. The location has changed. We see something that might be the mug. It seems to
+  be in a pot which itself is on a sofa.
+
+  2. The scene has not changed much since the last frame. We are still near the sofa.
+  The mug is in the bottom of the frame and close to the camera, suggesting we are
+  holding it now. Considering the descriptions above, it is likely that the mug was
+  picked up from a pot, or possibly from a sofa.
+
+  4. Not much has changed, we are still near the sofa, and we still hold the mug.
+
+  5. We are now a bit further away from the sofa. We are still holding the mug.'
+label_prompts:
+  label_0: We put the mug on the coffee machine
+  label_1: We put the mug on the dresser
+  label_2: We put the mug on the desk
+metadata:
+  concepts:
+    high_level_actions:
+    - PutObject
+    - GotoLocation
+    low_level_actions:
+    - LookDown
+    - PutObject
+    - LookUp
+    - RotateLeft
+    - RotateRight
+    - MoveAhead
+    objects:
+    - coffee machine
+    - dresser
+    - desk
+    - side table
+    - shelf
+    - mug
+prompt_gpt: Your task is to describe what you see in each frame, separately, in a
+  list. The frames will depict us putting down a mug somewhere. Your eventual goal
+  will be to recognize the place or container we put the object in (or on), but you
+  shouldn't lock-in to one answer too early. Instead, try to describe the place or
+  container as accurately as possible separately for each frame, refining your answer
+  as you see more frames.

@@ -1,0 +1,34 @@
+[
+    {
+        "path": "foundation/pick_v_put/fork_pick_lh_c1.mp4",
+        "label": "pick"
+    },
+    {
+        "path": "foundation/pick_v_put/fork_put_lh_c1.mp4",
+        "label": "put"
+    },
+    {
+        "path": "foundation/pick_v_put/fork_pick_lh_c2.mp4",
+        "label": "pick"
+    },
+    {
+        "path": "foundation/pick_v_put/fork_put_lh_c2.mp4",
+        "label": "put"
+    },
+    {
+        "path": "foundation/pick_v_put/fork_pick_rh_c1.mp4",
+        "label": "pick"
+    },
+    {
+        "path": "foundation/pick_v_put/fork_put_rh_c1.mp4",
+        "label": "put"
+    },
+    {
+        "path": "foundation/pick_v_put/fork_pick_rh_c2.mp4",
+        "label": "pick"
+    },
+    {
+        "path": "foundation/pick_v_put/fork_put_rh_c2.mp4",
+        "label": "put"
+    }
+]

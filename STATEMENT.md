@@ -1,1 +1,0 @@
-The authors bear all responsibility in case of violation of rights or licensing issues. We confirm that all the 3rd-party data we use is licensed as stated in the supplementary_documentation.pdf.

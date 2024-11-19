@@ -363,7 +363,7 @@ def plot_alfred(
             color="environment",
         ) + labs(title="Performance in level 1 by group and env")
         fig.to_pdf(str(plot_dir / "level_1_overall.pdf"))
-
+        fig.to_png(str(plot_dir / "level_1_overall.png"))
         fig = (
             _problem_set_bar_plot(
                 metric_per_task_with_baseline.filter(
@@ -414,6 +414,7 @@ def plot_alfred(
             title="Performance by level and problem group (all environments)",
         )
         fig.to_pdf(str(plot_dir / "levels_overall.pdf"))
+        fig.to_png(str(plot_dir / "levels_overall.png"))
 
         fig = _levels_plot(
             metric_per_task_with_baseline, get_tasks, min_level=1
@@ -421,6 +422,7 @@ def plot_alfred(
             title="Performance by level (all environments)",
         )
         fig.to_pdf(str(plot_dir / "levels_overall_ungrouped.pdf"))
+        fig.to_png(str(plot_dir / "levels_overall_ungrouped.png"))
 
         fig = (
             _levels_plot(

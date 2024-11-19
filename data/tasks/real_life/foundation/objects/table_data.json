@@ -1,0 +1,82 @@
+[
+    {
+        "path": "foundation/pick_object/apple_lh_t.mp4",
+        "label": "apple"
+    },
+    {
+        "path": "foundation/pick_object/apple_rh_t.mp4",
+        "label": "apple"
+    },
+    {
+        "path": "foundation/pick_object/appleslice_lh_t.mp4",
+        "label": "appleslice"
+    },
+    {
+        "path": "foundation/pick_object/appleslice_rh_t.mp4",
+        "label": "appleslice"
+    },
+    {
+        "path": "foundation/pick_object/book_lh_t1.mp4",
+        "label": "book"
+    },
+    {
+        "path": "foundation/pick_object/book_lh_t2.mp4",
+        "label": "book"
+    },
+    {
+        "path": "foundation/pick_object/book_rh_t1.mp4",
+        "label": "book"
+    },
+    {
+        "path": "foundation/pick_object/book_rh_t2.mp4",
+        "label": "book"
+    },
+    {
+        "path": "foundation/pick_object/pencil_lh_t1.mp4",
+        "label": "pencil"
+    },
+    {
+        "path": "foundation/pick_object/pencil_lh_t2.mp4",
+        "label": "pencil"
+    },
+    {
+        "path": "foundation/pick_object/pencil_rh_t1.mp4",
+        "label": "pencil"
+    },
+    {
+        "path": "foundation/pick_object/pencil_rh_t2.mp4",
+        "label": "pencil"
+    },
+    {
+        "path": "foundation/pick_object/potato_lh_t_1.mp4",
+        "label": "potato"
+    },
+    {
+        "path": "foundation/pick_object/potato_lh_t_2.mp4",
+        "label": "potato"
+    },
+    {
+        "path": "foundation/pick_object/potato_rh_t_1.mp4",
+        "label": "potato"
+    },
+    {
+        "path": "foundation/pick_object/potato_rh_t_2.mp4",
+        "label": "potato"
+    },
+    {
+        "path": "foundation/pick_object/potatoslice_lh_t_1.mp4",
+        "label": "potatoslice"
+    },
+    {
+        "path": "foundation/pick_object/potatoslice_lh_t_2.mp4",
+        "label": "potatoslice"
+    },
+    {
+        "path": "foundation/pick_object/potatoslice_rh_t_1.mp4",
+        "label": "potatoslice"
+    },
+    {
+        "path": "foundation/pick_object/potatoslice_rh_t_2.mp4",
+        "label": "potatoslice"
+    }
+]

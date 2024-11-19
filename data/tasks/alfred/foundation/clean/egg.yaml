@@ -1,0 +1,80 @@
+example_gpt: '
+
+  A few tips and hints to help you get started:
+
+  - ''Holding an object'' is depicted as the object being at the very bottom of the
+  screen and close to the camera, without any visible hands. Similarly, no hands are
+  shown for cleaning, heating, or any other action.
+
+  - The objects almost never lie on the floor. If the object is at the bottom of the
+  screen, close to the camera and looks like it is lying on the floor, we are most
+  likely just holding it.
+
+  - Proper cleaning involves putting an object in a sink, running water over it, and
+  then picking it back up
+
+
+  Example with the tips applied:
+
+
+  (note that this example is for five frames for illustration purposes, but you should
+  work with as many frames as you are given)
+
+
+  Input: [5 frames]
+
+
+  Frame-by-frame description:
+
+  1. We are near the countertop. There is a egg at the bottom of the screen, which
+  suggests we are holding it.
+
+  2. We are now near a sink. The egg is still at the bottom of the screen, so we are
+  definitely holding it.
+
+  3. The egg now lies in the sink, along with other objects. The water is not running
+  yet.
+
+  4. The egg is still in the sink. The water is still not running.
+
+  5. We are holding the egg again, as depicted by it being at the bottom of the screen
+  again. Although it was in the sink, we didn''t run water over it, which means we
+  did not clean it.
+
+  '
+label_prompts:
+  label_0: We clean the egg in the sink basin under running water
+  label_1: We go to the sink basin, holding egg in hand, we don't put it in the sink
+    basin
+  label_2: We put the egg in the sink basin and pick it back up without running water
+    over it
+metadata:
+  concepts:
+    high_level_actions:
+    - CleanObject
+    - GotoLocation
+    low_level_actions:
+    - LookDown
+    - PutObject
+    - LookUp
+    - ToggleObjectOn
+    - RotateLeft
+    - ToggleObjectOff
+    - PickupObject
+    - RotateRight
+    - MoveAhead
+    objects:
+    - dining table
+    - garbage can
+    - sink basin
+    - side table
+    - counter top
+    - fridge
+    - egg
+    - microwave
+prompt_gpt: The frames will depict us carrying a egg to a sink and then possibly cleaning
+  it under running water. Your eventual goal will be to discern whether all the steps
+  required for cleaning the object actually happened, but you shouldn't lock-in to
+  one answer too early. Instead, for each frame, concisely describe the scene, the
+  objects we're holding, and from that deduce what actions have likely been performed
+  since the last frame.

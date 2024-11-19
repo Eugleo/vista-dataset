@@ -1,0 +1,57 @@
+example_gpt: '
+
+  Example:
+
+
+  (note that this example is for five frames for illustration purposes, but you should
+  work with as many frames as you are given)
+
+
+  Input: [5 frames]
+
+
+  Frame-by-frame description:
+
+  1. We are near the countertop. We are holding $(A_OR_AN_OBJ) at the bottom of the screen.
+
+  2. We are now near a microwave. We are still holding the $(OBJ) at the bottom of the screen.
+
+  3. The $(OBJ) is in the microwave. The microwave is open and thus not running,
+  so we are not heating the $(OBJ) up yet.
+
+  4. The $(OBJ) is still in the microwave. The microwave is still open.
+
+  5. We are holding the $(OBJ) again. Although it was in the microwave, we didn''t close the
+  microwave and turn it on, which means we did not heat it.
+  '
+label_prompts:
+  microwave: We heat the $(OBJ) in the microwave
+  approach: We go to the microwave and then immediately leave without putting the $(OBJ)
+    in
+  open_no_put: We open the microwave and immediately close it again, without putting the
+    $(OBJ) in
+  put_no_close: We open the microwave, put the $(OBJ) in, then immediately pick it back
+    up without heating it
+  put_no_turn_on: We put the $(OBJ) in the microwave for a while, we do not turn the microwave
+    on, then we pick up the $(OBJ) back again
+metadata:
+  concepts:
+    high_level_actions:
+    - CoolObject
+    - GotoLocation
+    low_level_actions:
+    - LookDown
+    - PutObject
+    - LookUp
+    - RotateLeft
+    - OpenObject
+    - PickupObject
+    - RotateRight
+    - CloseObject
+    - MoveAhead
+prompt_gpt: Your task is to describe what you see in each frame, separately, in a
+  list. The frames will depict us carrying $(A_OR_AN_OBJ) to a microwave and then possibly
+  heating it there. Your eventual goal will be to discern whether all the steps required
+  for heating the object actually happened, but you shouldn't lock-in to one answer
+  too early. Instead, for each frame, concisely describe the scene, the objects we're
+  holding, and what actions have likely been performed since the last frame.

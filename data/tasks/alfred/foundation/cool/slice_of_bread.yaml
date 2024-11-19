@@ -1,0 +1,82 @@
+example_gpt: '
+
+  A few tips and hints to help you get started:
+
+  - ''Holding an object'' is depicted as the object being at the very bottom of the
+  screen and close to the camera, without any visible hands. Similarly, no hands are
+  shown for cleaning, heating, or any other action.
+
+  - The objects almost never lie on the floor. If the object is at the bottom of the
+  screen, close to the camera and looks like it is lying on the floor, we are most
+  likely just holding it.
+
+  - Cooling an object involves holding it, opening the fridge, putting it in a fridge,
+  closing the fridge, opening the fridge, and picking the object back up. Proper cooling
+  needs to have all these parts.
+
+
+  Example with the tips applied:
+
+
+  (note that this example is for five frames for illustration purposes, but you should
+  work with as many frames as you are given)
+
+
+  Input: [5 frames]
+
+
+  Frame-by-frame description:
+
+  1. We are near the countertop. There is slice of bread at the bottom of the screen,
+  which suggests we are holding it.
+
+  2. We are now near a fridge. The slice of bread is still at the bottom of the screen,
+  so we are definitely holding it.
+
+  3. The fridge is now open. We still hold the slice of bread.
+
+  4. The fridge is now closed. We still hold the slice of bread. This means we did
+  not put the object in the fridge.
+
+  5. We are holding the slice of bread, still. It seems we just opened and closed
+  the fridge without putting the slice of bread in, even for a moment. The cooling
+  did not happen.
+
+  '
+label_prompts:
+  label_0: We cool the slice of bread by putting it in the fridge for a while
+  label_1: We open the fridge, put in the slice of bread and immediately pick it back
+    up without leaving it to cool in a closed fridge
+  label_2: We open the fridge and then immediately close it without putting the slice
+    of bread in
+  label_3: We go to the fridge and then we leave, without even opening it
+metadata:
+  concepts:
+    high_level_actions:
+    - CoolObject
+    - GotoLocation
+    low_level_actions:
+    - LookDown
+    - PutObject
+    - LookUp
+    - RotateLeft
+    - OpenObject
+    - PickupObject
+    - RotateRight
+    - CloseObject
+    - MoveAhead
+    objects:
+    - slice of bread
+    - dining table
+    - garbage can
+    - side table
+    - counter top
+    - fridge
+    - microwave
+prompt_gpt: Your task is to describe what you see in each frame, separately, in a
+  list. The frames will depict us carrying a slice of bread to a fridge and then possibly
+  cooling it by leaving it in a closed fridge for a while before picking it up again.
+  Your eventual goal will be to discern whether all the steps required for cooling
+  the object actually happened, but you shouldn't lock-in to one answer too early.
+  Instead, for each frame, concisely describe the scene, the objects we're holding,
+  and what actions have likely been performed since the last frame.

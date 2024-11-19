@@ -1,0 +1,34 @@
+example_gpt: '
+
+Example:
+
+
+  (note that this example is for five frames for illustration purposes, but you should
+  work with as many frames as you are given)
+
+
+  Input: [5 frames]
+
+
+  Frame-by-frame description:
+
+  1.  The camera focuses on a fridge, which is closed. We see parts of other furniture in the frame.
+
+  2.  The fridge is still closed in this frame.
+
+  3.  The upper door is now slightly ajar.
+
+  4.  The fridge is now open even more.
+
+  5.  We now see fully inside the fridge. There''s nothing on the shelves inside.
+'
+label_prompts:
+  opening: A door opens
+  closing: A door closes
+
+prompt_gpt: Your task is to describe what you see in each frame, separately, in a
+  list. The frames will show footage of a door. This may be the door to a room, a
+  cabinet, an airplane, or anything else. Your task is to describe whether it is
+  opening or closing during the video, but you shouldn't lock-in to one answer too
+  early. Instead, try to describe the changes among the frames as accurately as
+  possible separately for each frame, refining your answer as you see more frames.

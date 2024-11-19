@@ -1,0 +1,85 @@
+example_gpt: '
+
+  A few tips and hints to help you get started:
+
+  - ''Holding an object'' is depicted as the object being at the very bottom of the
+  screen and close to the camera, without any visible hands. Similarly, no hands are
+  shown for cleaning, heating, or any other action.
+
+  - The objects almost never lie on the floor. If the object is at the bottom of the
+  screen, close to the camera and looks like it is lying on the floor, we are most
+  likely just holding it.
+
+  - Sometimes the microwave will be barely visible in the frame. Still, you should
+  be able to discern whether it is shining (and thus on) or not.
+
+
+  Example with the tips applied:
+
+
+  (note that this example is for five frames for illustration purposes, but you should
+  work with as many frames as you are given)
+
+
+  Input: [5 frames]
+
+
+  Frame-by-frame description:
+
+  1. We are near the countertop. We see a microwave in front of us.
+
+  2. The microwave doesn''t seem to be turned on. There is no light coming from it.
+
+  3. Nothing has changed; the microwave is still off.
+
+  4. Again, similar frame, the microwave is still off, as we would expect.
+
+  5. For the entire length of the video, the microwave has been off.
+
+  '
+label_prompts:
+  label_0: The microwave is turned on
+  label_1: The microwave is turned off
+metadata:
+  concepts:
+    high_level_actions:
+    - HeatObject
+    - GotoLocation
+    low_level_actions:
+    - LookDown
+    - LookUp
+    - ToggleObjectOn
+    - RotateLeft
+    - RotateRight
+    - MoveAhead
+    objects:
+    - bread
+    - cup
+    - slice of apple
+    - shelf
+    - plate
+    - microwave
+    - slice of bread
+    - apple
+    - dining table
+    - coffee machine
+    - side table
+    - egg
+    - knife
+    - slice of potato
+    - counter top
+    - fridge
+    - mug
+    - cabinet
+    - garbage can
+    - sink basin
+    - tomato
+    - potato
+    - slice of tomato
+prompt_gpt: "Your task is to describe what you see in each frame, separately, in a\
+  \ list. The frames will standing in front of or walking towards a microwave. Your\
+  \ eventual goal will be to say whether the microwave has been on or off in the video.\
+  \ The on/off state of the object won't change during the video. You shouldn't lock-in\
+  \ to one answer too early \u2014 instead, for each frame, concisely describe the\
+  \ scene, the state of the microwave, and what actions have likely been performed\
+  \ since the last frame."

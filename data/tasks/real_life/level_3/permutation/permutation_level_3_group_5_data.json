@@ -1,0 +1,14 @@
+[
+    {
+        "path": "permutations/perm_l3_5_pick_mug_f_heat_mug_tog_fl.mp4",
+        "label": "label_0"
+    },
+    {
+        "path": "permutations/perm_l3_5_pick_mug_f_tog_fl_heat_mug.mp4",
+        "label": "label_1"
+    },
+    {
+        "path": "permutations/perm_l3_5_tog_fl_pick_mug_f_heat_mug.mp4",
+        "label": "label_2"
+    }
+]

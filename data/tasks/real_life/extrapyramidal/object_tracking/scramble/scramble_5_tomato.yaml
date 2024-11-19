@@ -1,0 +1,64 @@
+example_gpt: '
+
+Example:
+
+
+  (note that this example is for five frames for illustration purposes, but you should
+  work with as many frames as you are given)
+
+
+  Input: [5 frames]
+
+
+  Frame-by-frame description:
+
+  1. Four apples are in a line on a table. We will call them apple A, B, C, and D, from left to right.
+  The leftmost, apple A, is partly obscured by a hand which seems about to pick it up.
+
+  2. There are now three apples in a triangle shape on the table near the top of the image.
+  The arm is reaching toward the apple at the lower left corner of the triangle, and the arm is partly
+  obscuring another apple at the bottom of the image. The two apples that are the lower corners of the
+  triangle appear to be in the same place and orientation as apples B and D. Most likely, we have placed
+  apple A at the top middle, moved apple C to the bottom, set it down, and will likely move apple B or A next,
+  since the hand seems to be reaching toward one of those two further to the left rather than apple D to the right.
+
+  3. We are picking up a apple from the top of the image. On the bottom right, a apple on the table is visible;
+  the other two apples are mostly blocked by the arm, but partly visible. The two blocked apples are arranged almost
+  vertically relative to each other, with the lower one slightly lower than the apple at the bottom right,
+  and the top one significantly higher, near the middle of the image. In the previous frame, no apples were aligned
+  vertically, so at least one of the two obscured apples has been moved; also, only apple C was at the bottom of the image,
+  and now there are two apples at the bottom: one at the middle, and one at the right. The apple at the bottom middle
+  seems to be apple C which we placed there in the previous frame, and the apple at the bottom right seems lighter in color
+  than the others, like apple B. So, we likely picked up apple B, as it seemed like we were going to in the previous frame,
+  then placed it back down at the bottom right. The apple vertically above apple C, which is mostly obscured by the arm,
+  does not seem to match the position of any apple in the previous frame. So this may be apple A or D. The final apple,
+  which the hand is reaching toward, is at the very top of the image. It is in the same orientation as apple A was in the
+  previous frame, so this is likely apple A. Therefore, it''s apple D that is in the middle of the table obscured by the arm.
+
+  4. Now, there are three apples in a horizontal line at the middle, slightly to the left.
+  There is also an apple at the bottom right not in the line. A hand is over the apple in the line that is furthest to the right.
+  The apple at the bottom right seems to be apple B, which was at the bottom right in the previous frame and lighter in color
+  than the others. No two apples in the previous frame were aligned horizontally, so at least two apples have been moved.
+  One of these is likely apple A, since the hand was reaching for it in the previous frame. The apple that the hand is currently over
+  is probably the other apple that was moved, since we know that at least two apples were moved, and apple A was moved first.
+  It seems like the apple in the middle of the horizontal line could be in the same place that apple D was in the previous frame.
+  Furthermore, there is no longer an apple at the bottom middle of the image. So, the apple that was at the bottom middle in the previous frame,
+  which was apple C, is likely the apple that the hand is over now. The only apple we haven''t tracked yet is apple A, which must by process of elimination
+  be the apple at the left of the horizontal line.
+
+  5. All four apples are back in a line on the table, and the hand is no longer visible. The three apples that were in a line in the previous frame
+  seem to match the three apples to the left in this frame. Most likely, apple B was moved up from the bottom right
+  to be the rightmost apple in the line, and indeed the rightmost apple looks somewhat lighter than the others.
+  Therefore, it is still apple A which is furthest to the left at the end of the video.
+
+'
+label_prompts:
+  same: The object that was furthest to the left at the start of the video is still furthest to the left at the end 
+  diff: The object that was furthest to the left at the start of the video is no longer furthest to the left at the end
+prompt_gpt: Your task is to describe what you see in each frame, separately, in a
+  list. The frames will depict us moving around several objects on a table. Your eventual goal
+  will be to discern whether the object that started out furthest to the left is still furthest
+  to the left at the end of the video. The object may have been moved during the video; we just
+  want to know if it was moved back to where it originally started. You shouldn't lock-in to one
+  answer too early. Instead, try to describe the frames as accurately as possible, reasoning about
+  the location of all the objects and how they compare to the previous frame.

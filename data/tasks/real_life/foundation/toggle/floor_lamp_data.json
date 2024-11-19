@@ -1,0 +1,26 @@
+[
+    {
+        "path": "foundation/toggle/floor_lamp_turn_on_1.mp4",
+        "label": "turn_on"
+    },
+    {
+        "path": "foundation/toggle/floor_lamp_turn_on_2.mp4",
+        "label": "turn_on"
+    },
+    {
+        "path": "foundation/toggle/floor_lamp_turn_on_3.mp4",
+        "label": "turn_on"
+    },
+    {
+        "path": "foundation/toggle/floor_lamp_turn_off_1.mp4",
+        "label": "turn_off"
+    },
+    {
+        "path": "foundation/toggle/floor_lamp_turn_off_2.mp4",
+        "label": "turn_off"
+    },
+    {
+        "path": "foundation/toggle/floor_lamp_turn_off_3.mp4",
+        "label": "turn_off"
+    }
+]

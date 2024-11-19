@@ -1,0 +1,14 @@
+[
+    {
+        "path": "permutations/perm_l5_3_pick_h_f_tog_dl_tog_fl_tog_dl_tog_fl.mp4",
+        "label": "label_0"
+    },
+    {
+        "path": "permutations/perm_l5_3_tog_dl_pick_h_f_tog_fl_tog_dl_tog_fl.mp4",
+        "label": "label_1"
+    },
+    {
+        "path": "permutations/perm_l5_3_tog_fl_tog_dl_tog_fl_tog_dl_pick_h_f.mp4",
+        "label": "label_2"
+    }
+]

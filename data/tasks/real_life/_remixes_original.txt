@@ -1,0 +1,169 @@
+2:
+remixes set 1:
+toggle(desk_lamp, None), heat(mug, None)
+pickup(mug, microwave), toggle(floor_lamp, None)
+clean(apple, None), toggle(desk_lamp, None)
+heat(potato, None), slice(potato, None)
+heat(apple, None), put(None, counter)
+toggle(desk_lamp, None), toggle(floor_lamp, None)
+toggle(desk_lamp, None), heat(apple, None)
+toggle(desk_lamp, None), heat(potato, None)
+toggle(desk_lamp, None), clean(potato, None)
+
+remixes set 2:
+put(unknown, sink), toggle(floor_lamp, None)
+pickup(butterknife, freezer), clean(butterknife, None)
+clean(can, None), put(None, counter)
+clean(hammer, None), toggle(floor_lamp, None)
+cool(potato, None), clean(potato, None)
+put(unknown, sink), toggle(desk_lamp, None)
+put(unknown, sink), pickup(butterknife, freezer)
+put(unknown, sink), pickup(can, freezer)
+put(unknown, sink), pickup(hammer, freezer)
+
+remixes set 3:
+toggle(desk_lamp, None), toggle(floor_lamp, None)
+heat(apple, None), put(None, freezer)
+clean(potato, None), put(None, freezer)
+toggle(floor_lamp, None), cool(hammer, None)
+toggle(floor_lamp, None), pickup(hammer, table)
+toggle(desk_lamp, None), put(None, counter)
+toggle(desk_lamp, None), cool(apple, None)
+toggle(desk_lamp, None), clean(apple, None)
+toggle(desk_lamp, None), heat(potato, None)
+
+3:
+remixes set 1:
+heat(apple, None), clean(apple, None), toggle(floor_lamp, None)
+toggle(floor_lamp, None), put(None, sink), toggle(floor_lamp, None)
+toggle(desk_lamp, None), heat(apple, None), clean(apple, None)
+heat(apple, None), put(None, table), pickup(can, table)
+heat(apple, None), toggle(floor_lamp, None), put(None, table)
+heat(apple, None), put(None, counter), toggle(floor_lamp, None)
+heat(apple, None), clean(apple, None), put(None, counter)
+heat(apple, None), clean(apple, None), toggle(desk_lamp, None)
+heat(apple, None), clean(apple, None), cool(apple, None)
+
+remixes set 2:
+clean(mug, None), toggle(desk_lamp, None), heat(mug, None)
+clean(hammer, None), put(None, microwave), pickup(potato, table)
+slice(potato, None), put(None, table), pickup(butterknife, freezer)
+clean(mug, None), put(None, table), pickup(mug, freezer)
+clean(mug, None), heat(mug, None), toggle(desk_lamp, None)
+clean(mug, None), put(None, table), toggle(desk_lamp, None)
+clean(mug, None), toggle(desk_lamp, None), toggle(floor_lamp, None)
+clean(mug, None), toggle(desk_lamp, None), cool(mug, None)
+clean(mug, None), toggle(desk_lamp, None), put(None, counter)
+
+remixes set 3:
+toggle(floor_lamp, None), put(unknown, freezer), pickup(mug, microwave)
+put(None, microwave), pickup(potato, sink), heat(potato, None)
+toggle(desk_lamp, None), cool(can, None), put(None, freezer)
+toggle(floor_lamp, None), cool(apple, None), toggle(desk_lamp, None)
+toggle(floor_lamp, None), slice(potato, None), put(None, freezer)
+toggle(floor_lamp, None), heat(apple, None), toggle(desk_lamp, None)
+toggle(floor_lamp, None), put(unknown, freezer), toggle(desk_lamp, None)
+toggle(floor_lamp, None), put(unknown, freezer), pickup(butterknife, counter)
+toggle(floor_lamp, None), put(unknown, freezer), pickup(can, counter)
+
+4:
+remixes set 1:
+toggle(floor_lamp, None), heat(potato, None), clean(potato, None), slice(potato, None)
+pickup(potato, table), put(None, table), pickup(apple, freezer), toggle(floor_lamp, None)
+clean(potato, None), put(None, microwave), pickup(mug, counter), put(None, counter)
+toggle(floor_lamp, None), toggle(desk_lamp, None), cool(hammer, None), put(None, counter)
+toggle(floor_lamp, None), cool(hammer, None), put(None, microwave), pickup(apple, sink)
+toggle(floor_lamp, None), heat(potato, None), slice(potato, None), put(None, freezer)
+toggle(floor_lamp, None), heat(potato, None), toggle(desk_lamp, None), put(None, freezer)
+toggle(floor_lamp, None), heat(potato, None), clean(potato, None), cool(potato, None)
+toggle(floor_lamp, None), heat(potato, None), clean(potato, None), toggle(desk_lamp, None)
+
+remixes set 2:
+toggle(floor_lamp, None), toggle(desk_lamp, None), cool(mug, None), put(mug, sink)
+pickup(mug, freezer), put(None, counter), pickup(mug, sink), put(None, sink)
+cool(apple, None), toggle(floor_lamp, None), put(None, counter), toggle(desk_lamp, None)
+toggle(floor_lamp, None), heat(potato, None), put(None, freezer), pickup(mug, counter)
+toggle(floor_lamp, None), clean(can, None), put(None, freezer), pickup(hammer, counter)
+toggle(floor_lamp, None), toggle(desk_lamp, None), pickup(hammer, freezer), put(None, sink)
+toggle(floor_lamp, None), toggle(desk_lamp, None), slice(potato, None), put(None, microwave)
+toggle(floor_lamp, None), toggle(desk_lamp, None), cool(mug, None), put(None, table)
+toggle(floor_lamp, None), toggle(desk_lamp, None), cool(mug, None), heat(mug, None)
+
+remixes set 3:
+toggle(floor_lamp, None), pickup(can, freezer), put(can, freezer), toggle(desk_lamp, None)
+put(None, sink), toggle(floor_lamp, None), toggle(desk_lamp, None), toggle(floor_lamp, None)
+heat(mug, None), put(None, table), toggle(desk_lamp, None), toggle(floor_lamp, None)
+toggle(floor_lamp, None), heat(apple, None), put(None, sink), pickup(butterknife, freezer)
+toggle(floor_lamp, None), pickup(can, sink), put(None, microwave), pickup(can, microwave)
+toggle(floor_lamp, None), pickup(can, freezer), cool(can, None), toggle(desk_lamp, None)
+toggle(floor_lamp, None), pickup(can, freezer), toggle(desk_lamp, None), put(None, sink)
+toggle(floor_lamp, None), pickup(can, freezer), put(can, freezer), pickup(hammer, sink)
+toggle(floor_lamp, None), pickup(can, freezer), put(can, freezer), pickup(can, microwave)
+
+5:
+remixes set 1:
+toggle(desk_lamp, None), cool(apple, None), clean(apple, None), put(apple, table), pickup(mug, counter)
+toggle(floor_lamp, None), pickup(potato, freezer), toggle(desk_lamp, None), heat(potato, None), put(None, counter)
+toggle(floor_lamp, None), pickup(potato, counter), toggle(desk_lamp, None), clean(potato, None), put(None, counter)
+toggle(floor_lamp, None), heat(mug, None), toggle(desk_lamp, None), toggle(floor_lamp, None), toggle(desk_lamp, None)
+cool(hammer, None), put(None, freezer), pickup(apple, counter), toggle(floor_lamp, None), put(None, counter)
+toggle(desk_lamp, None), pickup(can, sink), clean(can, None), toggle(floor_lamp, None), put(None, microwave)
+toggle(desk_lamp, None), cool(apple, None), toggle(floor_lamp, None), put(None, sink), toggle(floor_lamp, None)
+toggle(desk_lamp, None), cool(apple, None), clean(apple, None), put(None, table), pickup(potato, freezer)
+toggle(desk_lamp, None), cool(apple, None), clean(apple, None), put(apple, table), pickup(can, counter)
+
+remixes set 2:
+heat(mug, None), put(mug, microwave), toggle(desk_lamp, None), pickup(mug, sink), toggle(floor_lamp, None)
+pickup(potato, table), slice(potato, None), put(None, microwave), pickup(butterknife, sink), put(None, freezer)
+heat(apple, None), toggle(floor_lamp, None), put(None, freezer), pickup(can, table), toggle(desk_lamp, None)
+toggle(floor_lamp, None), clean(butterknife, None), toggle(desk_lamp, None), toggle(floor_lamp, None), clean(butterknife, None)
+toggle(desk_lamp, None), clean(mug, None), heat(mug, None), put(None, counter), toggle(floor_lamp, None)
+heat(mug, None), toggle(desk_lamp, None), put(None, freezer), pickup(potato, counter), put(None, table)
+heat(mug, None), put(mug, microwave), pickup(butterknife, sink), put(None, microwave), pickup(apple, freezer)
+heat(mug, None), put(mug, microwave), toggle(desk_lamp, None), toggle(floor_lamp, None), toggle(desk_lamp, None)
+heat(mug, None), put(mug, microwave), toggle(desk_lamp, None), pickup(mug, sink), cool(mug, None)
+
+remixes set 3:
+cool(butterknife, None), put(butterknife, microwave), pickup(potato, freezer), put(potato, sink), pickup(potato, microwave)
+toggle(floor_lamp, None), toggle(desk_lamp, None), cool(apple, None), toggle(desk_lamp, None), clean(apple, None)
+pickup(hammer, freezer), put(None, microwave), pickup(hammer, table), put(None, freezer), toggle(floor_lamp, None)
+cool(apple, None), toggle(floor_lamp, None), put(None, table), pickup(butterknife, sink), toggle(floor_lamp, None)
+put(None, freezer), pickup(butterknife, sink), toggle(desk_lamp, None), put(None, freezer), pickup(potato, table)
+cool(butterknife, None), put(None, table), toggle(desk_lamp, None), toggle(floor_lamp, None), toggle(desk_lamp, None)
+cool(butterknife, None), put(butterknife, microwave), pickup(apple, table), clean(apple, None), put(None, microwave)
+cool(butterknife, None), put(butterknife, microwave), pickup(potato, freezer), heat(potato, None), toggle(desk_lamp, None)
+cool(butterknife, None), put(butterknife, microwave), pickup(potato, freezer), put(potato, sink), pickup(can, table)
+
+8:
+remixes set 1:
+toggle(floor_lamp, None), heat(mug, None), cool(mug, None), put(mug, freezer), pickup(potato, microwave), put(potato, counter), pickup(butterknife, table), put(butterknife, microwave)
+heat(apple, None), toggle(desk_lamp, None), toggle(floor_lamp, None), put(None, freezer), pickup(apple, sink), toggle(desk_lamp, None), heat(apple, None), cool(apple, None)
+toggle(floor_lamp, None), put(None, sink), pickup(potato, freezer), put(None, freezer), toggle(desk_lamp, None), pickup(can, counter), clean(can, None), cool(can, None)
+toggle(floor_lamp, None), heat(mug, None), put(None, freezer), pickup(potato, freezer), put(None, counter), pickup(can, counter), put(None, table), pickup(mug, sink)
+toggle(floor_lamp, None), heat(mug, None), cool(mug, None), put(None, counter), toggle(desk_lamp, None), pickup(mug, sink), put(None, microwave), pickup(hammer, microwave)
+toggle(floor_lamp, None), heat(mug, None), cool(mug, None), put(mug, freezer), toggle(desk_lamp, None), pickup(potato, counter), slice(potato, None), put(None, counter)
+toggle(floor_lamp, None), heat(mug, None), cool(mug, None), put(mug, freezer), pickup(potato, microwave), heat(potato, None), toggle(desk_lamp, None), put(None, table)
+toggle(floor_lamp, None), heat(mug, None), cool(mug, None), put(mug, freezer), pickup(potato, microwave), put(potato, counter), pickup(potato, table), toggle(desk_lamp, None)
+toggle(floor_lamp, None), heat(mug, None), cool(mug, None), put(mug, freezer), pickup(potato, microwave), put(potato, counter), pickup(butterknife, table), put(None, counter)
+
+remixes set 2:
+cool(hammer, None), put(hammer, sink), pickup(potato, microwave), put(potato, table), pickup(can, table), put(can, freezer), pickup(potato, sink), toggle(floor_lamp, None)
+pickup(hammer, sink), put(None, freezer), toggle(desk_lamp, None), pickup(apple, microwave), heat(apple, None), put(None, freezer), pickup(butterknife, microwave), clean(butterknife, None)
+cool(hammer, None), put(None, sink), toggle(floor_lamp, None), toggle(desk_lamp, None), pickup(butterknife, table), put(None, table), pickup(can, sink), put(None, freezer)
+cool(hammer, None), put(hammer, sink), toggle(floor_lamp, None), pickup(butterknife, sink), put(None, table), pickup(apple, microwave), put(None, freezer), toggle(desk_lamp, None)
+cool(hammer, None), put(hammer, sink), pickup(potato, microwave), put(None, table), pickup(potato, freezer), put(None, counter), pickup(hammer, microwave), put(None, sink)
+cool(hammer, None), put(hammer, sink), pickup(potato, microwave), put(potato, table), pickup(apple, table), heat(apple, None), clean(apple, None), put(None, counter)
+cool(hammer, None), put(hammer, sink), pickup(potato, microwave), put(potato, table), pickup(can, table), toggle(floor_lamp, None), put(None, freezer), toggle(desk_lamp, None)
+cool(hammer, None), put(hammer, sink), pickup(potato, microwave), put(potato, table), pickup(can, table), put(can, freezer), toggle(desk_lamp, None), pickup(apple, counter)
+cool(hammer, None), put(hammer, sink), pickup(potato, microwave), put(potato, table), pickup(can, table), put(can, freezer), pickup(potato, sink), heat(potato, None)
+
+remixes set 3:
+pickup(hammer, microwave), put(hammer, freezer), toggle(desk_lamp, None), pickup(hammer, table), put(hammer, table), toggle(floor_lamp, None), pickup(can, microwave), put(can, counter)
+put(None, table), pickup(apple, freezer), put(None, sink), toggle(floor_lamp, None), toggle(desk_lamp, None), toggle(floor_lamp, None), pickup(potato, sink), toggle(desk_lamp, None)
+pickup(hammer, microwave), cool(hammer, None), put(None, table), toggle(floor_lamp, None), pickup(mug, freezer), put(None, freezer), pickup(mug, microwave), toggle(desk_lamp, None)
+pickup(hammer, microwave), put(hammer, freezer), pickup(apple, microwave), put(None, counter), toggle(floor_lamp, None), toggle(desk_lamp, None), pickup(potato, freezer), clean(potato, None)
+pickup(hammer, microwave), put(hammer, freezer), toggle(desk_lamp, None), pickup(mug, table), put(None, freezer), toggle(floor_lamp, None), pickup(butterknife, sink), put(None, sink)
+pickup(hammer, microwave), put(hammer, freezer), toggle(desk_lamp, None), pickup(hammer, table), toggle(floor_lamp, None), put(None, sink), pickup(can, counter), cool(can, None)
+pickup(hammer, microwave), put(hammer, freezer), toggle(desk_lamp, None), pickup(hammer, table), put(hammer, table), pickup(butterknife, freezer), put(None, microwave), toggle(floor_lamp, None)
+pickup(hammer, microwave), put(hammer, freezer), toggle(desk_lamp, None), pickup(hammer, table), put(hammer, table), toggle(floor_lamp, None), pickup(apple, counter), put(None, freezer)
+pickup(hammer, microwave), put(hammer, freezer), toggle(desk_lamp, None), pickup(hammer, table), put(hammer, table), toggle(floor_lamp, None), pickup(can, microwave), cool(can, None)

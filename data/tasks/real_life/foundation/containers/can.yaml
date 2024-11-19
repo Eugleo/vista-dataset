@@ -1,0 +1,51 @@
+example_gpt: '
+
+Example:
+
+
+  (note that this example is for five frames for illustration purposes, but you should
+  work with as many frames as you are given)
+
+
+  Input: [5 frames]
+
+
+  Frame-by-frame description:
+
+  1. We are by a counter, holding a can.
+
+  2. We have turned toward the sink, still holding the can.
+
+  3. We are in front of an open microwave. The can is no longer in the frame;
+  it may have been put down or we may still be holding it, since the hand that was
+  holding it is not visible either.
+
+  4. The can is in the microwave, and our hand is on the door of the microwave.
+
+  5. We have turned toward the stove. Part of the microwave is still visible,
+  and the door seems to be closed.
+
+'
+label_prompts:
+  counter: We put the can on the counter
+  freezer: We put the can in the freezer
+  microwave: We put the can in the microwave
+  sink: We put the can in the sink
+metadata:
+  concepts:
+    high_level_actions:
+    - PutObject
+    - GotoLocation
+    low_level_actions:
+    - LookDown
+    - PutObject
+    - LookUp
+    - RotateLeft
+    - RotateRight
+    - MoveAhead
+prompt_gpt: Your task is to describe what you see in each frame, separately, in a
+  list. The frames will depict us putting down a can somewhere. Your eventual goal
+  will be to recognize the place or container we put the object in (or on), but you
+  shouldn't lock-in to one answer too early. Instead, try to describe the place or
+  container as accurately as possible separately for each frame, refining your answer
+  as you see more frames.

@@ -1,0 +1,38 @@
+[
+    {
+        "path": "extrapyramidal/object_tracking/relative_position/nectarine_left.mp4",
+        "label": "left"
+    },
+    {
+        "path": "extrapyramidal/object_tracking/relative_position/nectarine_middle.mp4",
+        "label": "middle"
+    },
+    {
+        "path": "extrapyramidal/object_tracking/relative_position/nectarine_right.mp4",
+        "label": "right"
+    },
+    {
+        "path": "extrapyramidal/object_tracking/relative_position/chopsticks_left.mp4",
+        "label": "left"
+    },
+    {
+        "path": "extrapyramidal/object_tracking/relative_position/chopsticks_middle.mp4",
+        "label": "middle"
+    },
+    {
+        "path": "extrapyramidal/object_tracking/relative_position/chopsticks_right.mp4",
+        "label": "right"
+    },
+    {
+        "path": "extrapyramidal/object_tracking/relative_position/lime_left.mp4",
+        "label": "left"
+    },
+    {
+        "path": "extrapyramidal/object_tracking/relative_position/lime_middle.mp4",
+        "label": "middle"
+    },
+    {
+        "path": "extrapyramidal/object_tracking/relative_position/lime_right.mp4",
+        "label": "right"
+    }
+]

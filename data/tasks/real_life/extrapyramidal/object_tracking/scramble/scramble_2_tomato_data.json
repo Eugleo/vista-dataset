@@ -1,0 +1,42 @@
+[
+    {
+        "path": "extrapyramidal/object_tracking/scramble/scramble_tomato_2_diff_1.mp4",
+        "label": "diff"
+    },
+    {
+        "path": "extrapyramidal/object_tracking/scramble/scramble_tomato_2_diff_2.mp4",
+        "label": "diff"
+    },
+    {
+        "path": "extrapyramidal/object_tracking/scramble/scramble_tomato_2_diff_3.mp4",
+        "label": "diff"
+    },
+    {
+        "path": "extrapyramidal/object_tracking/scramble/scramble_tomato_2_diff_4.mp4",
+        "label": "diff"
+    },
+    {
+        "path": "extrapyramidal/object_tracking/scramble/scramble_tomato_2_diff_5.mp4",
+        "label": "diff"
+    },
+    {
+        "path": "extrapyramidal/object_tracking/scramble/scramble_tomato_2_diff_6.mp4",
+        "label": "diff"
+    },
+    {
+        "path": "extrapyramidal/object_tracking/scramble/scramble_tomato_2_same_1.mp4",
+        "label": "same"
+    },
+    {
+        "path": "extrapyramidal/object_tracking/scramble/scramble_tomato_2_same_2.mp4",
+        "label": "same"
+    },
+    {
+        "path": "extrapyramidal/object_tracking/scramble/scramble_tomato_2_same_3.mp4",
+        "label": "same"
+    },
+    {
+        "path": "extrapyramidal/object_tracking/scramble/scramble_tomato_2_same_4.mp4",
+        "label": "same"
+    }
+]

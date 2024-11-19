@@ -1,0 +1,38 @@
+[
+    {
+        "path": "extrapyramidal/recognize_small_object/real/apple_1.mp4",
+        "label": "apple"
+    },
+    {
+        "path": "extrapyramidal/recognize_small_object/real/apple_2.mp4",
+        "label": "apple"
+    },
+    {
+        "path": "extrapyramidal/recognize_small_object/real/apple_3.mp4",
+        "label": "apple"
+    },
+    {
+        "path": "extrapyramidal/recognize_small_object/real/can_1.mp4",
+        "label": "can"
+    },
+    {
+        "path": "extrapyramidal/recognize_small_object/real/can_2.mp4",
+        "label": "can"
+    },
+    {
+        "path": "extrapyramidal/recognize_small_object/real/can_3.mp4",
+        "label": "can"
+    },
+    {
+        "path": "extrapyramidal/recognize_small_object/real/hammer_1.mp4",
+        "label": "hammer"
+    },
+    {
+        "path": "extrapyramidal/recognize_small_object/real/hammer_2.mp4",
+        "label": "hammer"
+    },
+    {
+        "path": "extrapyramidal/recognize_small_object/real/hammer_3.mp4",
+        "label": "hammer"
+    }
+]

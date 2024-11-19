@@ -1,0 +1,14 @@
+[
+    {
+        "path": "permutations/perm_l8_7_heat_p_put_p_f_tog_dl_pick_ap_c_cool_ap_heat_ap_put_ap_c_pick_p_s.mp4",
+        "label": "label_0"
+    },
+    {
+        "path": "permutations/perm_l8_7_pick_p_s_heat_p_put_p_f_pick_ap_c_tog_dl_heat_ap_cool_ap_put_ap_c.mp4",
+        "label": "label_1"
+    },
+    {
+        "path": "permutations/perm_l8_7_tog_dl_heat_p_put_p_f_pick_ap_c_cool_ap_heat_ap_put_ap_c_pick_p_s.mp4",
+        "label": "label_2"
+    }
+]

@@ -1,0 +1,282 @@
+[
+    {
+        "path": "foundation/pick_object/apple_lh_c.mp4",
+        "label": "apple"
+    },
+    {
+        "path": "foundation/pick_object/apple_rh_c.mp4",
+        "label": "apple"
+    },
+    {
+        "path": "foundation/pick_object/appleslice_lh_c.mp4",
+        "label": "appleslice"
+    },
+    {
+        "path": "foundation/pick_object/appleslice_rh_c.mp4",
+        "label": "appleslice"
+    },
+    {
+        "path": "foundation/pick_object/bowl_lh_c1.mp4",
+        "label": "bowl"
+    },
+    {
+        "path": "foundation/pick_object/bowl_lh_c2.mp4",
+        "label": "bowl"
+    },
+    {
+        "path": "foundation/pick_object/bowl_rh_c1.mp4",
+        "label": "bowl"
+    },
+    {
+        "path": "foundation/pick_object/bowl_rh_c2.mp4",
+        "label": "bowl"
+    },
+    {
+        "path": "foundation/pick_object/butterknife_lh_c1.mp4",
+        "label": "butterknife"
+    },
+    {
+        "path": "foundation/pick_object/butterknife_lh_c2.mp4",
+        "label": "butterknife"
+    },
+    {
+        "path": "foundation/pick_object/butterknife_rh_c1.mp4",
+        "label": "butterknife"
+    },
+    {
+        "path": "foundation/pick_object/butterknife_rh_c2.mp4",
+        "label": "butterknife"
+    },
+    {
+        "path": "foundation/pick_object/cup_lh_c1.mp4",
+        "label": "cup"
+    },
+    {
+        "path": "foundation/pick_object/cup_lh_c2.mp4",
+        "label": "cup"
+    },
+    {
+        "path": "foundation/pick_object/cup_rh_c1.mp4",
+        "label": "cup"
+    },
+    {
+        "path": "foundation/pick_object/cup_rh_c2.mp4",
+        "label": "cup"
+    },
+    {
+        "path": "foundation/pick_object/handtowel_lh_c1.mp4",
+        "label": "handtowel"
+    },
+    {
+        "path": "foundation/pick_object/handtowel_lh_c2.mp4",
+        "label": "handtowel"
+    },
+    {
+        "path": "foundation/pick_object/handtowel_rh_c1.mp4",
+        "label": "handtowel"
+    },
+    {
+        "path": "foundation/pick_object/handtowel_rh_c2.mp4",
+        "label": "handtowel"
+    },
+    {
+        "path": "foundation/pick_object/kettle_lh_c1.mp4",
+        "label": "kettle"
+    },
+    {
+        "path": "foundation/pick_object/kettle_lh_c2.mp4",
+        "label": "kettle"
+    },
+    {
+        "path": "foundation/pick_object/kettle_rh_c1.mp4",
+        "label": "kettle"
+    },
+    {
+        "path": "foundation/pick_object/kettle_rh_c2.mp4",
+        "label": "kettle"
+    },
+    {
+        "path": "foundation/pick_object/knife_lh_c1.mp4",
+        "label": "knife"
+    },
+    {
+        "path": "foundation/pick_object/knife_lh_c2.mp4",
+        "label": "knife"
+    },
+    {
+        "path": "foundation/pick_object/knife_rh_c1.mp4",
+        "label": "knife"
+    },
+    {
+        "path": "foundation/pick_object/knife_rh_c2.mp4",
+        "label": "knife"
+    },
+    {
+        "path": "foundation/pick_object/ladle_lh_c1.mp4",
+        "label": "ladle"
+    },
+    {
+        "path": "foundation/pick_object/ladle_lh_c2.mp4",
+        "label": "ladle"
+    },
+    {
+        "path": "foundation/pick_object/ladle_rh_c1.mp4",
+        "label": "ladle"
+    },
+    {
+        "path": "foundation/pick_object/ladle_rh_c2.mp4",
+        "label": "ladle"
+    },
+    {
+        "path": "foundation/pick_object/pan_lh_c1.mp4",
+        "label": "pan"
+    },
+    {
+        "path": "foundation/pick_object/pan_lh_c2.mp4",
+        "label": "pan"
+    },
+    {
+        "path": "foundation/pick_object/pan_rh_c1.mp4",
+        "label": "pan"
+    },
+    {
+        "path": "foundation/pick_object/pan_rh_c2.mp4",
+        "label": "pan"
+    },
+    {
+        "path": "foundation/pick_object/pen_lh_c1.mp4",
+        "label": "pen"
+    },
+    {
+        "path": "foundation/pick_object/pen_lh_c2.mp4",
+        "label": "pen"
+    },
+    {
+        "path": "foundation/pick_object/pen_rh_c1.mp4",
+        "label": "pen"
+    },
+    {
+        "path": "foundation/pick_object/pen_rh_c2.mp4",
+        "label": "pen"
+    },
+    {
+        "path": "foundation/pick_object/plate_lh_c1.mp4",
+        "label": "plate"
+    },
+    {
+        "path": "foundation/pick_object/plate_lh_c2.mp4",
+        "label": "plate"
+    },
+    {
+        "path": "foundation/pick_object/plate_rh_c1.mp4",
+        "label": "plate"
+    },
+    {
+        "path": "foundation/pick_object/plate_rh_c2.mp4",
+        "label": "plate"
+    },
+    {
+        "path": "foundation/pick_object/pot_lh_c1.mp4",
+        "label": "pot"
+    },
+    {
+        "path": "foundation/pick_object/pot_lh_c2.mp4",
+        "label": "pot"
+    },
+    {
+        "path": "foundation/pick_object/pot_rh_c1.mp4",
+        "label": "pot"
+    },
+    {
+        "path": "foundation/pick_object/pot_rh_c2.mp4",
+        "label": "pot"
+    },
+    {
+        "path": "foundation/pick_object/potato_lh_c1.mp4",
+        "label": "potato"
+    },
+    {
+        "path": "foundation/pick_object/potato_lh_c2.mp4",
+        "label": "potato"
+    },
+    {
+        "path": "foundation/pick_object/potato_rh_c1.mp4",
+        "label": "potato"
+    },
+    {
+        "path": "foundation/pick_object/potato_rh_c_1.mp4",
+        "label": "potato"
+    },
+    {
+        "path": "foundation/pick_object/potato_rh_c2.mp4",
+        "label": "potato"
+    },
+    {
+        "path": "foundation/pick_object/potato_rh_c_2.mp4",
+        "label": "potato"
+    },
+    {
+        "path": "foundation/pick_object/potatoslice_lh_c_1.mp4",
+        "label": "potatoslice"
+    },
+    {
+        "path": "foundation/pick_object/potatoslice_lh_c_2.mp4",
+        "label": "potatoslice"
+    },
+    {
+        "path": "foundation/pick_object/potatoslice_rh_c_1.mp4",
+        "label": "potatoslice"
+    },
+    {
+        "path": "foundation/pick_object/potatoslice_rh_c_2.mp4",
+        "label": "potatoslice"
+    },
+    {
+        "path": "foundation/pick_object/soapbottle_lh_c1.mp4",
+        "label": "soapbottle"
+    },
+    {
+        "path": "foundation/pick_object/soapbottle_lh_c2.mp4",
+        "label": "soapbottle"
+    },
+    {
+        "path": "foundation/pick_object/soapbottle_rh_c1.mp4",
+        "label": "soapbottle"
+    },
+    {
+        "path": "foundation/pick_object/soapbottle_rh_c2.mp4",
+        "label": "soapbottle"
+    },
+    {
+        "path": "foundation/pick_object/spatula_lh_c1.mp4",
+        "label": "spatula"
+    },
+    {
+        "path": "foundation/pick_object/spatula_lh_c2.mp4",
+        "label": "spatula"
+    },
+    {
+        "path": "foundation/pick_object/spatula_rh_c1.mp4",
+        "label": "spatula"
+    },
+    {
+        "path": "foundation/pick_object/spatula_rh_c2.mp4",
+        "label": "spatula"
+    },
+    {
+        "path": "foundation/pick_object/spoon_lh_c1.mp4",
+        "label": "spoon"
+    },
+    {
+        "path": "foundation/pick_object/spoon_lh_c2.mp4",
+        "label": "spoon"
+    },
+    {
+        "path": "foundation/pick_object/spoon_rh_c1.mp4",
+        "label": "spoon"
+    },
+    {
+        "path": "foundation/pick_object/spoon_rh_c2.mp4",
+        "label": "spoon"
+    }
+]

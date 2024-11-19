@@ -1,0 +1,71 @@
+example_gpt: '
+
+  Example:
+
+
+  (note that this example is for five frames for illustration purposes, but you should
+  work with as many frames as you are given)
+
+
+  Input: [5 frames]
+
+
+  Frame-by-frame description:
+
+  1. We are near the countertop. The blade of a knife is visible on the right side of the screen,
+  so we are likely holding it.
+
+  2. We have walked near a countertop, upon which there is a multitude of objects,
+  including $(A_OR_AN_OBJ). The knife is still at the right of the screen, and part of the
+  hand holding it is visible.
+
+  3. We are holding the knife near the $(OBJ), but we aren''t using it. Focusing
+  on the $(OBJ), it seems unchanged.
+
+  4. The $(OBJ) is now in pieces, which suggests we have sliced it. We still hold
+  the knife.
+
+  5. We are still near the countertop. We now see the $(OBJ) from a different angle,
+  and although it''s harder to see the sliced faces from this side, we did slice it according
+  to the previous frame.
+
+  '
+label_prompts:
+  slice: We slice the $(OBJ)
+  dontslice: We walk to the $(OBJ) with a knife in hand but don't slice it
+metadata:
+  concepts:
+    high_level_actions:
+    - SliceObject
+    - GotoLocation
+    low_level_actions:
+    - LookDown
+    - LookUp
+    - RotateLeft
+    - SliceObject
+    - OpenObject
+    - RotateRight
+    - CloseObject
+    - MoveAhead
+    objects:
+    - cabinet
+    - $(OBJ)
+    - dining table
+    - pan
+    - garbage can
+    - pot
+    - drawer
+    - bowl
+    - slice of $(OBJ)
+    - plate
+    - sink basin
+    - side table
+    - counter top
+    - fridge
+    - microwave
+prompt_gpt: Your task is to describe what you see in each frame, separately, in a
+  list. The frames will depict us carrying a knife and walking towards $(A_OR_AN_OBJ). Your
+  eventual goal will be to discern whether we sliced the $(OBJ) at the end of the video
+  or not, but you shouldn't lock-in to one answer too early. Instead, for each frame,
+  concisely describe the scene, the state of the $(OBJ), and what actions have likely
+  been performed since the last frame.

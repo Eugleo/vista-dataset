@@ -1,0 +1,14 @@
+[
+    {
+        "path": "permutations/perm_l4_7_put_mug_m_pick_mug_c_put_mug_m_tog_dl.mp4",
+        "label": "label_0"
+    },
+    {
+        "path": "permutations/perm_l4_7_put_mug_m_tog_dl_pick_mug_c_put_mug_m.mp4",
+        "label": "label_1"
+    },
+    {
+        "path": "permutations/perm_l4_7_tog_dl_put_mug_m_pick_mug_c_put_mug_m.mp4",
+        "label": "label_2"
+    }
+]

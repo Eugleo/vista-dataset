@@ -1,0 +1,89 @@
+example_gpt: '
+
+  A few tips and hints to help you get started:
+
+  - ''Holding an object'' is depicted as the object being at the very bottom of the
+  screen and close to the camera, without any visible hands. Similarly, no hands are
+  shown for cleaning, heating, or any other action, not even slicing.
+
+  - The objects almost never lie on the floor. If the object is at the bottom of the
+  screen, close to the camera and looks like it is lying on the floor, we are most
+  likely just holding it.
+
+  - Sometimes we just walk to an object with a knife in hand without slicing the object.
+  To see whether an object has been sliced, first find it in the frame, and then observe
+  how it changes in the following frames. A sliced object will have small, barely
+  noticeable lines on it.
+
+  - Whenever we hold a knife, we might be about to slice an object. Pay very close
+  attention to minute details in objects'' appearance. If there are small lines in
+  the object where there previously weren''t any, it is likely that we have sliced
+  it. But it might have been already sliced, or maybe we just do not plan to slice
+  it, even though we hold a knife.
+
+
+  Example with the tips applied:
+
+
+  (note that this example is for five frames for illustration purposes, but you should
+  work with as many frames as you are given)
+
+
+  Input: [5 frames]
+
+
+  Frame-by-frame description:
+
+  1. We are near the countertop. A butter knife is shown on the bottom of the screen,
+  which means we are holding it, as expected.
+
+  2. We have walked near a windowsill, upon which there is a multitude of objects,
+  including lettuce. The knife is still at the bottom of the screen, so we are definitely
+  holding it.
+
+  3. We are holding the knife still, but it is not clear if we are using it. Focusing
+  on the lettuce, it seems unchanged.
+
+  4. The lettuce now has lines on it, which suggests we have sliced it. We still hold
+  the knife, and the lettuce is still in the same place.
+
+  5. We are still near the windowsill. We now see the lettuce from a different angle,
+  and although we now do not see the slicing lines, we did slice it according to the
+  previous frame.
+
+  '
+label_prompts:
+  label_0: We slice the lettuce
+  label_1: We walk to the lettuce with a knife in hand but don't slice it
+metadata:
+  concepts:
+    high_level_actions:
+    - SliceObject
+    - GotoLocation
+    low_level_actions:
+    - LookDown
+    - LookUp
+    - RotateLeft
+    - SliceObject
+    - OpenObject
+    - RotateRight
+    - CloseObject
+    - MoveAhead
+    objects:
+    - cabinet
+    - dining table
+    - pan
+    - garbage can
+    - slice of lettuce
+    - plate
+    - sink basin
+    - lettuce
+    - side table
+    - counter top
+    - fridge
+prompt_gpt: Your task is to describe what you see in each frame, separately, in a
+  list. The frames will depict us carrying a knife and walking towards a lettuce.
+  Your eventual goal will be to discern whether we sliced the lettuce at the end of
+  the video or not, but you shouldn't lock-in to one answer too early. Instead, for
+  each frame, concisely describe the scene, the state of the lettuce, and what actions
+  have likely been performed since the last frame.

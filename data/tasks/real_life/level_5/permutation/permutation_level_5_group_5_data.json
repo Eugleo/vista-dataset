@@ -1,0 +1,14 @@
+[
+    {
+        "path": "permutations/perm_l5_5_pick_can_c_put_can_s_pick_can_f_clean_can_tog_dl.mp4",
+        "label": "label_0"
+    },
+    {
+        "path": "permutations/perm_l5_5_pick_can_f_clean_can_tog_dl_put_can_s_pick_can_c.mp4",
+        "label": "label_1"
+    },
+    {
+        "path": "permutations/perm_l5_5_tog_dl_pick_can_f_clean_can_put_can_s_pick_can_c.mp4",
+        "label": "label_2"
+    }
+]
