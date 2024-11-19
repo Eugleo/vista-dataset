@@ -2,7 +2,7 @@
 
 This repo hosts the evaluation code for the ViSTa dataset. Generally, we'd recommend you to use the dataset as a standalone with your own evaluation code, for full flexibility.
 
-## Usage with Your Own Data
+## Usage
 
 _Note: Throughout the following instructions, "task" and "problem set" are used interchangeably._
 
@@ -35,9 +35,9 @@ You can now run the evaluation.
 
 1. Create a virtual environment and install dependencies. We recommend using [uv](https://docs.astral.sh/uv/getting-started/installation/) for this.
 
-2. Move the video files into a local directory. You can choose the folder structure within that directory as you like.
-3. Create task definitons and labeled task data in a local directory (see section Tasks below). All files should be placed into this directory, without any additional folder structure. **The naming scheme is also important.** Check out the section Tasks below.
-4. Define an experiment config file in `configs/`. You can use the one below as an inspiration
+2. Move your video files, or the original ViSTa video files you downloaded, into a local directory. You can choose the folder structure within that directory as you like.
+3. Create problem set definitions and labeled task data in a local directory, or use our own tasks (in the main repo under `data/tasks/`). For the structure of a task file, see section Tasks below. Your task directory should be flat, and the naming scheme is also important, as you will see in the problem set section below.
+4. Define an experiment config file in `configs/`. You can use one of our configs there for a start, or use the one below as an inspiration:
 
    ```yaml
    # Optional: Directory where encoders (viclip, ...) and cache are stored
