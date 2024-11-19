@@ -12,13 +12,13 @@ with a focus on capabilities required for using vision-language models (VLMs) as
 
 ![Level 1 of ViSTa has videos containing a single action, like "We pick up a banana" or "We put a banana in a closet"; Level 2 has videos of two actions in sequence, like "We pick up a banana, then we put the banana in a closet"; this continues through Level 8, which has videos of sequences of eight actions, like "We pick up a banana, then [...], then we put the banana in a closet, then [...]".](./.assets/dataset_overview.png?raw=true)
 
-## Usage
+## Getting started
 
 The recommended way to use ViSTa is to download it as a standalone dataset and to build your own evaluation code on top of it. More on this below. For those who would like to use our own evaluation code, we supply it in `evaluation/`.
 
 **Downloading the dataset:** The dataset has three parts: the videos, the problem sets, and the metadata table connecting them. The videos can be downloaded from [todo: video data link], and the metadata table and the problem sets (also called `tasks`) are in the repository under `data/`.
 
-**Using the dataset:** Download the videos and load the metadata table. The metadata table has the complete information about each video:
+**Using the dataset:** Download the videos and load the metadata table. The metadata table has the complete information about each video, allowing you to iterate through all the videos and load them as needed:
 
 - `video`: the path to the video file, relative to the root of the downloaded videos directory
 - `description`: the description of the video
@@ -29,7 +29,7 @@ The recommended way to use ViSTa is to download it as a standalone dataset and t
 
 Some videos belong to multiple problem sets, and some videos have multiple valid descriptions. In these cases, the table contains multiple rows for the same video.
 
-If you are only interested in separate videos, you can stop reading here. If you want to evaluate your model on the problem sets we supply, take a look at the yaml files in `data/tasks/[[problem_set_id]]` for our GPT prompts. If you want, you can also programmatically load each task through the `Task` class in `evaluation/src/vlm/objects.py`.
+If you want to evaluate your model on the problem sets we supply, take a look at the yaml files in `data/tasks/[[problem_set_id]]` for our GPT prompts. You can also programmatically load each problem set through the `Task` class in `evaluation/src/vlm/objects.py`.
 
 ## Levels
 
