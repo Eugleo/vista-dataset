@@ -1,6 +1,7 @@
 # ViSTa Supplementary Material
 
-_Authors:_ [todo]
+_Authors:_ [Evžen Wybitul](https://github.com/Eugleo), [Evan Ryan Gunter](https://github.com/evgunter), [Mikhail Seleznyov](https://github.com/Dont-Care-Didnt-Ask), [David Lindner](https://github.com/david-lindner)
+
 
 _Link to full paper:_ [todo]
 
@@ -16,7 +17,7 @@ with a focus on capabilities required for using vision-language models (VLMs) as
 
 The recommended way to use ViSTa is to download it as a standalone dataset and to build your own evaluation code on top of it. More on this below. For those who would like to use our own evaluation code, we supply it in `evaluation/`.
 
-**Downloading the dataset:** The dataset has three parts: the videos, the problem sets, and the metadata table connecting them. The videos can be downloaded from [todo: video data link], and the metadata table and the problem sets (also called `tasks`) are in the repository under `data/`.
+**Downloading the dataset:** The dataset has three parts: the videos, the problem sets, and the metadata table connecting them. The videos can be downloaded [here](https://console.cloud.google.com/storage/browser/vista-dataset), and the metadata table and the problem sets (also called `tasks`) are in the repository under `data/`.
 
 **Using the dataset:** Download the videos and load the metadata table. The metadata table has the complete information about each video, allowing you to iterate through all the videos and load them as needed:
 
@@ -105,7 +106,3 @@ All models were good at recognizing objects, but had a harder time recognizing o
 None of the models were able to understand sequences of tasks well.
 
 ![Results on current VLMs. In level 1, all models are good at recognizing objects, but only GPT-4o can recognize actions and object properties. In higher levels, the models' performance drops off, with CLIP and ViCLIP starting around 0.5 F1, with baseline around 0.2 F1.](./.assets/results.png?raw=true)
-
-## Authors
-
-[Evžen Wybitul](https://github.com/Eugleo), [Evan Ryan Gunter](https://github.com/evgunter), [Mikhail Seleznyov](https://github.com/Dont-Care-Didnt-Ask), [David Lindner](https://github.com/david-lindner)
