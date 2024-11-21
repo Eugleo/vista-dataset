@@ -1,0 +1,26 @@
+[
+    {
+        "path": "foundation/on_v_off/floor_lamp/on/floor_lamp_on_1.mp4",
+        "label": "state_on"
+    },
+    {
+        "path": "foundation/on_v_off/floor_lamp/on/floor_lamp_on_2.mp4",
+        "label": "state_on"
+    },
+    {
+        "path": "foundation/on_v_off/floor_lamp/on/floor_lamp_on_3.mp4",
+        "label": "state_on"
+    },
+    {
+        "path": "foundation/on_v_off/floor_lamp/off/floor_lamp_off_1.mp4",
+        "label": "state_off"
+    },
+    {
+        "path": "foundation/on_v_off/floor_lamp/off/floor_lamp_off_2.mp4",
+        "label": "state_off"
+    },
+    {
+        "path": "foundation/on_v_off/floor_lamp/off/floor_lamp_off_3.mp4",
+        "label": "state_off"
+    }
+]

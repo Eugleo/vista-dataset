@@ -1,0 +1,14 @@
+[
+    {
+        "path": "permutations/perm_l8_2_clean_p_put_p_m_pick_ap_m_put_ap_m_tog_fl_pick_butterknife_f_put_butterknife_s_pick_p_m.mp4",
+        "label": "label_0"
+    },
+    {
+        "path": "permutations/perm_l8_2_pick_butterknife_f_put_butterknife_s_pick_ap_m_tog_fl_put_ap_m_pick_p_m_clean_p_put_p_m.mp4",
+        "label": "label_1"
+    },
+    {
+        "path": "permutations/perm_l8_2_pick_p_m_clean_p_put_p_m_pick_ap_m_put_ap_m_pick_butterknife_f_tog_fl_put_butterknife_s.mp4",
+        "label": "label_2"
+    }
+]

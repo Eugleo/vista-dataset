@@ -1,0 +1,34 @@
+example_gpt: '
+
+Example:
+
+
+  (note that this example is for five frames for illustration purposes, but you should
+  work with as many frames as you are given)
+
+
+  Input: [5 frames]
+
+
+  Frame-by-frame description:
+
+  1. Three cans are in a line on a table.
+
+  2. A hand has appeared, partly blocking the left can from view. The middle and right cans are unchanged.
+
+  3. We have picked up the middle can. The left and right cans have not been moved.
+
+  4. We are still holding the can that was in the middle at the bottom of the screen.
+
+  5. We are is still holding the can that was in the middle, and the left and right cans
+  are still in the same position as before. We picked up the middle can.
+  '
+label_prompts:
+  left: We pick up the object on the left
+  middle: We pick up the object in the middle
+  right: We pick up the object on the right
+prompt_gpt: Your task is to describe what you see in each frame, separately, in a
+  list. The frames will depict us picking up one of three objects arranged in a line.
+  Your goal is to discern which of the three objects was picked up. You shouldn't lock-in to one
+  answer too early. Instead, try to describe the frames as accurately as possible, reasoning about
+  the location of all the objects and how they compare to the previous frame. 

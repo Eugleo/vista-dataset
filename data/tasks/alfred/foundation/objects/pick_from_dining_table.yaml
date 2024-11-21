@@ -1,0 +1,104 @@
+example_gpt: 'A few tips and hints to help you get started:
+
+  - ''Holding an object'' is depicted as the object being at the very bottom of the
+  screen and close to the camera, without any visible hands. Similarly, no hands are
+  shown for cleaning, heating, or any other action.
+
+  - The objects almost never lie on the floor. If the object is at the bottom of the
+  screen, close to the camera and looks like it is lying on the floor, we are most
+  likely just holding it.
+
+  - You are bound not to recognize some objects correctly, which might hurt your peformance
+  in downstream tasks. Instead of running with your first guess, try to list a few
+  alternatives for an object if you''re unsure what it is.
+
+  - If we didn''t have anything in hand in a frame, and something appears in our hands
+  in the next frame, we must have performed a `pick` action
+
+
+  Example with the tips applied:
+
+
+  (note that this example is for five frames for illustration purposes, but you should
+  work with as many frames as you are given)
+
+
+  Input: [5 frames]
+
+
+  Frame-by-frame description:
+
+  1. We are in the middle of the room. We do not see the dining table yet.
+
+  2. The location has changed. We see something that might be the dining table. We
+  see a multitude of objects there, among them a toaster, a butter knife, a laptop,
+  and a mug, and a pan or possibly a bowl.
+
+  2. The scene has not changed much since the last frame. We are still near the dining
+  table.
+
+  3. We see a rectangular object at the bottom of the screen, suggesting we are holding
+  it. Considering the selection of objects on the dining table we saw above, it is
+  likely the laptop or the toaster.
+
+  4. The angle has changed a bit and we see that the laptop is still on the dining
+  table. This means the thing we hold must be the toaster, based on our previous observations.
+
+  5. We are now a bit further away from the dining table. We are still holding the
+  toaster.'
+label_prompts:
+  label_0: We pick up a box from the dining table
+  label_1: We pick up a key chain from the dining table
+  label_10: We pick up a statue from the dining table
+  label_11: We pick up a book from the dining table
+  label_2: We pick up a watch from the dining table
+  label_3: We pick up a cd from the dining table
+  label_4: We pick up a remote control from the dining table
+  label_5: We pick up a cell phone from the dining table
+  label_6: We pick up a pencil from the dining table
+  label_7: We pick up a vase from the dining table
+  label_8: We pick up a newspaper from the dining table
+  label_9: We pick up a alarm clock from the dining table
+metadata:
+  concepts:
+    high_level_actions:
+    - PickupObject
+    - GotoLocation
+    low_level_actions:
+    - LookDown
+    - LookUp
+    - RotateLeft
+    - PickupObject
+    - RotateRight
+    - MoveAhead
+    objects:
+    - alarm clock
+    - dresser
+    - statue
+    - arm chair
+    - ottoman
+    - box
+    - cell phone
+    - shelf
+    - sofa
+    - dining table
+    - vase
+    - book
+    - drawer
+    - cd
+    - desk lamp
+    - safe
+    - side table
+    - newspaper
+    - pencil
+    - coffee table
+    - floor lamp
+    - watch
+    - garbage can
+    - key chain
+    - remote control
+prompt_gpt: Your task is to describe what you see in each frame, separately, in a
+  list. The frames will depict us or putting down an object into (or on) a dining
+  table. Your eventual goal will be to recognize the object, but you shouldn't lock-in
+  to one answer too early. Instead, try to describe the object as accurately as possible
+  separately for each frame, refining your answer as you see more frames.

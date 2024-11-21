@@ -1,0 +1,197 @@
+2:
+permutations set 1:
+toggle(desk_lamp, None), cool(can, None)
+cool(can, None), toggle(desk_lamp, None)
+
+permutations set 2:
+put(unknown, sink), toggle(desk_lamp, None)
+toggle(desk_lamp, None), put(unknown, sink)
+
+permutations set 3:
+heat(apple, None), toggle(desk_lamp, None)
+toggle(desk_lamp, None), heat(apple, None)
+
+permutations set 4:
+clean(potato, None), cool(potato, None)
+cool(potato, None), clean(potato, None)
+
+permutations set 5:
+slice(potato, None), cool(potato, None)
+cool(potato, None), slice(potato, None)
+
+permutations set 6:
+toggle(desk_lamp, None), pickup(butterknife, microwave)
+pickup(butterknife, microwave), toggle(desk_lamp, None)
+
+permutations set 7:
+heat(potato, None), cool(potato, None)
+cool(potato, None), heat(potato, None)
+
+permutations set 8:
+put(unknown, microwave), toggle(floor_lamp, None)
+toggle(floor_lamp, None), put(unknown, microwave)
+
+3:
+permutations set 1:
+toggle(desk_lamp, None), toggle(floor_lamp, None), put(unknown, table)
+toggle(floor_lamp, None), toggle(desk_lamp, None), put(unknown, table)
+put(unknown, table), toggle(desk_lamp, None), toggle(floor_lamp, None)
+
+permutations set 2:
+toggle(floor_lamp, None), heat(potato, None), slice(potato, None)
+slice(potato, None), toggle(floor_lamp, None), heat(potato, None)
+slice(potato, None), heat(potato, None), toggle(floor_lamp, None)
+
+permutations set 3:
+pickup(potato, freezer), put(potato, freezer), toggle(floor_lamp, None)
+toggle(floor_lamp, None), pickup(potato, freezer), put(potato, freezer)
+pickup(potato, freezer), toggle(floor_lamp, None), put(potato, freezer)
+
+permutations set 4:
+toggle(floor_lamp, None), put(unknown, freezer), pickup(hammer, sink)
+put(unknown, freezer), pickup(hammer, sink), toggle(floor_lamp, None)
+put(unknown, freezer), toggle(floor_lamp, None), pickup(hammer, sink)
+
+permutations set 5:
+pickup(potato, freezer), heat(potato, None), toggle(floor_lamp, None)
+toggle(floor_lamp, None), pickup(potato, freezer), heat(potato, None)
+pickup(potato, freezer), toggle(floor_lamp, None), heat(potato, None)
+
+permutations set 6:
+pickup(apple, microwave), put(apple, microwave), toggle(floor_lamp, None)
+toggle(floor_lamp, None), pickup(apple, microwave), put(apple, microwave)
+pickup(apple, microwave), toggle(floor_lamp, None), put(apple, microwave)
+
+permutations set 7:
+toggle(desk_lamp, None), toggle(floor_lamp, None), pickup(potato, sink)
+pickup(potato, sink), toggle(floor_lamp, None), toggle(desk_lamp, None)
+toggle(desk_lamp, None), pickup(potato, sink), toggle(floor_lamp, None)
+
+permutations set 8:
+put(unknown, counter), pickup(hammer, microwave), toggle(floor_lamp, None)
+put(unknown, counter), toggle(floor_lamp, None), pickup(hammer, microwave)
+toggle(floor_lamp, None), put(unknown, counter), pickup(hammer, microwave)
+
+4:
+permutations set 1:
+heat(potato, None), put(potato, sink), toggle(desk_lamp, None), pickup(mug, freezer)
+heat(potato, None), put(potato, sink), pickup(mug, freezer), toggle(desk_lamp, None)
+toggle(desk_lamp, None), heat(potato, None), put(potato, sink), pickup(mug, freezer)
+
+permutations set 2:
+toggle(floor_lamp, None), slice(potato, None), put(potato, freezer), toggle(floor_lamp, None)
+toggle(floor_lamp, None), slice(potato, None), toggle(floor_lamp, None), put(potato, freezer)
+slice(potato, None), toggle(floor_lamp, None), put(potato, freezer), toggle(floor_lamp, None)
+
+permutations set 3:
+clean(mug, None), put(mug, sink), toggle(desk_lamp, None), pickup(potato, counter)
+clean(mug, None), put(mug, sink), pickup(potato, counter), toggle(desk_lamp, None)
+toggle(desk_lamp, None), clean(mug, None), put(mug, sink), pickup(potato, counter)
+
+permutations set 4:
+put(unknown, counter), pickup(hammer, table), toggle(floor_lamp, None), toggle(desk_lamp, None)
+put(unknown, counter), toggle(floor_lamp, None), toggle(desk_lamp, None), pickup(hammer, table)
+toggle(desk_lamp, None), toggle(floor_lamp, None), put(unknown, counter), pickup(hammer, table)
+
+permutations set 5:
+toggle(floor_lamp, None), heat(mug, None), toggle(floor_lamp, None), clean(mug, None)
+clean(mug, None), toggle(floor_lamp, None), heat(mug, None), toggle(floor_lamp, None)
+toggle(floor_lamp, None), clean(mug, None), heat(mug, None), toggle(floor_lamp, None)
+
+permutations set 6:
+put(unknown, freezer), toggle(floor_lamp, None), pickup(potato, freezer), put(potato, freezer)
+toggle(floor_lamp, None), put(unknown, freezer), pickup(potato, freezer), put(potato, freezer)
+put(unknown, freezer), pickup(potato, freezer), put(potato, freezer), toggle(floor_lamp, None)
+
+permutations set 7:
+put(unknown, microwave), toggle(desk_lamp, None), pickup(mug, counter), put(mug, microwave)
+toggle(desk_lamp, None), put(unknown, microwave), pickup(mug, counter), put(mug, microwave)
+put(unknown, microwave), pickup(mug, counter), put(mug, microwave), toggle(desk_lamp, None)
+
+permutations set 8:
+toggle(floor_lamp, None), heat(potato, None), put(potato, microwave), toggle(desk_lamp, None)
+toggle(desk_lamp, None), heat(potato, None), toggle(floor_lamp, None), put(potato, microwave)
+heat(potato, None), put(potato, microwave), toggle(desk_lamp, None), toggle(floor_lamp, None)
+
+5:
+permutations set 1:
+toggle(desk_lamp, None), put(unknown, table), pickup(potato, freezer), toggle(floor_lamp, None), slice(potato, None)
+put(unknown, table), toggle(floor_lamp, None), toggle(desk_lamp, None), pickup(potato, freezer), slice(potato, None)
+put(unknown, table), toggle(desk_lamp, None), pickup(potato, freezer), slice(potato, None), toggle(floor_lamp, None)
+
+permutations set 2:
+toggle(desk_lamp, None), put(unknown, table), pickup(hammer, table), toggle(desk_lamp, None), put(hammer, table)
+put(unknown, table), toggle(desk_lamp, None), pickup(hammer, table), put(hammer, table), toggle(desk_lamp, None)
+put(unknown, table), pickup(hammer, table), toggle(desk_lamp, None), put(hammer, table), toggle(desk_lamp, None)
+
+permutations set 3:
+pickup(hammer, freezer), toggle(desk_lamp, None), toggle(floor_lamp, None), toggle(desk_lamp, None), toggle(floor_lamp, None)
+toggle(floor_lamp, None), toggle(desk_lamp, None), toggle(floor_lamp, None), toggle(desk_lamp, None), pickup(hammer, freezer)
+toggle(desk_lamp, None), pickup(hammer, freezer), toggle(floor_lamp, None), toggle(desk_lamp, None), toggle(floor_lamp, None)
+
+permutations set 4:
+toggle(floor_lamp, None), put(unknown, sink), pickup(mug, counter), toggle(floor_lamp, None), heat(mug, None)
+toggle(floor_lamp, None), put(unknown, sink), toggle(floor_lamp, None), pickup(mug, counter), heat(mug, None)
+put(unknown, sink), pickup(mug, counter), toggle(floor_lamp, None), heat(mug, None), toggle(floor_lamp, None)
+
+permutations set 5:
+pickup(can, counter), put(can, sink), pickup(can, freezer), cool(can, None), toggle(desk_lamp, None)
+toggle(desk_lamp, None), pickup(can, freezer), cool(can, None), put(can, sink), pickup(can, counter)
+pickup(can, freezer), cool(can, None), toggle(desk_lamp, None), put(can, sink), pickup(can, counter)
+
+permutations set 6:
+pickup(apple, microwave), put(apple, sink), toggle(desk_lamp, None), toggle(floor_lamp, None), pickup(can, sink)
+toggle(desk_lamp, None), pickup(apple, microwave), toggle(floor_lamp, None), put(apple, sink), pickup(can, sink)
+pickup(apple, microwave), put(apple, sink), toggle(floor_lamp, None), pickup(can, sink), toggle(desk_lamp, None)
+
+permutations set 7:
+put(unknown, sink), pickup(butterknife, table), toggle(desk_lamp, None), clean(butterknife, None), toggle(desk_lamp, None)
+toggle(desk_lamp, None), put(unknown, sink), toggle(desk_lamp, None), pickup(butterknife, table), clean(butterknife, None)
+put(unknown, sink), toggle(desk_lamp, None), pickup(butterknife, table), toggle(desk_lamp, None), clean(butterknife, None)
+
+permutations set 8:
+clean(butterknife, None), put(butterknife, microwave), pickup(can, counter), put(can, table), pickup(butterknife, counter)
+pickup(butterknife, counter), clean(butterknife, None), put(butterknife, microwave), pickup(can, counter), put(can, table)
+pickup(can, counter), put(can, table), pickup(butterknife, counter), clean(butterknife, None), put(butterknife, microwave)
+
+
+8:
+permutations set 1:
+toggle(floor_lamp, None), pickup(can, sink), put(can, freezer), pickup(mug, table), put(mug, freezer), pickup(can, microwave), put(can, sink), pickup(mug, microwave)
+pickup(mug, microwave), put(mug, freezer), pickup(can, microwave), put(can, sink), pickup(can, sink), put(can, freezer), pickup(mug, table), toggle(floor_lamp, None)
+pickup(mug, table), put(mug, freezer), toggle(floor_lamp, None), pickup(can, sink), put(can, sink), pickup(can, microwave), put(can, freezer), pickup(mug, microwave)
+
+permutations set 2:
+pickup(potato, microwave), clean(potato, None), put(potato, microwave), pickup(apple, microwave), put(apple, microwave), pickup(butterknife, freezer), toggle(floor_lamp, None), put(butterknife, sink)
+clean(potato, None), put(potato, microwave), pickup(apple, microwave), put(apple, microwave), toggle(floor_lamp, None), pickup(butterknife, freezer), put(butterknife, sink), pickup(potato, microwave)
+pickup(butterknife, freezer), put(butterknife, sink), pickup(apple, microwave), put(apple, microwave), toggle(floor_lamp, None), pickup(potato, microwave), clean(potato, None), put(potato, microwave)
+
+permutations set 3:
+toggle(desk_lamp, None), pickup(butterknife, microwave), toggle(desk_lamp, None), put(butterknife, microwave), pickup(potato, freezer), slice(potato, None), heat(potato, None), toggle(floor_lamp, None)
+pickup(butterknife, microwave), toggle(desk_lamp, None), put(butterknife, microwave), toggle(desk_lamp, None), pickup(potato, freezer), slice(potato, None), toggle(floor_lamp, None), heat(potato, None)
+pickup(butterknife, microwave), put(butterknife, microwave), toggle(desk_lamp, None), pickup(potato, freezer), toggle(floor_lamp, None), heat(potato, None), slice(potato, None), toggle(desk_lamp, None)
+
+permutations set 4:
+heat(potato, None), put(potato, counter), pickup(potato, table), put(potato, table), pickup(apple, microwave), toggle(floor_lamp, None), put(apple, table), pickup(potato, microwave)
+pickup(potato, microwave), put(potato, counter), toggle(floor_lamp, None), pickup(potato, table), heat(potato, None), put(potato, table), pickup(apple, microwave), put(apple, table)
+pickup(apple, microwave), put(apple, table), pickup(potato, table), heat(potato, None), put(potato, counter), pickup(potato, microwave), put(potato, table), toggle(floor_lamp, None)
+
+permutations set 5:
+toggle(desk_lamp, None), put(unknown, table), pickup(hammer, microwave), toggle(floor_lamp, None), cool(hammer, None), put(hammer, table), pickup(can, table), clean(can, None)
+put(unknown, table), pickup(hammer, microwave), toggle(floor_lamp, None), cool(hammer, None), toggle(desk_lamp, None), put(hammer, table), pickup(can, table), clean(can, None)
+toggle(desk_lamp, None), put(unknown, table), pickup(hammer, microwave), cool(hammer, None), put(hammer, table), pickup(can, table), clean(can, None), toggle(floor_lamp, None)
+
+permutations set 6:
+put(unknown, counter), pickup(can, counter), put(can, freezer), pickup(potato, freezer), toggle(desk_lamp, None), toggle(floor_lamp, None), put(potato, freezer), toggle(floor_lamp, None)
+put(unknown, counter), pickup(potato, freezer), put(potato, freezer), toggle(floor_lamp, None), pickup(can, counter), toggle(floor_lamp, None), put(can, freezer), toggle(desk_lamp, None)
+toggle(desk_lamp, None), put(unknown, counter), pickup(can, counter), toggle(floor_lamp, None), put(can, freezer), pickup(potato, freezer), toggle(floor_lamp, None), put(potato, freezer)
+
+permutations set 7:
+pickup(apple, sink), heat(apple, None), put(apple, freezer), pickup(potato, counter), toggle(desk_lamp, None), heat(potato, None), cool(potato, None), put(potato, freezer)
+heat(apple, None), put(apple, freezer), toggle(desk_lamp, None), pickup(potato, counter), cool(potato, None), heat(potato, None), put(potato, freezer), pickup(apple, sink)
+toggle(desk_lamp, None), heat(apple, None), put(apple, freezer), pickup(potato, counter), cool(potato, None), heat(potato, None), put(potato, freezer), pickup(apple, sink)
+
+permutations set 8:
+toggle(desk_lamp, None), put(unknown, sink), pickup(apple, sink), heat(apple, None), toggle(desk_lamp, None), put(apple, counter), pickup(can, counter), cool(can, None)
+put(unknown, sink), pickup(apple, sink), heat(apple, None), put(apple, counter), pickup(can, counter), toggle(desk_lamp, None), cool(can, None), toggle(desk_lamp, None)
+toggle(desk_lamp, None), put(unknown, sink), toggle(desk_lamp, None), pickup(apple, sink), heat(apple, None), put(apple, counter), pickup(can, counter), cool(can, None)

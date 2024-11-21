@@ -1,0 +1,10 @@
+[
+    {
+        "path": "foundation/on_v_off/desk_lamp/on/desk_lamp_on.mp4",
+        "label": "state_on"
+    },
+    {
+        "path": "foundation/on_v_off/desk_lamp/off/desk_lamp_off.mp4",
+        "label": "state_off"
+    }
+]

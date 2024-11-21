@@ -1,0 +1,49 @@
+example_gpt: '
+
+Example:
+
+
+  (note that this example is for five frames for illustration purposes, but you should
+  work with as many frames as you are given)
+
+
+  Input: [5 frames]
+
+
+  Frame-by-frame description:
+
+  1. We are near the countertop. We are holding $(A_OR_AN_OBJ) at the bottom of the screen.
+
+  2. We are now near a sink. We are still holding the $(OBJ) at the bottom of the screen.
+
+  3. We are now holding the $(OBJ) in the sink. The water is not running yet.
+
+  4. We are still holding the $(OBJ) in the sink. The water is still not running.
+
+  5. We are near the countertop again. Although the $(OBJ) was in the sink, we didn''t run water over it, which means
+  we did not clean it.
+  '
+label_prompts:
+  positive: We clean the $(OBJ) in the sink
+  negative: We hold the $(OBJ) in the sink, but we don't clean it
+metadata:
+  concepts:
+    high_level_actions:
+    - CleanObject
+    - GotoLocation
+    low_level_actions:
+    - LookDown
+    - PutObject
+    - LookUp
+    - ToggleObjectOn
+    - RotateLeft
+    - ToggleObjectOff
+    - PickupObject
+    - RotateRight
+    - MoveAhead
+prompt_gpt: The frames will depict us carrying $(A_OR_AN_OBJ) to a sink and then possibly
+  cleaning it under running water. Your eventual goal will be to discern whether all
+  the steps required for cleaning the object actually happened, but you shouldn't
+  lock-in to one answer too early. Instead, for each frame, concisely describe the
+  scene, the objects we're holding, and from that deduce what actions have likely
+  been performed since the last frame.

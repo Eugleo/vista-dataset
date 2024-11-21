@@ -1,0 +1,14 @@
+[
+    {
+        "path": "permutations/perm_l8_1_pick_mug_m_put_mug_f_pick_can_m_put_can_s_pick_can_s_put_can_f_pick_mug_t_tog_fl.mp4",
+        "label": "label_0"
+    },
+    {
+        "path": "permutations/perm_l8_1_pick_mug_t_put_mug_f_tog_fl_pick_can_s_put_can_s_pick_can_m_put_can_f_pick_mug_m.mp4",
+        "label": "label_1"
+    },
+    {
+        "path": "permutations/perm_l8_1_tog_fl_pick_can_s_put_can_f_pick_mug_t_put_mug_f_pick_can_m_put_can_s_pick_mug_m.mp4",
+        "label": "label_2"
+    }
+]

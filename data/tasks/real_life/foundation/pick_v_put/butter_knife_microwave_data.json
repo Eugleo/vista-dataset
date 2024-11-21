@@ -1,0 +1,50 @@
+[
+    {
+        "path": "foundation/pick_v_put/pick_butter_knife_lh_m-c.mp4",
+        "label": "pick"
+    },
+    {
+        "path": "foundation/put_object/microwave/butter_knife/butter_knife_lh_c-m.mp4",
+        "label": "put"
+    },
+    {
+        "path": "foundation/pick_v_put/pick_butter_knife_lh_m-f.mp4",
+        "label": "pick"
+    },
+    {
+        "path": "foundation/put_object/microwave/butter_knife/butter_knife_lh_f-m.mp4",
+        "label": "put"
+    },
+    {
+        "path": "foundation/pick_v_put/pick_butter_knife_lh_m-s.mp4",
+        "label": "pick"
+    },
+    {
+        "path": "foundation/put_object/microwave/butter_knife/butter_knife_lh_s-m.mp4",
+        "label": "put"
+    },
+    {
+        "path": "foundation/pick_v_put/pick_butter_knife_rh_m-c.mp4",
+        "label": "pick"
+    },
+    {
+        "path": "foundation/put_object/microwave/butter_knife/butter_knife_rh_c-m.mp4",
+        "label": "put"
+    },
+    {
+        "path": "foundation/pick_v_put/pick_butter_knife_rh_m-f.mp4",
+        "label": "pick"
+    },
+    {
+        "path": "foundation/put_object/microwave/butter_knife/butter_knife_rh_f-m.mp4",
+        "label": "put"
+    },
+    {
+        "path": "foundation/pick_v_put/pick_butter_knife_rh_m-s.mp4",
+        "label": "pick"
+    },
+    {
+        "path": "foundation/put_object/microwave/butter_knife/butter_knife_rh_s-m.mp4",
+        "label": "put"
+    }
+]

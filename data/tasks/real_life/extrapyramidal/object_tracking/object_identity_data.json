@@ -1,0 +1,50 @@
+[
+    {
+        "path": "extrapyramidal/object_tracking/object_identity/nectarine_jar_dont_switch.mp4",
+        "label": "same"
+    },
+    {
+        "path": "extrapyramidal/object_tracking/object_identity/nectarine_jar_switch.mp4",
+        "label": "different"
+    },
+    {
+        "path": "extrapyramidal/object_tracking/object_identity/chopstick_potato_dont_switch_1.mp4",
+        "label": "same"
+    },
+    {
+        "path": "extrapyramidal/object_tracking/object_identity/chopstick_potato_dont_switch_2.mp4",
+        "label": "same"
+    },
+    {
+        "path": "extrapyramidal/object_tracking/object_identity/chopstick_potato_dont_switch_3.mp4",
+        "label": "same"
+    },
+    {
+        "path": "extrapyramidal/object_tracking/object_identity/chopstick_potato_switch_1.mp4",
+        "label": "different"
+    },
+    {
+        "path": "extrapyramidal/object_tracking/object_identity/chopstick_potato_switch_2.mp4",
+        "label": "different"
+    },
+    {
+        "path": "extrapyramidal/object_tracking/object_identity/chopstick_potato_switch_3.mp4",
+        "label": "different"
+    },
+    {
+        "path": "extrapyramidal/object_tracking/object_identity/potato_chopstick_dont_switch_1.mp4",
+        "label": "same"
+    },
+    {
+        "path": "extrapyramidal/object_tracking/object_identity/potato_chopstick_dont_switch_2.mp4",
+        "label": "same"
+    },
+    {
+        "path": "extrapyramidal/object_tracking/object_identity/potato_chopstick_switch_1.mp4",
+        "label": "different"
+    },
+    {
+        "path": "extrapyramidal/object_tracking/object_identity/potato_chopstick_switch_2.mp4",
+        "label": "different"
+    }
+]

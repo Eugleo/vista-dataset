@@ -1,0 +1,10 @@
+[
+    {
+        "path": "foundation/toggle/desk_lamp_turn_on.mp4",
+        "label": "turn_on"
+    },
+    {
+        "path": "foundation/toggle/desk_lamp_turn_off.mp4",
+        "label": "turn_off"
+    }
+]

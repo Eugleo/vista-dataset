@@ -1,0 +1,10 @@
+[
+    {
+        "path": "foundation/on_v_off/sink/on/sink_on.mp4",
+        "label": "state_on"
+    },
+    {
+        "path": "foundation/on_v_off/sink/off/sink_off.mp4",
+        "label": "state_off"
+    }
+]

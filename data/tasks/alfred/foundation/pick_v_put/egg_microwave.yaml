@@ -1,0 +1,86 @@
+example_gpt: '
+
+  A few tips and hints to help you get started:
+
+  - ''Holding an object'' is depicted as the object being at the very bottom of the
+  screen and close to the camera, without any visible hands. Similarly, no hands are
+  shown for cleaning, heating, or any other action.
+
+  - The objects almost never lie on the floor. If the object is at the bottom of the
+  screen, close to the camera and looks like it is lying on the floor, we are most
+  likely just holding it.
+
+  - Sometimes it is hard to see where exactly we put the object. However, if we held
+  it in a frame and we don''t hold it in the next frame, we definitely had to put
+  it somewhere.
+
+  - We will never pick up an object and put it down in the same frame. Only exactly
+  one of these will happen.
+
+  - Sometimes, when putting down an object, we put it in or onto another object, instead
+  of a container. In that case you should describe the object we put the object in
+  or onto in addition to the general place this "container" is in.
+
+  - Similarly, sometimes we pick up an object that has another object in it. In that
+  case, list both objects in your description.
+
+
+  Example with the tips applied:
+
+
+  (note that this example is for five frames for illustration purposes, but you should
+  work with as many frames as you are given)
+
+
+  Input: [5 frames]
+
+
+  Frame-by-frame description:
+
+  1. We are near a countertop or a large table.
+
+  2. Now it seems we walked near a windowsill. We don''t appear to have anything in
+  hand. There is a egg on the windowsill, along with a toaster, and a bowl or a plate.
+
+  3. We seem to be holding the egg now, because it is at the bottom of the screen,
+  almost as if it was lying on the floor.
+
+  4. We still hold the egg. We are further from the windowsill now, possibly walking
+  towards somewhere else.
+
+  5. We still hold the egg.
+
+  '
+label_prompts:
+  label_0: We pick up a egg from the microwave
+  label_1: We put the egg in the microwave
+metadata:
+  concepts:
+    high_level_actions:
+    - PutObject
+    - PickupObject
+    - GotoLocation
+    low_level_actions:
+    - LookDown
+    - PutObject
+    - LookUp
+    - RotateLeft
+    - PickupObject
+    - OpenObject
+    - RotateRight
+    - CloseObject
+    - MoveAhead
+    objects:
+    - dining table
+    - plate
+    - sink basin
+    - counter top
+    - fridge
+    - egg
+    - microwave
+prompt_gpt: Your task is to describe what you see in each frame, separately, in a
+  list. The frames will depict us handling a egg, and your eventual goal will be to
+  discern whether picked it up during the video, or started out holding it and put
+  it down somewhere. You shouldn't lock-in to one answer too early. Instead, for each
+  frame, concisely describe the scene, the state of the egg, and what actions have
+  likely been performed since the last frame.

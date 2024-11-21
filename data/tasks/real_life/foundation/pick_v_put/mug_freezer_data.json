@@ -1,0 +1,50 @@
+[
+    {
+        "path": "foundation/pick_v_put/pick_mug_lh_f-c.mp4",
+        "label": "pick"
+    },
+    {
+        "path": "foundation/put_object/freezer/mug/mug_lh_c-f.mp4",
+        "label": "put"
+    },
+    {
+        "path": "foundation/pick_v_put/pick_mug_lh_f-m.mp4",
+        "label": "pick"
+    },
+    {
+        "path": "foundation/put_object/freezer/mug/mug_lh_m-f.mp4",
+        "label": "put"
+    },
+    {
+        "path": "foundation/pick_v_put/pick_mug_lh_f-s.mp4",
+        "label": "pick"
+    },
+    {
+        "path": "foundation/put_object/freezer/mug/mug_lh_s-f.mp4",
+        "label": "put"
+    },
+    {
+        "path": "foundation/pick_v_put/pick_mug_rh_f-c.mp4",
+        "label": "pick"
+    },
+    {
+        "path": "foundation/put_object/freezer/mug/mug_rh_c-f.mp4",
+        "label": "put"
+    },
+    {
+        "path": "foundation/pick_v_put/pick_mug_rh_f-m.mp4",
+        "label": "pick"
+    },
+    {
+        "path": "foundation/put_object/freezer/mug/mug_rh_m-f.mp4",
+        "label": "put"
+    },
+    {
+        "path": "foundation/pick_v_put/pick_mug_rh_f-s.mp4",
+        "label": "pick"
+    },
+    {
+        "path": "foundation/put_object/freezer/mug/mug_rh_s-f.mp4",
+        "label": "put"
+    }
+]

@@ -1,0 +1,64 @@
+example_gpt: '
+
+Example:
+
+
+  (note that this example is for five frames for illustration purposes, but you should
+  work with as many frames as you are given)
+
+
+  Input: [5 frames]
+
+
+  Frame-by-frame description:
+
+  1. We are nearing a countertop. We see an apple lying on the countertop. It is hard
+  to see whether it is sliced or not at an oblique angle like this.
+
+  2. We are now standing directly at the countertop.
+
+  3. We picked up the apple. It seems to be a wedge instead of the whole thing.
+
+  4. We now changed our position again. We can now see the apple is just a wedge
+  since we can see the inner texture.
+
+  5. We are now nearing a fridge, still holding the apple.
+
+  '
+label_prompts:
+  slice: We pick up a slice of apple
+  whole: We pick up an apple
+metadata:
+  concepts:
+    high_level_actions:
+    - PickupObject
+    - GotoLocation
+    low_level_actions:
+    - LookDown
+    - LookUp
+    - RotateLeft
+    - PickupObject
+    - OpenObject
+    - RotateRight
+    - CloseObject
+    - MoveAhead
+    objects:
+    - dining table
+    - apple
+    - pan
+    - pot
+    - garbage can
+    - bowl
+    - slice of apple
+    - plate
+    - sink basin
+    - side table
+    - counter top
+    - fridge
+    - microwave
+prompt_gpt: Your task is to describe what you see in each frame, separately, in a
+  list. The frames will depict us picking up an apple, or possibly just a piece or
+  slice of it. Your eventual goal will be to say whether the apple was picked up
+  whole, or if just a piece of it was picked, but you shouldn't lock-in to one answer
+  too early. Instead, for each frame, concisely describe the scene, the state of the
+  apple, and what actions have likely been performed since the last frame.

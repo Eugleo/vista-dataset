@@ -1,0 +1,14 @@
+[
+    {
+        "path": "permutations/perm_l4_5_clean_mug_tog_fl_heat_mug_tog_fl.mp4",
+        "label": "label_0"
+    },
+    {
+        "path": "permutations/perm_l4_5_tog_fl_clean_mug_heat_mug_tog_fl.mp4",
+        "label": "label_1"
+    },
+    {
+        "path": "permutations/perm_l4_5_tog_fl_heat_mug_tog_fl_clean_mug.mp4",
+        "label": "label_2"
+    }
+]

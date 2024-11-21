@@ -1,0 +1,50 @@
+[
+    {
+        "path": "foundation/pick_v_put/pick_mug_lh_s-c.mp4",
+        "label": "pick"
+    },
+    {
+        "path": "foundation/put_object/sink/mug/mug_lh_c-s.mp4",
+        "label": "put"
+    },
+    {
+        "path": "foundation/pick_v_put/pick_mug_lh_s-f.mp4",
+        "label": "pick"
+    },
+    {
+        "path": "foundation/put_object/sink/mug/mug_lh_f-s.mp4",
+        "label": "put"
+    },
+    {
+        "path": "foundation/pick_v_put/pick_mug_lh_s-m.mp4",
+        "label": "pick"
+    },
+    {
+        "path": "foundation/put_object/sink/mug/mug_lh_m-s.mp4",
+        "label": "put"
+    },
+    {
+        "path": "foundation/pick_v_put/pick_mug_rh_s-c.mp4",
+        "label": "pick"
+    },
+    {
+        "path": "foundation/put_object/sink/mug/mug_rh_c-s.mp4",
+        "label": "put"
+    },
+    {
+        "path": "foundation/pick_v_put/pick_mug_rh_s-f.mp4",
+        "label": "pick"
+    },
+    {
+        "path": "foundation/put_object/sink/mug/mug_rh_f-s.mp4",
+        "label": "put"
+    },
+    {
+        "path": "foundation/pick_v_put/pick_mug_rh_s-m.mp4",
+        "label": "pick"
+    },
+    {
+        "path": "foundation/put_object/sink/mug/mug_rh_m-s.mp4",
+        "label": "put"
+    }
+]

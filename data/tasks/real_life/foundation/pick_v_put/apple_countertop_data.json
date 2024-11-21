@@ -1,0 +1,50 @@
+[
+    {
+        "path": "foundation/pick_v_put/pick_apple_lh_c-f.mp4",
+        "label": "pick"
+    },
+    {
+        "path": "foundation/put_object/counter/apple/apple_lh_f-c.mp4",
+        "label": "put"
+    },
+    {
+        "path": "foundation/pick_v_put/pick_apple_lh_c-m.mp4",
+        "label": "pick"
+    },
+    {
+        "path": "foundation/put_object/counter/apple/apple_lh_m-c.mp4",
+        "label": "put"
+    },
+    {
+        "path": "foundation/pick_v_put/pick_apple_lh_c-s.mp4",
+        "label": "pick"
+    },
+    {
+        "path": "foundation/put_object/counter/apple/apple_lh_s-c.mp4",
+        "label": "put"
+    },
+    {
+        "path": "foundation/pick_v_put/pick_apple_rh_c-f.mp4",
+        "label": "pick"
+    },
+    {
+        "path": "foundation/put_object/counter/apple/apple_rh_f-c.mp4",
+        "label": "put"
+    },
+    {
+        "path": "foundation/pick_v_put/pick_apple_rh_c-m.mp4",
+        "label": "pick"
+    },
+    {
+        "path": "foundation/put_object/counter/apple/apple_rh_m-c.mp4",
+        "label": "put"
+    },
+    {
+        "path": "foundation/pick_v_put/pick_apple_rh_c-s.mp4",
+        "label": "pick"
+    },
+    {
+        "path": "foundation/put_object/counter/apple/apple_rh_s-c.mp4",
+        "label": "put"
+    }
+]

@@ -1,0 +1,39 @@
+example_gpt: '
+
+Example:
+
+
+  (note that this example is for five frames for illustration purposes, but you should
+  work with as many frames as you are given)
+
+
+  Input: [5 frames]
+
+
+  Frame-by-frame description:
+
+  1. A can and an apple sit on a table. The can is to the left of the apple. A hand is in the lower left corner,
+  and appears to be reaching toward the can.
+
+  2. The can is now closer to the center and top of the image than it was before, and the hand is touching the apple,
+  which is in the same position as before.
+
+  3. We are now holding the apple at the bottom of the image. The can is still at the top of the image.
+
+  4. The apple is further to the right. We are holding the can at the top of the image.
+
+  5. The can is now back to its original position on the left side of the table, and the apple is still on the right.
+  The hand is no longer visible. The can is still furthest to the left, so the object that was furthest to the left
+  at the start of the video is still furthest to the left at the end.
+  
+'
+label_prompts:
+  same: The object that was furthest to the left at the start of the video is still furthest to the left at the end 
+  different: The object that was furthest to the left at the start of the video is no longer furthest to the left at the end
+prompt_gpt: Your task is to describe what you see in each frame, separately, in a
+  list. The frames will depict us moving around several objects on a table. Your eventual goal
+  will be to discern whether the object that started out furthest to the left is still furthest
+  to the left at the end of the video. The object may have been moved during the video; we just
+  want to know if it was moved back to where it originally started. You shouldn't lock-in to one
+  answer too early. Instead, try to describe the frames as accurately as possible, reasoning about
+  the location of all the objects and how they compare to the previous frame. 

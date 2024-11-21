@@ -1,0 +1,165 @@
+example_gpt: 'A few tips and hints to help you get started:
+
+  - ''Holding an object'' is depicted as the object being at the very bottom of the
+  screen and close to the camera, without any visible hands. Similarly, no hands are
+  shown for cleaning, heating, or any other action.
+
+  - The objects almost never lie on the floor. If the object is at the bottom of the
+  screen, close to the camera and looks like it is lying on the floor, we are most
+  likely just holding it.
+
+  - You are bound not to recognize some objects correctly, which might hurt your peformance
+  in downstream tasks. Instead of running with your first guess, try to list a few
+  alternatives for an object if you''re unsure what it is.
+
+  - If we didn''t have anything in hand in a frame, and something appears in our hands
+  in the next frame, we must have performed a `pick` action
+
+
+  Example with the tips applied:
+
+
+  (note that this example is for five frames for illustration purposes, but you should
+  work with as many frames as you are given)
+
+
+  Input: [5 frames]
+
+
+  Frame-by-frame description:
+
+  1. We are in the middle of the room. We do not see the counter top yet.
+
+  2. The location has changed. We see something that might be the counter top. We
+  see a multitude of objects there, among them a toaster, a butter knife, a laptop,
+  and a mug, and a pan or possibly a bowl.
+
+  2. The scene has not changed much since the last frame. We are still near the counter
+  top.
+
+  3. We see a rectangular object at the bottom of the screen, suggesting we are holding
+  it. Considering the selection of objects on the counter top we saw above, it is
+  likely the laptop or the toaster.
+
+  4. The angle has changed a bit and we see that the laptop is still on the counter
+  top. This means the thing we hold must be the toaster, based on our previous observations.
+
+  5. We are now a bit further away from the counter top. We are still holding the
+  toaster.'
+label_prompts:
+  label_0: We pick up a ladle from the counter top
+  label_1: We pick up a butter knife from the counter top
+  label_10: We pick up a tissue box from the counter top
+  label_11: We pick up a bread from the counter top
+  label_12: We pick up a apple from the counter top
+  label_13: We pick up a glass bottle from the counter top
+  label_14: We pick up a slice of lettuce from the counter top
+  label_15: We pick up a lettuce from the counter top
+  label_16: We pick up a slice of tomato from the counter top
+  label_17: We pick up a spatula from the counter top
+  label_18: We pick up a soap bar from the counter top
+  label_19: We pick up a egg from the counter top
+  label_2: We pick up a slice of bread from the counter top
+  label_20: We pick up a fork from the counter top
+  label_21: We pick up a soap bottle from the counter top
+  label_22: We pick up a slice of potato from the counter top
+  label_23: We pick up a candle from the counter top
+  label_24: We pick up a cloth from the counter top
+  label_25: We pick up a cup from the counter top
+  label_26: We pick up a dish sponge from the counter top
+  label_27: We pick up a wine bottle from the counter top
+  label_28: We pick up a laptop from the counter top
+  label_29: We pick up a toilet paper from the counter top
+  label_3: We pick up a potato from the counter top
+  label_30: We pick up a bowl from the counter top
+  label_31: We pick up a pan from the counter top
+  label_32: We pick up a spoon from the counter top
+  label_33: We pick up a pepper shaker from the counter top
+  label_34: We pick up a kettle from the counter top
+  label_35: We pick up a hand towel from the counter top
+  label_36: We pick up a pen from the counter top
+  label_37: We pick up a pot from the counter top
+  label_38: We pick up a salt shaker from the counter top
+  label_39: We pick up a credit card from the counter top
+  label_4: We pick up a tomato from the counter top
+  label_5: We pick up a knife from the counter top
+  label_6: We pick up a mug from the counter top
+  label_7: We pick up a spray bottle from the counter top
+  label_8: We pick up a slice of apple from the counter top
+  label_9: We pick up a plate from the counter top
+metadata:
+  concepts:
+    high_level_actions:
+    - PickupObject
+    - GotoLocation
+    low_level_actions:
+    - LookDown
+    - LookUp
+    - RotateLeft
+    - PickupObject
+    - RotateRight
+    - CloseObject
+    - MoveAhead
+    objects:
+    - spatula
+    - bread
+    - dresser
+    - cup
+    - laptop
+    - spray bottle
+    - slice of apple
+    - butter knife
+    - fork
+    - dish sponge
+    - shelf
+    - plate
+    - microwave
+    - slice of bread
+    - apple
+    - dining table
+    - glass bottle
+    - candle
+    - drawer
+    - wine bottle
+    - cart
+    - soap bar
+    - bowl
+    - salt shaker
+    - slice of lettuce
+    - spoon
+    - lettuce
+    - side table
+    - cloth
+    - egg
+    - bathtub basin
+    - knife
+    - tissue box
+    - pot
+    - ladle
+    - slice of potato
+    - toilet paper hanger
+    - pepper shaker
+    - hand towel
+    - counter top
+    - fridge
+    - soap bottle
+    - mug
+    - kettle
+    - cabinet
+    - pan
+    - toilet paper
+    - garbage can
+    - bed
+    - toilet
+    - pen
+    - sink basin
+    - tomato
+    - stove burner
+    - potato
+    - slice of tomato
+    - credit card
+prompt_gpt: Your task is to describe what you see in each frame, separately, in a
+  list. The frames will depict us or putting down an object into (or on) a counter
+  top. Your eventual goal will be to recognize the object, but you shouldn't lock-in
+  to one answer too early. Instead, try to describe the object as accurately as possible
+  separately for each frame, refining your answer as you see more frames.

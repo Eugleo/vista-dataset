@@ -1,0 +1,14 @@
+[
+    {
+        "path": "videos/minecraft/multistep/2024-06-03 14-00-50-break-craft-place-2-cropped.mp4",
+        "label": "break_craft_place"
+    },
+    {
+        "path": "videos/minecraft/multistep/2024-06-03 16-57-12-craft-place-break-cropped.mp4",
+        "label": "craft_place_break"
+    },
+    {
+        "path": "videos/minecraft/multistep/2024-06-03 16-57-12-place-craft-break-cropped.mp4",
+        "label": "place_craft_break"
+    }
+]

@@ -1,0 +1,50 @@
+[
+    {
+        "path": "foundation/pick_v_put/pick_can_lh_c-f.mp4",
+        "label": "pick"
+    },
+    {
+        "path": "foundation/put_object/counter/can/can_lh_f-c.mp4",
+        "label": "put"
+    },
+    {
+        "path": "foundation/pick_v_put/pick_can_lh_c-m.mp4",
+        "label": "pick"
+    },
+    {
+        "path": "foundation/put_object/counter/can/can_lh_m-c.mp4",
+        "label": "put"
+    },
+    {
+        "path": "foundation/pick_v_put/pick_can_lh_c-s.mp4",
+        "label": "pick"
+    },
+    {
+        "path": "foundation/put_object/counter/can/can_lh_s-c.mp4",
+        "label": "put"
+    },
+    {
+        "path": "foundation/pick_v_put/pick_can_rh_c-f.mp4",
+        "label": "pick"
+    },
+    {
+        "path": "foundation/put_object/counter/can/can_rh_f-c.mp4",
+        "label": "put"
+    },
+    {
+        "path": "foundation/pick_v_put/pick_can_rh_c-m.mp4",
+        "label": "pick"
+    },
+    {
+        "path": "foundation/put_object/counter/can/can_rh_m-c.mp4",
+        "label": "put"
+    },
+    {
+        "path": "foundation/pick_v_put/pick_can_rh_c-s.mp4",
+        "label": "pick"
+    },
+    {
+        "path": "foundation/put_object/counter/can/can_rh_s-c.mp4",
+        "label": "put"
+    }
+]

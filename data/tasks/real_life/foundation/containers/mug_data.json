@@ -1,0 +1,98 @@
+[
+    {
+        "path": "foundation/put_object/counter/mug/mug_lh_f-c.mp4",
+        "label": "counter"
+    },
+    {
+        "path": "foundation/put_object/counter/mug/mug_lh_m-c.mp4",
+        "label": "counter"
+    },
+    {
+        "path": "foundation/put_object/counter/mug/mug_lh_s-c.mp4",
+        "label": "counter"
+    },
+    {
+        "path": "foundation/put_object/freezer/mug/mug_lh_c-f.mp4",
+        "label": "freezer"
+    },
+    {
+        "path": "foundation/put_object/freezer/mug/mug_lh_m-f.mp4",
+        "label": "freezer"
+    },
+    {
+        "path": "foundation/put_object/freezer/mug/mug_lh_s-f.mp4",
+        "label": "freezer"
+    },
+    {
+        "path": "foundation/put_object/microwave/mug/mug_lh_c-m.mp4",
+        "label": "microwave"
+    },
+    {
+        "path": "foundation/put_object/microwave/mug/mug_lh_f-m.mp4",
+        "label": "microwave"
+    },
+    {
+        "path": "foundation/put_object/microwave/mug/mug_lh_s-m.mp4",
+        "label": "microwave"
+    },
+    {
+        "path": "foundation/put_object/sink/mug/mug_lh_c-s.mp4",
+        "label": "sink"
+    },
+    {
+        "path": "foundation/put_object/sink/mug/mug_lh_f-s.mp4",
+        "label": "sink"
+    },
+    {
+        "path": "foundation/put_object/sink/mug/mug_lh_m-s.mp4",
+        "label": "sink"
+    },
+    {
+        "path": "foundation/put_object/counter/mug/mug_rh_f-c.mp4",
+        "label": "counter"
+    },
+    {
+        "path": "foundation/put_object/counter/mug/mug_rh_m-c.mp4",
+        "label": "counter"
+    },
+    {
+        "path": "foundation/put_object/counter/mug/mug_rh_s-c.mp4",
+        "label": "counter"
+    },
+    {
+        "path": "foundation/put_object/freezer/mug/mug_rh_c-f.mp4",
+        "label": "freezer"
+    },
+    {
+        "path": "foundation/put_object/freezer/mug/mug_rh_m-f.mp4",
+        "label": "freezer"
+    },
+    {
+        "path": "foundation/put_object/freezer/mug/mug_rh_s-f.mp4",
+        "label": "freezer"
+    },
+    {
+        "path": "foundation/put_object/microwave/mug/mug_rh_c-m.mp4",
+        "label": "microwave"
+    },
+    {
+        "path": "foundation/put_object/microwave/mug/mug_rh_f-m.mp4",
+        "label": "microwave"
+    },
+    {
+        "path": "foundation/put_object/microwave/mug/mug_rh_s-m.mp4",
+        "label": "microwave"
+    },
+    {
+        "path": "foundation/put_object/sink/mug/mug_rh_c-s.mp4",
+        "label": "sink"
+    },
+    {
+        "path": "foundation/put_object/sink/mug/mug_rh_f-s.mp4",
+        "label": "sink"
+    },
+    {
+        "path": "foundation/put_object/sink/mug/mug_rh_m-s.mp4",
+        "label": "sink"
+    }
+]

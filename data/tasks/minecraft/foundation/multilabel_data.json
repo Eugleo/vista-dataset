@@ -1,0 +1,130 @@
+[
+  {
+    "path": "videos/minecraft/mp4_json_local_pairs/minecraft_2024-04-17-22-07-46-combat-thing-02.mp4",
+    "label": "combat"
+  },
+  {
+    "path": "videos/minecraft/mp4_json_local_pairs/minecraft_2024-04-17-22-07-46-mine-thing-01.mp4",
+    "label": "break,mine,pickup"
+  },
+  {
+    "path": "videos/minecraft/mp4_json_local_pairs/minecraft_2024-04-17-22-07-46-find-thing-01.mp4",
+    "label": "find,pickup"
+  },
+  {
+    "path": "videos/minecraft/mp4_json_local_pairs/minecraft_2024-04-17-22-07-46-break-thing-02.mp4",
+    "label": "break,pickup"
+  },
+  {
+    "path": "videos/minecraft/mp4_json_local_pairs/minecraft_2024-04-17-22-07-46-break-thing-01.mp4",
+    "label": "break,find,pickup"
+  },
+  {
+    "path": "videos/minecraft/mp4_json_local_pairs/minecraft_2024-04-17-22-07-46-combat-thing-01.mp4",
+    "label": "combat"
+  },
+  {
+    "path": "videos/minecraft/mp4_json_local_pairs/minecraft_2024-04-17-22-07-46-craft-thing-01.mp4",
+    "label": "craft"
+  },
+  {
+    "path": "videos/minecraft/mp4_json_local_pairs/minecraft_2024-04-17-22-07-46-mine-thing-02.mp4",
+    "label": "break,mine,pickup"
+  },
+  {
+    "path": "videos/minecraft/mp4_json_local_pairs/minecraft_2024-04-17-22-07-46-craft-thing-02.mp4",
+    "label": "craft"
+  },
+  {
+    "path": "videos/minecraft/mp4_json_local_pairs/minecraft_2024-04-17-22-07-46-combat-thing-05.mp4",
+    "label": "combat,find,pickup"
+  },
+  {
+    "path": "videos/minecraft/mp4_json_local_pairs/minecraft_2024-04-17-22-07-46-combat-thing-04.mp4",
+    "label": "combat"
+  },
+  {
+    "path": "videos/minecraft/mp4_json_local_pairs/minecraft_2024-04-17-22-07-46-put-thing-01.mp4",
+    "label": "place"
+  },
+  {
+    "path": "videos/minecraft/mp4_json_local_pairs/minecraft_2024-04-17-22-07-46-craft-thing-03.mp4",
+    "label": "craft"
+  },
+  {
+    "path": "videos/minecraft/mp4_json_local_pairs/minecraft_2024-04-17-22-07-46-combat-thing-03.mp4",
+    "label": "combat"
+  },
+  {
+    "path": "videos/minecraft/mp4_json_193610_pairs/cheeky-cornflower-setter-0a9ad3ddd136-20220726-193610-craft-thing-03.mp4",
+    "label": "craft"
+  },
+  {
+    "path": "videos/minecraft/mp4_json_193610_pairs/cheeky-cornflower-setter-0a9ad3ddd136-20220726-193610-put-thing-10.mp4",
+    "label": "place"
+  },
+  {
+    "path": "videos/minecraft/mp4_json_193610_pairs/cheeky-cornflower-setter-0a9ad3ddd136-20220726-193610-put-thing-08.mp4",
+    "label": "place"
+  },
+  {
+    "path": "videos/minecraft/mp4_json_193610_pairs/cheeky-cornflower-setter-0a9ad3ddd136-20220726-193610-craft-thing-04.mp4",
+    "label": "craft"
+  },
+  {
+    "path": "videos/minecraft/mp4_json_193610_pairs/cheeky-cornflower-setter-0a9ad3ddd136-20220726-193610-put-thing-07.mp4",
+    "label": "place"
+  },
+  {
+    "path": "videos/minecraft/mp4_json_193610_pairs/cheeky-cornflower-setter-0a9ad3ddd136-20220726-193610-craft-thing-01.mp4",
+    "label": "place,craft"
+  },
+  {
+    "path": "videos/minecraft/mp4_json_193610_pairs/cheeky-cornflower-setter-0a9ad3ddd136-20220726-193610-break-thing-02.mp4",
+    "label": "break,pickup"
+  },
+  {
+    "path": "videos/minecraft/mp4_json_193610_pairs/cheeky-cornflower-setter-0a9ad3ddd136-20220726-193610-put-thing-06.mp4",
+    "label": "place,craft"
+  },
+  {
+    "path": "videos/minecraft/mp4_json_193610_pairs/cheeky-cornflower-setter-0a9ad3ddd136-20220726-193610-craft-thing-02.mp4",
+    "label": "place,craft"
+  },
+  {
+    "path": "videos/minecraft/mp4_json_193610_pairs/cheeky-cornflower-setter-0a9ad3ddd136-20220726-193610-put-thing-01.mp4",
+    "label": "place,find"
+  },
+  {
+    "path": "videos/minecraft/mp4_json_193610_pairs/cheeky-cornflower-setter-0a9ad3ddd136-20220726-193610-put-thing-09.mp4",
+    "label": "place"
+  },
+  {
+    "path": "videos/minecraft/mp4_json_193610_pairs/cheeky-cornflower-setter-0a9ad3ddd136-20220726-193610-put-thing-05.mp4",
+    "label": "place,craft"
+  },
+  {
+    "path": "videos/minecraft/mp4_json_193610_pairs/cheeky-cornflower-setter-0a9ad3ddd136-20220726-193610-break-thing-03.mp4",
+    "label": "break,pickup"
+  },
+  {
+    "path": "videos/minecraft/mp4_json_193610_pairs/cheeky-cornflower-setter-0a9ad3ddd136-20220726-193610-break-thing-01.mp4",
+    "label": "break,find"
+  },
+  {
+    "path": "videos/minecraft/mp4_json_193610_pairs/cheeky-cornflower-setter-0a9ad3ddd136-20220726-193610-put-thing-02.mp4",
+    "label": "place,find"
+  },
+  {
+    "path": "videos/minecraft/mp4_json_193610_pairs/cheeky-cornflower-setter-0a9ad3ddd136-20220726-193610-put-thing-04.mp4",
+    "label": "place"
+  },
+  {
+    "path": "videos/minecraft/mp4_json_193610_pairs/cheeky-cornflower-setter-0a9ad3ddd136-20220726-193610-break-thing-04.mp4",
+    "label": "break,pickup"
+  },
+  {
+    "path": "videos/minecraft/mp4_json_193610_pairs/cheeky-cornflower-setter-0a9ad3ddd136-20220726-193610-put-thing-03.mp4",
+    "label": "break,place"
+  }
+]

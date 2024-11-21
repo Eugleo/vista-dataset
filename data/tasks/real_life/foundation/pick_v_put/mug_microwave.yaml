@@ -1,0 +1,51 @@
+example_gpt: '
+
+  Example:
+
+
+  (note that this example is for five frames for illustration purposes, but you should
+  work with as many frames as you are given)
+
+
+  Input: [5 frames]
+
+
+  Frame-by-frame description:
+
+  1. We are near an oven.
+
+  2. Now it seems we walked near an open microwave. We don''t appear to have anything in
+  hand. There is a mug in the microwave, along with a spoon and a glass.
+
+  3. We seem to be holding the mug now, because it is at the bottom of the
+  screen, almost as if it was lying on the floor.
+
+  4. We are definitely holding the mug since our hand is visible now. We are further
+  from the microwave now, possibly walking towards somewhere else.
+
+  5. We still hold the mug.
+
+  '
+label_prompts:
+  pick: We pick up the mug from the microwave
+  put: We put the mug on the microwave
+metadata:
+  concepts:
+    high_level_actions:
+    - PutObject
+    - PickupObject
+    - GotoLocation
+    low_level_actions:
+    - LookDown
+    - PutObject
+    - LookUp
+    - RotateLeft
+    - PickupObject
+    - RotateRight
+    - MoveAhead
+prompt_gpt: Your task is to describe what you see in each frame, separately, in a
+  list. The frames will depict us handling a mug, and your eventual goal will
+  be to discern whether picked it up during the video, or started out holding it and
+  put it down somewhere. You shouldn't lock-in to one answer too early. Instead, for
+  each frame, concisely describe the scene, the state of the mug, and what
+  actions have likely been performed since the last frame.

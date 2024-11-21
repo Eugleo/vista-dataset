@@ -1,0 +1,74 @@
+[
+    {
+        "path": "extrapyramidal/object_interaction/pin_both_1.mp4",
+        "label": "pin"
+    },
+    {
+        "path": "extrapyramidal/object_interaction/pin_both_2.mp4",
+        "label": "pin"
+    },
+    {
+        "path": "extrapyramidal/object_interaction/pin_both_3.mp4",
+        "label": "pin"
+    },
+    {
+        "path": "extrapyramidal/object_interaction/pin_both_4.mp4",
+        "label": "pin"
+    },
+    {
+        "path": "extrapyramidal/object_interaction/pin_both_5.mp4",
+        "label": "pin"
+    },
+    {
+        "path": "extrapyramidal/object_interaction/pin_both_6.mp4",
+        "label": "pin"
+    },
+    {
+        "path": "extrapyramidal/object_interaction/pin_both_7.mp4",
+        "label": "pin"
+    },
+    {
+        "path": "extrapyramidal/object_interaction/pin_both_8.mp4",
+        "label": "pin"
+    },
+    {
+        "path": "extrapyramidal/object_interaction/pin_both_9.mp4",
+        "label": "pin"
+    },
+    {
+        "path": "extrapyramidal/object_interaction/pin_lhs_only_over_rhs_1.mp4",
+        "label": "no_pin"
+    },
+    {
+        "path": "extrapyramidal/object_interaction/pin_lhs_only_over_rhs_2.mp4",
+        "label": "no_pin"
+    },
+    {
+        "path": "extrapyramidal/object_interaction/pin_none_over_both_1.mp4",
+        "label": "no_pin"
+    },
+    {
+        "path": "extrapyramidal/object_interaction/pin_none_over_both_2.mp4",
+        "label": "no_pin"
+    },
+    {
+        "path": "extrapyramidal/object_interaction/pin_none_over_rhs_under_lhs.mp4",
+        "label": "no_pin"
+    },
+    {
+        "path": "extrapyramidal/object_interaction/pin_rhs_twice.mp4",
+        "label": "no_pin"
+    },
+    {
+        "path": "extrapyramidal/object_interaction/pin_rhs_under_lhs.mp4",
+        "label": "no_pin"
+    },
+    {
+        "path": "extrapyramidal/object_interaction/pin_rhs_withdraw_lhs.mp4",
+        "label": "no_pin"
+    },
+    {
+        "path": "extrapyramidal/object_interaction/pin_withdraw_lhs_rhs_only_over_lhs.mp4",
+        "label": "no_pin"
+    }
+]

@@ -1,0 +1,82 @@
+example_gpt: '
+
+  A few tips and hints to help you get started:
+
+  - ''Holding an object'' is depicted as the object being at the very bottom of the
+  screen and close to the camera, without any visible hands. Similarly, no hands are
+  shown for cleaning, heating, or any other action.
+
+  - The objects almost never lie on the floor. If the object is at the bottom of the
+  screen, close to the camera and looks like it is lying on the floor, we are most
+  likely just holding it.
+
+  - We are sure that you will observe a tomato being picked up. If you can barely
+  see it, maybe you just picked up a very thin slice that is angled weirdly.
+
+  - Sometimes we will pick up slices, sometimes wedges, but you can usually ignore
+  this, as long as you can tell whether the object is whole or not.
+
+
+  Example with the tips applied:
+
+
+  (note that this example is for five frames for illustration purposes, but you should
+  work with as many frames as you are given)
+
+
+  Input: [5 frames]
+
+
+  Frame-by-frame description:
+
+  1. We are nearing a countertop. We see a tomato lying on the countertop. It is hard
+  to see whether it is sliced or not when it''s lying down like this.
+
+  2. We are now standing directly at the countertop.
+
+  3. We picked up the tomato. It seems to be a wedge instead of the whole thing.
+
+  4. We now changed our position again. We can now see the potato is just a wedge
+  since we can see the inner texture.
+
+  5. We are now nearing a fridge, still holding the tomato, as signified by it being
+  at the bottom of the screen.
+
+  '
+label_prompts:
+  label_0: We pick up a slice of tomato
+  label_1: We pick up a tomato
+metadata:
+  concepts:
+    high_level_actions:
+    - PickupObject
+    - GotoLocation
+    low_level_actions:
+    - LookDown
+    - LookUp
+    - RotateLeft
+    - PickupObject
+    - OpenObject
+    - RotateRight
+    - CloseObject
+    - MoveAhead
+    objects:
+    - dining table
+    - pan
+    - fridge
+    - garbage can
+    - pot
+    - bowl
+    - plate
+    - sink basin
+    - tomato
+    - side table
+    - counter top
+    - slice of tomato
+    - microwave
+prompt_gpt: Your task is to describe what you see in each frame, separately, in a
+  list. The frames will depict us picking up a tomato, or possibly just a piece or
+  slice of it. Your eventual goal will be to say whether the object was picked up
+  whole, or if just a piece of it was picked, but you shouldn't lock-in to one answer
+  too early. Instead, for each frame, concisely describe the scene, the state of the
+  tomato, and what actions have likely been performed since the last frame.

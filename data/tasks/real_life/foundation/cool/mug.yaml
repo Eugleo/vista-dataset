@@ -1,0 +1,55 @@
+example_gpt: '
+
+  Example:
+
+
+  (note that this example is for five frames for illustration purposes, but you should
+  work with as many frames as you are given)
+
+
+  Input: [5 frames]
+
+
+  Frame-by-frame description:
+
+  1. We are near the countertop. We are holding a mug at the bottom of the screen.
+
+  2. We are now near a freezer. We are still holding the mug at the bottom of the screen.
+
+  3. The freezer is now open. We still hold the mug.
+
+  4. The freezer is now closed. We still hold the mug. This means we did not put
+  the object in the freezer.
+
+  5. We are holding the mug, still. It seems we just opened and closed the freezer
+  without putting the mug in, even for a moment. The cooling did not happen.
+  '
+label_prompts:
+  freeze: We cool the mug by putting it in the freezer for a while
+  put_no_close: We open the freezer, put in the mug and immediately pick it back up
+    without leaving it to cool in the closed freezer
+  open_no_put: We open the freezer and then immediately close it without putting the mug
+    in
+  approach: We go to the freezer and then we leave, without even opening it
+metadata:
+  concepts:
+    high_level_actions:
+    - CoolObject
+    - GotoLocation
+    low_level_actions:
+    - LookDown
+    - PutObject
+    - LookUp
+    - RotateLeft
+    - OpenObject
+    - PickupObject
+    - RotateRight
+    - CloseObject
+    - MoveAhead
+prompt_gpt: Your task is to describe what you see in each frame, separately, in a
+  list. The frames will depict us carrying a mug to a freezer and then possibly
+  cooling it by leaving it in the closed freezer for a while before picking it up again.
+  Your eventual goal will be to discern whether all the steps required for cooling
+  the object actually happened, but you shouldn't lock-in to one answer too early.
+  Instead, for each frame, concisely describe the scene, the objects we're holding,
+  and what actions have likely been performed since the last frame.

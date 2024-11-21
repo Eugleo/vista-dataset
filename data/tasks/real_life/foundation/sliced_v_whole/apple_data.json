@@ -1,0 +1,34 @@
+[
+    {
+        "path": "foundation/pick_object/appleslice_lh_c.mp4",
+        "label": "slice"
+    },
+    {
+        "path": "foundation/pick_object/appleslice_rh_c.mp4",
+        "label": "slice"
+    },
+    {
+        "path": "foundation/pick_object/appleslice_lh_t.mp4",
+        "label": "slice"
+    },
+    {
+        "path": "foundation/pick_object/appleslice_rh_t.mp4",
+        "label": "slice"
+    },
+    {
+        "path": "foundation/pick_object/apple_lh_c.mp4",
+        "label": "whole"
+    },
+    {
+        "path": "foundation/pick_object/apple_rh_c.mp4",
+        "label": "whole"
+    },
+    {
+        "path": "foundation/pick_object/apple_lh_t.mp4",
+        "label": "whole"
+    },
+    {
+        "path": "foundation/pick_object/apple_rh_t.mp4",
+        "label": "whole"
+    }
+]

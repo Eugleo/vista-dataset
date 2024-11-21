@@ -1,0 +1,54 @@
+example_gpt: '
+
+  Example:
+
+
+  (note that this example is for five frames for illustration purposes, but you should
+  work with as many frames as you are given)
+
+
+  Input: [5 frames]
+
+
+  Frame-by-frame description:
+
+  1. We are in the middle of the room. We do not see the $(OBJ) yet.
+
+  2. The location has changed. We see something that might be the $(OBJ). We
+  see several objects there: a spoon, a butter knife, and a mug.
+
+  3. We see a shiny object at the bottom of the screen, suggesting we are holding
+  it. Considering the selection of objects on the $(OBJ) we saw above, it is
+  likely the spoon or the butter knife.
+
+  4. The angle has changed a bit and we see that the spoon is still on the $(OBJ).
+  This means the thing we hold must be the butter knife, based on our previous observations.
+
+  5. We are now a bit further away from the $(OBJ). We are still holding the butter knife.
+
+  '
+label_prompts:
+  apple: We pick up an apple from the $(OBJ)
+  appleslice: We pick up a slice of apple from the $(OBJ)
+  book: We pick up a book from the $(OBJ)
+  pencil: We pick up a pencil from the $(OBJ)
+  potato: We pick up a potato from the $(OBJ)
+  potatoslice: We pick up a slice of potato from the $(OBJ)
+metadata:
+  concepts:
+    high_level_actions:
+    - PickupObject
+    - GotoLocation
+    low_level_actions:
+    - LookDown
+    - LookUp
+    - RotateLeft
+    - PickupObject
+    - RotateRight
+    - CloseObject
+    - MoveAhead
+prompt_gpt: Your task is to describe what you see in each frame, separately, in a
+  list. The frames will depict us or putting down an object $(A_OR_AN_OBJ).
+  Your eventual goal will be to recognize the object, but you shouldn't lock-in to
+  one answer too early. Instead, try to describe the object as accurately as possible
+  separately for each frame, refining your answer as you see more frames.

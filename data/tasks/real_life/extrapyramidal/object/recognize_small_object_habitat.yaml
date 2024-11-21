@@ -1,0 +1,46 @@
+example_gpt: 'A few tips and hints to help you get started:
+
+  - ''Holding an object'' is depicted as the object floating in the air behind the cursor,
+  without any visible hands.
+
+  - The objects almost never lie on the floor. If the object is at the bottom of the
+  screen, close to the camera and looks like it is lying on the floor, we are most
+  likely just holding it.
+
+  - You are bound not to recognize some objects correctly, which might hurt your peformance
+  in downstream tasks. Instead of running with your first guess, try to list a few
+  alternatives for an object if you''re unsure what it is.
+
+
+  Example with the tips applied:
+
+  (note that this example is for five frames for illustration purposes, but you should
+  work with as many frames as you are given)
+
+
+  Input: [5 frames]
+
+
+  Frame-by-frame description:
+
+  1. In this frame, we see a table covered with different objects, but the angle is such that we can''t see what the agent is focusing on.
+
+  2. We are nearing the table, and we see that the agent is focusing on an apple.
+
+  3. In the end, the agent picks up a can instead. The can now hovers in the air in front of the camera.
+
+  4. The can is still in the air, but our position has changed.
+
+  5. We are now in front of a table, and the can is still in the air.
+'
+label_prompts:
+  apple: We pick up an apple from a cluttered table
+  can: We pick up a can from a cluttered table
+  hammer: We pick up a hammer from a cluttered table
+
+prompt_gpt: Your task is to describe what you see in each frame, separately, in a
+  list. The frames will depict us putting down $(A_OR_AN_OBJ) somewhere. Your eventual goal
+  will be to recognize the place or container we put the object in (or on), but you
+  shouldn't lock-in to one answer too early. Instead, try to describe the place or
+  container as accurately as possible separately for each frame, refining your answer
+  as you see more frames.

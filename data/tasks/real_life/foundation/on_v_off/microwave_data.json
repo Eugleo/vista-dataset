@@ -1,0 +1,10 @@
+[
+    {
+        "path": "foundation/on_v_off/microwave/on/microwave_on.mp4",
+        "label": "state_on"
+    },
+    {
+        "path": "foundation/on_v_off/microwave/off/microwave_off.mp4",
+        "label": "state_off"
+    }
+]

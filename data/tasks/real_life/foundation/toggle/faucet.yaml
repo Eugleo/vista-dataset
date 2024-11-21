@@ -1,0 +1,47 @@
+example_gpt: '
+
+  Example:
+
+
+  (note that this example is for five frames for illustration purposes, but you should
+  work with as many frames as you are given)
+
+
+  Input: [5 frames]
+
+
+  Frame-by-frame description:
+
+  1. We are in a kitchen. We see a faucet in front of us.
+
+  2. The faucet doesn''t seem to be turned on.
+
+  3. Nothing has changed; the faucet is still off.
+
+  4. Now, the faucet is turned on.
+
+  5. The faucet is still on.
+
+  '
+label_prompts:
+  turn_on: We turn the faucet on
+  turn_off: We turn the faucet off
+metadata:
+  concepts:
+    high_level_actions:
+    - ToggleObject
+    - GotoLocation
+    low_level_actions:
+    - LookDown
+    - LookUp
+    - ToggleObjectOn
+    - RotateLeft
+    - RotateRight
+    - MoveAhead
+    objects:
+    - faucet
+prompt_gpt: "Your task is to describe what you see in each frame, separately, in a
+  list. The frames will depict a faucet, and your eventual goal will be to discern
+  whether we turned it on or off during the video. You shouldn't lock-in to one
+  answer too early. Instead, for each frame, concisely describe the scene and the state
+  of the faucet and what actions have likely been performed since the last frame."

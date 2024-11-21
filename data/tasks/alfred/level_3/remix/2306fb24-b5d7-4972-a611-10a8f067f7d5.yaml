@@ -1,0 +1,154 @@
+example_gpt: '
+
+  A few tips and hints to help you get started:
+
+  - ''Holding an object'' is depicted as the object being at the very bottom of the
+  screen and close to the camera, without any visible hands. Similarly, no hands are
+  shown for cleaning, heating, or any other action.
+
+  - No action happens before the first frame. If the first frame starts with us already
+  holding an object, it was already in our hands from the beginning.
+
+  - The objects almost never lie on the floor. If the object is at the bottom of the
+  screen, close to the camera and looks like it is lying on the floor, we are most
+  likely just holding it.
+
+  - The possible actions that can be performed are: pickup(object, location), put(object,
+  location), heat(object, microwave), cool(object, fridge), clean(object, sink), slice(object),
+  toggle(object), and goto(location). You should formulate your descriptions of what
+  happened since the last frame based on these actions.
+
+  - To be able to `put` something, we first need to `pick` it up (or start with it
+  in our hands).
+
+  - If we had something in hand in a frame, and it is not visible in the next frame,
+  we must have performed a `put` action.
+
+  - If we didn''t have anything in hand in a frame, and something appears in our hands
+  in the next frame, we must have performed a `pick` action
+
+  - Slicing can only happen if we have a knife in our hands
+
+  - Cleaning involves putting an object in a sink, running water over it, and then
+  picking it back up
+
+  - Heating involves putting an object in a microwave, turning the microwave on, turning
+  it off, and then picking the object back up
+
+  - Cooling involves putting an object in a fridge, closing the fridge, opening it,
+  and then picking the object back up
+
+  - Multiple actions can happen between frames, though MOST OFTEN it will just be
+  a combination of goto and one other action. For example, it is unlikely we sliced
+  AND put down the knife inbetween two frames.
+
+  - You are bound not to recognize some objects correctly, which might hurt your peformance
+  in downstream tasks. Instead of running with your first guess, try to list a few
+  alternatives for an object if you''re unsure what it is.
+
+  - Whenever we hold a knife, we might be about to slice an object. Pay very close
+  attention to minute details in objects'' appearance. If there are small lines in
+  the object where there previously weren''t any, it is likely that we have sliced
+  it. But it might have been already sliced, or maybe we just do not plan to slice
+  it, even though we hold a knife.
+
+  - Sometimes, when putting down an object, we put it in or onto another object, instead
+  of a container. In that case you should describe the object we put the object in
+  or onto in addition to the general place this "container" is in.
+
+  - Similarly, sometimes we pick up an object that has another object in it. In that
+  case, list both objects in your description.
+
+  '
+label_prompts:
+  label_0: First, we pick up a egg from the dining table, then we cool the egg by
+    putting it in the fridge for a while, and finally we put the egg in the microwave
+  label_1: First, we pick up a egg from the dining table, then we cool the egg by
+    putting it in the fridge for a while, and finally we put the egg on the dining
+    table
+  label_2: First, we pick up a egg from the dining table, then we cool the egg by
+    putting it in the fridge for a while, and finally we cool the egg by putting it
+    in the fridge for a while
+  label_3: First, we pick up a egg from the dining table, then we cool the egg by
+    putting it in the fridge for a while, and finally we clean the egg in the sink
+    basin under running water
+  label_4: First, we pick up a egg from the dining table, then we put the egg in the
+    microwave, and finally we pick up a slice of tomato from the dining table
+  label_5: First, we pick up a egg from the dining table, then we heat the egg in
+    the microwave, and finally we cool the egg by putting it in the fridge for a while
+  label_6: First, we pick up a egg from the dining table, then we clean the egg in
+    the sink basin under running water, and finally we cool the egg by putting it
+    in the fridge for a while
+  label_7: First, we pick up a ladle from the counter top, then we clean the ladle
+    in the sink basin under running water, and finally we put the ladle in the pan
+  label_8: First, we pick up a butter knife, then we put the butter knife on the counter
+    top, and finally we pick up a slice of tomato from the counter top
+metadata:
+  concepts:
+    high_level_actions:
+    - PutObject
+    - CleanObject
+    - HeatObject
+    - PickupObject
+    - GotoLocation
+    - CoolObject
+    low_level_actions:
+    - LookDown
+    - PutObject
+    - LookUp
+    - ToggleObjectOn
+    - RotateLeft
+    - ToggleObjectOff
+    - PickupObject
+    - OpenObject
+    - RotateRight
+    - CloseObject
+    - MoveAhead
+    objects:
+    - dining table
+    - pan
+    - ladle
+    - sink basin
+    - butter knife
+    - slice of tomato
+    - counter top
+    - fridge
+    - egg
+    - microwave
+  prefix_lens:
+  - description: First, we pick up a egg from the dining table, then we cool the egg
+      by putting it in the fridge for a while, and finally we put the egg in the microwave
+    shared_prefix: 3
+  - description: First, we pick up a egg from the dining table, then we cool the egg
+      by putting it in the fridge for a while, and finally we put the egg on the dining
+      table
+    shared_prefix: 2
+  - description: First, we pick up a egg from the dining table, then we cool the egg
+      by putting it in the fridge for a while, and finally we cool the egg by putting
+      it in the fridge for a while
+    shared_prefix: 2
+  - description: First, we pick up a egg from the dining table, then we cool the egg
+      by putting it in the fridge for a while, and finally we clean the egg in the
+      sink basin under running water
+    shared_prefix: 2
+  - description: First, we pick up a egg from the dining table, then we put the egg
+      in the microwave, and finally we pick up a slice of tomato from the dining table
+    shared_prefix: 1
+  - description: First, we pick up a egg from the dining table, then we heat the egg
+      in the microwave, and finally we cool the egg by putting it in the fridge for
+      a while
+    shared_prefix: 1
+  - description: First, we pick up a egg from the dining table, then we clean the
+      egg in the sink basin under running water, and finally we cool the egg by putting
+      it in the fridge for a while
+    shared_prefix: 1
+  - description: First, we pick up a ladle from the counter top, then we clean the
+      ladle in the sink basin under running water, and finally we put the ladle in
+      the pan
+    shared_prefix: 0
+  - description: First, we pick up a butter knife, then we put the butter knife on
+      the counter top, and finally we pick up a slice of tomato from the counter top
+    shared_prefix: 0
+prompt_gpt: Your task is to describe what you see in each frame, separately, in a
+  list. For each frame, concisely describe the scene, the objects we're holding, and
+  from that deduce what actions have likely been performed since the last frame.

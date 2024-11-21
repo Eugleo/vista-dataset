@@ -1,0 +1,57 @@
+[project]
+dependencies = [
+    "av",
+    "backoff",
+    "einops",
+    "human-id",
+    # "kaleido",
+    "matplotlib",
+    "open_clip_torch",
+    "openai",
+    "opencv-python",
+    "pandas",
+    "jsonlines",
+    "pyarrow",
+    "pydantic",
+    "python-dotenv",
+    "scikit-learn",
+    "torch",
+    "torchvision",
+    "typer",
+    "streamlit",
+    "setuptools>=75.3.0",
+    "lets-plot==4.4.1",
+    "plotly>=5.24.1",
+    "cairosvg>=2.7.1",
+    "polars>=1.12.0",
+    "datasets>=3.1.0",
+]
+name = "vlm-benchmark"
+version = "0.0.1"
+requires-python = "==3.9.18"
+
+[tool.ruff]
+lint.ignore = ["F722", "F821", "F403", "F405", "E731"]
+
+
+[tool.pyright]
+include = ["projects/", "tests/", "factored_representations/"]
+reportMissingTypeStubs = false
+reportUnknownVariableType = false
+reportUnknownArgumentType = false
+reportUnknownMemberType = false
+
+[tool.pdm.dev-dependencies]
+dev = ["ipykernel>=6.29.5"]
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[dependency-groups]
+dev = ["huggingface-hub>=0.26.2"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[project.scripts]
+vlm = "main:app"
