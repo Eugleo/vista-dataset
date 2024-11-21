@@ -1,4 +1,4 @@
-# ViSTa Supplementary Material
+# ViSTa Dataset: Do vision-language models understand sequential tasks?
 
 _Authors:_ [Evžen Wybitul](https://github.com/Eugleo), [Evan Ryan Gunter](https://github.com/evgunter), [Mikhail Seleznyov](https://github.com/Dont-Care-Didnt-Ask), [David Lindner](https://github.com/david-lindner)
 
