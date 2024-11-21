@@ -3,7 +3,7 @@
 _Authors:_ [Evžen Wybitul](https://github.com/Eugleo), [Evan Ryan Gunter](https://github.com/evgunter), [Mikhail Seleznyov](https://github.com/Dont-Care-Didnt-Ask), [David Lindner](https://github.com/david-lindner)
 
 
-_Link to full paper:_ [https://arxiv.org/abs/2411.13211](https://arxiv.org/abs/2411.13211)
+_Full paper:_ [https://arxiv.org/abs/2411.13211](https://arxiv.org/abs/2411.13211)
 
 ViSTa is a dataset for evaluating <b>Vi</b>sion-based understanding of <b>S</b>equential <b>Ta</b>sks.
 ViSTa comprises over 4,000 videos with step-by-step descriptions in virtual home, Minecraft, and real-world environments.
